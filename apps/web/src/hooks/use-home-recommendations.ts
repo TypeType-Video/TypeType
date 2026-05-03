@@ -12,6 +12,7 @@ type Result = {
   serviceId: number;
   intent: RecommendationIntent;
   isLoading: boolean;
+  isError: boolean;
   isFetchingNextPage: boolean;
   hasNextPage: boolean;
   fetchNextPage: () => void;
@@ -43,6 +44,7 @@ export function useHomeRecommendations(): Result {
     serviceId: settings.defaultService,
     intent,
     isLoading: query.isLoading,
+    isError: query.isError,
     isFetchingNextPage: query.isFetchingNextPage,
     hasNextPage: query.hasNextPage,
     fetchNextPage: query.fetchNextPage,
