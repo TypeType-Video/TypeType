@@ -87,7 +87,7 @@ export type HomeRecommendationsResponse = {
   hasMore: boolean;
 };
 
-export type RecommendationOnboardingTopicGroup = {
+type RecommendationOnboardingTopicGroup = {
   id: string;
   label: string;
   topics: string[];

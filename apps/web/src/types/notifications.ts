@@ -1,6 +1,6 @@
 import type { VideoItem } from "./api";
 
-export type SubscriptionNewVideoNotification = {
+type SubscriptionNewVideoNotification = {
   type: "subscription_new_video";
   title: string;
   publishedAt?: number | null;

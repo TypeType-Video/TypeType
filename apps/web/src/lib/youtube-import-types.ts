@@ -1,4 +1,4 @@
-export type YoutubeTakeoutImportStatus = "pending" | "running" | "completed" | "failed";
+type YoutubeTakeoutImportStatus = "pending" | "running" | "completed" | "failed";
 
 export type YoutubeTakeoutImportJob = {
   jobId: string;

@@ -1,8 +1,8 @@
 {
   "name": "typetype",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
-    "knip": "^6.6.1",
+    "@biomejs/biome": "^2.4.14",
+    "knip": "^6.11.0",
     "sherif": "^1.11.1"
   },
   "overrides": {
