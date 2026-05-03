@@ -5,7 +5,14 @@ import { HomeRecommendationsSection } from "../components/home-recommendations-s
 import { useAuth } from "../hooks/use-auth";
 
 function HomePage() {
-  const { isAuthed } = useAuth();
+  const { authReady, isAuthed } = useAuth();
+  if (!authReady) {
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <p className="text-sm text-fg-muted">Loading session...</p>
+      </div>
+    );
+  }
   const title = isAuthed ? "Recommended" : "Trending";
 
   return (

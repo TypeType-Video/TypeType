@@ -8,7 +8,7 @@ export function useAuth() {
   const signOut = useAuthStore((s) => s.setSignedOut);
 
   const role = me?.role ?? null;
-  const isAuthed = token !== null;
+  const isAuthed = status === "authenticated" || status === "guest";
   const authReady = status !== "loading";
   const isGuest = status === "guest";
   const publicUsername = me?.publicUsername ?? null;
