@@ -49,9 +49,11 @@ export function PlayerDefaults({
   useEffect(() => {
     if (!canPlay || qualityApplied.current || !defaultQuality) return;
     const defaultHeight = qualityLabelHeight(defaultQuality);
-    const match =
-      qualityOptions.find((o) => o.label === defaultQuality) ??
-      qualityOptions.find((o) => defaultHeight !== null && o.quality?.height === defaultHeight);
+    const exactMatch = qualityOptions.find((o) => o.label === defaultQuality);
+    const heightMatch = qualityOptions.find(
+      (o) => defaultHeight !== null && o.quality?.height === defaultHeight,
+    );
+    const match = exactMatch ?? heightMatch;
     if (!match) return;
     match.select();
     qualityApplied.current = true;

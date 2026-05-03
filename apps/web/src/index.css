@@ -3,6 +3,7 @@
 @import "@vidstack/react/player/styles/default/layouts/video.css";
 @import "./styles/theme.css";
 @import "./styles/shorts-overrides.css";
+@import "./styles/player-menu-overrides.css";
 
 @keyframes card-pop-in {
   from {

@@ -1,0 +1,15 @@
+.vds-quality-menu .vds-menu-items[data-submenu] {
+  align-items: stretch;
+  justify-content: flex-start;
+  max-height: min(44svh, 18rem);
+  overflow-y: auto;
+}
+
+@media (pointer: coarse) {
+  [data-view-type="video"] .vds-menu-items[data-root]:not([data-placement]) {
+    right: 0.75rem;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    left: 0.75rem;
+    max-height: min(32svh, 16rem);
+  }
+}
