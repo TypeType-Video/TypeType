@@ -21,11 +21,10 @@ export function FormatSelector() {
 
   const videoOptions = options.filter((o) => o.quality !== null);
   const groups = groupByFamily(videoOptions);
-
-  if (groups.size <= 1) return null;
-
   const current = activeFamily(videoOptions) ?? "H.264";
   const availableOptions = FORMAT_OPTIONS.filter((f) => groups.has(f.value));
+
+  if (groups.size <= 1) return null;
 
   function onChange(value: string) {
     const best = groups.get(value as "H.264" | "VP9");

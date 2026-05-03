@@ -1,6 +1,6 @@
 export type DownloaderMode = "video" | "audio";
 
-export type DownloaderJobStatus = "queued" | "running" | "done" | "failed";
+type DownloaderJobStatus = "queued" | "running" | "done" | "failed";
 
 export type DownloaderJobStage =
   | "queued"
@@ -12,7 +12,7 @@ export type DownloaderJobStage =
   | "cancelled"
   | "failed";
 
-export type DownloaderJobOptions = {
+type DownloaderJobOptions = {
   mode: DownloaderMode;
   quality: string;
   format: string;

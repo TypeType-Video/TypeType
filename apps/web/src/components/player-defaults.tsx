@@ -15,6 +15,13 @@ type PlayerDefaultsProps = {
   defaultSubtitleLanguage?: string;
 };
 
+function qualityLabelHeight(label: string): number | null {
+  const match = label.match(/(\d+)/);
+  if (!match) return null;
+  const height = Number(match[1]);
+  return Number.isFinite(height) ? height : null;
+}
+
 export function PlayerDefaults({
   defaultQuality,
   defaultAudioLanguage,
@@ -41,7 +48,12 @@ export function PlayerDefaults({
 
   useEffect(() => {
     if (!canPlay || qualityApplied.current || !defaultQuality) return;
-    const match = qualityOptions.find((o) => o.label === defaultQuality);
+    const defaultHeight = qualityLabelHeight(defaultQuality);
+    const exactMatch = qualityOptions.find((o) => o.label === defaultQuality);
+    const heightMatch = qualityOptions.find(
+      (o) => defaultHeight !== null && o.quality?.height === defaultHeight,
+    );
+    const match = exactMatch ?? heightMatch;
     if (!match) return;
     match.select();
     qualityApplied.current = true;
