@@ -1,6 +1,7 @@
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useHomeRecommendations } from "../hooks/use-home-recommendations";
 import { trackRecommendationEvent } from "../lib/recommendation-tracker";
+import { HomeFallbackSection } from "./home-fallback-section";
 import { ScrollSentinel } from "./scroll-sentinel";
 import { VideoCardSkeleton } from "./video-card-skeleton";
 import { VideoGrid } from "./video-grid";
@@ -18,12 +19,21 @@ function SkeletonGrid() {
 }
 
 export function HomeRecommendationsSection() {
-  const { streams, serviceId, intent, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useHomeRecommendations();
+  const {
+    streams,
+    serviceId,
+    intent,
+    isLoading,
+    isError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useHomeRecommendations();
   const { filter } = useBlockedFilter();
   const filtered = filter(streams);
 
   if (isLoading) return <SkeletonGrid />;
+  if (isError || filtered.length === 0) return <HomeFallbackSection />;
   return (
     <>
       <VideoGrid
