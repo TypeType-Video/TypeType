@@ -2,7 +2,7 @@ import type { VideoQualityOption } from "./vidstack";
 
 type CodecFamily = "H.264" | "VP9";
 
-export function codecFamily(codec: string | null): CodecFamily | null {
+function codecFamily(codec: string | null): CodecFamily | null {
   if (!codec) return null;
   if (codec.startsWith("avc1")) return "H.264";
   if (codec.startsWith("vp09") || codec === "vp9") return "VP9";
