@@ -1,147 +1,110 @@
-# TypeType
+<div align="center">
+  <img src="assets/banner.svg" alt="TypeType" width="100%">
+</div>
 
-TypeType is a self-hosted, privacy-respecting video platform frontend.
+<div align="center">
 
-It is a clean TypeScript rewrite and runs as a SPA served by nginx.
+[<img src="assets/widgets/license.svg" alt="MIT license">](LICENSE)
 
-Current focus is a reliable desktop-first UX with responsive support for mobile layouts.
+[<img src="assets/widgets/typetype.svg" alt="TypeType">](https://github.com/Priveetee/TypeType)
+[<img src="assets/widgets/pipepipe.svg" alt="PipePipe">](https://github.com/InfinityLoop1308/PipePipeExtractor)
+[<img src="assets/widgets/react.svg" alt="React">](https://react.dev)
 
-## Core product areas
+</div>
 
-- Watch experience (video playback, subtitles, audio language selection, history/progress).
-- Shorts experience (vertical navigation, subscriptions feed, blended discovery support).
-- Import and restore tools (YouTube Takeout import and PipePipe backup restore).
-- User controls (settings, recommendation privacy, playlists, favorites, watch later).
+TypeType is a self-hosted, privacy-respecting video platform with a modern web client, private user features, and a server-side extraction boundary. It is built for people who want a clean video experience without handing watch history, subscriptions, playlists, and preferences to a public platform.
 
-## Runtime services
+This project is still young. Expect active changes while watch, recommendations, imports, and mobile layouts continue to mature.
 
-TypeType frontend depends on:
+## What this is
 
-- TypeType-Server (API, auth, extraction): `http://localhost:8080`
-- TypeType-Token (PO token helper): `http://localhost:8081`
-- TypeType-Downloader (download jobs, internal)
-- Garage (S3-compatible storage for downloader artifacts, internal)
+A TypeScript web application and self-hosting stack for TypeType. The frontend runs in the browser, talks to TypeType-Server over HTTP, and keeps extraction out of the web codebase.
 
-The easiest setup is Docker Compose at repository root.
+The app focuses on a calm interface for watching videos, managing subscriptions, importing existing data, and keeping user state on your own instance.
 
-## Quick start (Docker)
+## What this is not
 
-End-user one-liner installer (no git/clone needed):
+- Not a YouTube frontend clone.
+- Not a fork of Piped, FreeTube, LibreTube, Invidious, or NewPipe.
+- Not a standalone extractor. TypeType needs a reachable TypeType-Server instance.
+- Not affiliated with YouTube or any upstream video platform.
+
+## Highlights
+
+- Watch pages with subtitles, audio language selection, progress tracking, playlists, favorites, and watch later.
+- Home recommendations with local privacy controls and feedback actions.
+- Shorts-style vertical browsing for short-form videos.
+- YouTube Takeout and PipePipe backup import flows.
+- Download jobs through a separate downloader service.
+- A Docker Compose stack for self-hosting the frontend, backend, cache, database, token service, and artifact storage.
+
+## Stack
+
+| Role | Tool |
+|---|---|
+| Language | TypeScript |
+| Runtime | Bun |
+| Build | Vite |
+| UI | React |
+| Routing | TanStack Router |
+| Server state | TanStack Query |
+| Client state | Zustand |
+| Player | Vidstack |
+| Styling | Tailwind CSS |
+| Components | shadcn/ui + Radix UI |
+| Quality | Biome, Sherif, Knip |
+| Deployment | Docker Compose |
+| License | MIT |
+
+## Self-hosting
+
+The fastest path is the installer:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash
 ```
 
-By default, this installs to `~/typetype-stack` and starts the stack.
+It installs to `~/typetype-stack`, generates local downloader credentials, chooses free ports when needed, starts the services, and bootstraps Garage.
 
-When `.env` is created, downloader S3 credentials are generated uniquely (random) for this host.
-No hardcoded shared downloader secret is used at install time.
-
-Requirements before running this command:
-
-- Docker installed
-- Docker Compose v2 available (`docker compose version`)
-- If `8080/8081/8082` are busy, installer auto-picks free host ports and writes them to `.env`
-
----
-
-One-command interactive setup (recommended):
+For an interactive setup from a cloned repository:
 
 ```sh
 ./scripts/setup-stack.sh
 ```
 
-This script:
-
-- asks for env values (with safe defaults)
-- writes `.env`
-- pulls images
-- starts containers
-- bootstraps Garage for downloader artifacts
-- prints `docker compose ps`
-
-If you already run another stack on `8080/8081/8082`, setup auto-picks free host ports.
-
-Manual setup (if you prefer):
-
-1) Create `.env` in repo root:
+Manual setup is also supported:
 
 ```sh
 cp .env.example .env
-```
-
-2) Start stack:
-
-```sh
 docker compose pull
 docker compose up -d
+./scripts/bootstrap-garage.sh
 docker compose ps
 ```
 
-The frontend container mounts local `nginx.conf` by default, so proxy and upload-limit updates are applied from this repository file.
-
-3) Initialize Garage (required once for downloader artifacts):
-
-```sh
-./scripts/bootstrap-garage.sh
-```
-
-4) Open:
-
-- Frontend: `http://localhost:8082`
-- Server API: `http://localhost:8080`
-- Token service: `http://localhost:8081`
-- Downloader service (internal Docker network): `http://typetype-downloader:18093`
-- Downloader API from frontend/server flow: `/api/downloader/*`
-
-Host ports are configurable via `.env`:
-
-- `HOST_PORT_WEB` (default `8082`)
-- `HOST_PORT_SERVER` (default `8080`)
-- `HOST_PORT_TOKEN` (default `8081`)
-
-## Synology notes
-
-- Use Container Manager > Project and point it to this `docker-compose.yml`.
-- Put the `.env` file next to `docker-compose.yml` before starting the project.
-- If port `8082` is already used, change `docker-compose.yml` to another host port, for example `8088:80`, and set `ALLOWED_ORIGINS=http://localhost:8088`.
-- First start can take a few minutes while images are pulled.
-
-## Troubleshooting
-
-- `.env not found`: create `.env` in repository root (same folder as `docker-compose.yml`).
-- Frontend not loading: run `docker compose logs typetype`.
-- Backend API not responding: run `docker compose logs typetype-server`.
-- Downloader artifact issues: run `./scripts/bootstrap-garage.sh` again, then restart downloader with `docker compose up -d typetype-downloader`.
-- Port already in use: change host ports in `docker-compose.yml` and restart with `docker compose up -d`.
-- After updating `nginx.conf`: restart frontend with `docker compose up -d typetype`.
+Default local endpoints are `http://localhost:8082` for the frontend, `http://localhost:8080` for the API, and `http://localhost:8081` for the token service. Host ports can be changed through `.env`.
 
 ## Local development
 
-### Prerequisites
-
-- Bun >= 1.0
-- Running TypeType-Server
-
-### Install
+Install dependencies:
 
 ```sh
 bun install
 ```
 
-### Configure frontend env
+Create the frontend environment file:
 
 ```sh
 cp apps/web/.env.example apps/web/.env
 ```
 
-Set API base URL in `apps/web/.env`:
+Set the API URL:
 
 ```env
 VITE_API_URL=http://localhost:8080
 ```
 
-### Run dev server
+Run the dev server:
 
 ```sh
 bun run dev
@@ -149,48 +112,51 @@ bun run dev
 
 Open `http://localhost:5173`.
 
-### Build and checks
+## Checks
 
 ```sh
-bun run build
 bun run check
+bun run build
+bun run knip
+bun run sherif
 ```
 
-## Docker image tags (GHCR)
+## Docker images
 
-Published tags:
+Images are published to GitHub Container Registry: `typetype`, `typetype-server`, `typetype-downloader`, and `typetype-token`. Published tags include `latest`, `main`, branch tags, release tags, and `sha-<short-sha>`.
 
-- `latest` on default branch
-- `sha-<short-sha>` on every build
-- branch tags (for example `main`)
-- release tags from git tags like `v1.2.3` (`1.2.3`, `1.2`)
+## Updating
 
-## Documentation
+Update the whole stack:
 
-- Architecture and API boundary: `Architecture.md`
-- Agent operating rules: `AGENTS.md`
+```sh
+docker compose pull
+docker compose up -d --force-recreate
+docker compose ps
+```
 
-## API contract notes
+Update only the frontend:
 
-- Frontend runtime uses `/api` proxy in production container mode.
-- Authenticated endpoints require `Authorization: Bearer <token>`.
-- Recommendation personalization is controlled through `/settings`.
+```sh
+docker compose pull typetype
+docker compose up -d --force-recreate --no-deps typetype
+```
 
-## Roadmap
+## Related projects
 
-- Continue stabilizing desktop watch experience
-- Add dedicated mobile UX and layout support
-- Keep API compatibility with TypeType-Server
+- [TypeType-Server](https://github.com/Priveetee/TypeType-Server) is the Kotlin backend.
+- [TypeType-Downloader](https://github.com/Priveetee/TypeType-Downloader) handles downloadable artifacts.
+- [TypeType-Token](https://github.com/Priveetee/TypeType-Token) provides proof-of-origin tokens.
+- [TypeType-Android](https://github.com/Priveetee/TypeType-Android) is the native Android client.
 
 ## Acknowledgments
 
-A huge thanks to the projects that made this possible. TypeType is a clean rewrite, and this frontend would not exist without the work these teams published first.
+TypeType is a clean rewrite, but the product direction was shaped by existing open-source video clients and extractor projects.
 
-- [TeamPiped/Piped-Frontend](https://github.com/TeamPiped/Piped-Frontend) - UX and API pattern reference
-- [FreeTubeApp/FreeTube](https://github.com/FreeTubeApp/FreeTube) - video player behavior reference
-- [InfinityLoop1308/PipePipe](https://github.com/InfinityLoop1308/PipePipe) - multi-service behavior reference
-- [InfinityLoop1308/PipePipeExtractor](https://github.com/InfinityLoop1308/PipePipeExtractor) - extraction engine used by the backend API
+- [Piped](https://github.com/TeamPiped/Piped-Frontend) for UX and API pattern references.
+- [FreeTube](https://github.com/FreeTubeApp/FreeTube) for video player behavior references.
+- [PipePipe](https://github.com/InfinityLoop1308/PipePipe) and [PipePipeExtractor](https://github.com/InfinityLoop1308/PipePipeExtractor) for multi-service extraction behavior.
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
