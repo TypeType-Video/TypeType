@@ -8,7 +8,7 @@
 
 [<img src="assets/widgets/typetype.svg" alt="TypeType">](https://github.com/Priveetee/TypeType)
 [<img src="assets/widgets/pipepipe.svg" alt="PipePipe">](https://github.com/InfinityLoop1308/PipePipeExtractor)
-[<img src="assets/widgets/freetube.svg" alt="FreeTube">](https://github.com/FreeTubeApp/FreeTube)
+[<img src="assets/widgets/react.svg" alt="React">](https://react.dev)
 
 </div>
 
