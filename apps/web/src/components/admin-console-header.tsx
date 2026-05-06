@@ -1,4 +1,4 @@
-type AdminSection = "settings" | "users" | "issues";
+type AdminSection = "settings" | "users" | "sessions" | "issues";
 
 type Props = {
   section: AdminSection;
@@ -7,12 +7,14 @@ type Props = {
 const TITLES: Record<AdminSection, string> = {
   settings: "Admin Settings",
   users: "User Management",
+  sessions: "Active Sessions",
   issues: "Issue Triage",
 };
 
 const DESCRIPTIONS: Record<AdminSection, string> = {
   settings: "Global moderation and platform switches.",
   users: "Roles, suspension, and account recovery tools.",
+  sessions: "Connected clients, playback state, and recent activity.",
   issues: "Bug reports, diagnostics, status updates, and GitHub sync.",
 };
 

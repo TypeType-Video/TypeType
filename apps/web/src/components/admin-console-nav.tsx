@@ -1,4 +1,4 @@
-type AdminSection = "settings" | "users" | "issues";
+type AdminSection = "settings" | "users" | "sessions" | "issues";
 
 type Item = {
   key: AdminSection;
@@ -13,8 +13,8 @@ type Props = {
 
 export function AdminConsoleNav({ items, active, onSelect }: Props) {
   return (
-    <nav className="pt-3" aria-label="Admin sections">
-      <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
+    <nav className="overflow-x-auto pt-3" aria-label="Admin sections">
+      <div className="flex min-w-max gap-3 sm:grid sm:min-w-0 sm:grid-cols-4 sm:gap-1">
         {items.map((item) => {
           const isActive = item.key === active;
           return (
@@ -23,7 +23,7 @@ export function AdminConsoleNav({ items, active, onSelect }: Props) {
               type="button"
               aria-current={isActive ? "page" : undefined}
               onClick={() => onSelect(item.key)}
-              className={`border-b px-1 py-2 text-left font-mono text-xs uppercase tracking-[0.16em] transition-colors ${
+              className={`shrink-0 border-b px-1 py-2 text-left font-mono text-xs uppercase tracking-[0.16em] transition-colors ${
                 isActive
                   ? "border-border text-fg"
                   : "border-border text-fg-soft hover:border-border-strong hover:text-fg-muted"

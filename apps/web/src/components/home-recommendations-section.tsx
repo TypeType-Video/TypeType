@@ -1,6 +1,5 @@
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useHomeRecommendations } from "../hooks/use-home-recommendations";
-import { trackRecommendationEvent } from "../lib/recommendation-tracker";
 import { HomeFallbackSection } from "./home-fallback-section";
 import { ScrollSentinel } from "./scroll-sentinel";
 import { VideoCardSkeleton } from "./video-card-skeleton";
@@ -19,16 +18,8 @@ function SkeletonGrid() {
 }
 
 export function HomeRecommendationsSection() {
-  const {
-    streams,
-    serviceId,
-    intent,
-    isLoading,
-    isError,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  } = useHomeRecommendations();
+  const { streams, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useHomeRecommendations();
   const { filter } = useBlockedFilter();
   const filtered = filter(streams);
 
@@ -36,15 +27,7 @@ export function HomeRecommendationsSection() {
   if (isError || filtered.length === 0) return <HomeFallbackSection />;
   return (
     <>
-      <VideoGrid
-        streams={filtered}
-        onCardOpen={(stream) => {
-          trackRecommendationEvent("click", stream, { serviceId, intent });
-        }}
-        onCardImpression={(stream) => {
-          trackRecommendationEvent("impression", stream, { serviceId, intent });
-        }}
-      />
+      <VideoGrid streams={filtered} />
       <ScrollSentinel onIntersect={fetchNextPage} enabled={hasNextPage && !isFetchingNextPage} />
     </>
   );

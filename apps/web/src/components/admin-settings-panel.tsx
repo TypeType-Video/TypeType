@@ -35,6 +35,12 @@ export function AdminSettingsPanel({ settings, pending, onToggle }: Props) {
           pending={pending}
           onClick={() => onToggle("forceEmailVerification")}
         />
+        <SettingToggle
+          label="Track active sessions"
+          value={settings.activeSessionsEnabled}
+          pending={pending}
+          onClick={() => onToggle("activeSessionsEnabled")}
+        />
       </div>
     </section>
   );

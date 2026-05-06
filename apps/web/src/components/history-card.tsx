@@ -4,6 +4,7 @@ import { formatDuration } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
 import type { HistoryItem } from "../types/user";
 import { HistoryChannelAvatar } from "./history-channel-avatar";
+import { VideoProgressBar } from "./video-progress-bar";
 
 function XIcon() {
   return (
@@ -67,6 +68,7 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
               {formatDuration(item.duration)}
             </span>
           )}
+          <VideoProgressBar progress={item.progress} duration={item.duration} alwaysVisible />
           <button
             type="button"
             onClick={(e) => {

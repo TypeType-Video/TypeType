@@ -5,11 +5,8 @@ import { usePlayerError } from "../hooks/use-player-error";
 import { useSaveProgress } from "../hooks/use-progress";
 import { useSettings } from "../hooks/use-settings";
 import { useVolumeSync } from "../hooks/use-volume-sync";
-import {
-  useWatchRecommendationTracking,
-  useWatchVttAssets,
-} from "../hooks/use-watch-layout-assets";
-import { useWatchProgressPersistence } from "../hooks/use-watch-progress-persistence";
+import { useWatchVttAssets } from "../hooks/use-watch-layout-assets";
+import { useWatchPlayerEvents } from "../hooks/use-watch-player-events";
 import {
   getOriginalAudioLocale,
   getOriginalAudioTrackId,
@@ -55,13 +52,6 @@ export function WatchLayout({ stream, startTime }: Props) {
   const [toast, setToast] = useState<string | null>(null);
   const handleVolumeChange = useVolumeSync(update.mutate);
   const { thumbnailVtt, chaptersVtt } = useWatchVttAssets(stream);
-  const { positionRef, handleTimeUpdate, handlePause, handleSeeked } = useWatchProgressPersistence({
-    durationSec: stream.duration,
-    isLive,
-    mutate: save.mutate,
-  });
-
-  useWatchRecommendationTracking(stream, isLive, positionRef);
 
   useEffect(() => {
     if (!toast) return;
@@ -75,11 +65,17 @@ export function WatchLayout({ stream, startTime }: Props) {
     if (!next) return;
     navigate({ to: "/watch", search: { v: next.id } });
   }, [settingsReady, settings.autoplay, stream.related, navigate]);
+  const playerEvents = useWatchPlayerEvents({
+    stream,
+    isLive,
+    mutate: save.mutate,
+    onEnded: handleEnded,
+  });
 
   const overlay = (
     <>
       {isNicoNico && bulletCommentsOn && bulletComments && (
-        <DanmakuOverlay comments={bulletComments} positionRef={positionRef} />
+        <DanmakuOverlay comments={bulletComments} positionRef={playerEvents.positionRef} />
       )}
       <PlayerFocuser />
       <PlayerDefaults
@@ -131,11 +127,11 @@ export function WatchLayout({ stream, startTime }: Props) {
             originalAudioLocale={originalLocale}
             overlay={overlay}
             onVolumeChange={handleVolumeChange}
-            onTimeUpdate={handleTimeUpdate}
-            onPause={handlePause}
-            onSeeked={handleSeeked}
+            onTimeUpdate={playerEvents.handleTimeUpdate}
+            onPause={playerEvents.handlePause}
+            onSeeked={playerEvents.handleSeeked}
             onError={handleError}
-            onEnded={handleEnded}
+            onEnded={playerEvents.handleEnded}
             onSeekReady={(s) => {
               seekRef.current = s;
             }}

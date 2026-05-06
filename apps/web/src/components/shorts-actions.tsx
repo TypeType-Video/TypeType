@@ -1,18 +1,10 @@
-import { Ban, Clock3, MessageCircle, Share2, Star, UserMinus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Clock3, MessageCircle, Share2, Star } from "lucide-react";
 import { useAuth } from "../hooks/use-auth";
 import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
-import { useSettings } from "../hooks/use-settings";
 import { useShareUrl } from "../hooks/use-share-url";
 import { useWatchLaterPlaylist } from "../hooks/use-watch-later-playlist";
-import {
-  sendRecommendationFeedback,
-  trackRecommendationEvent,
-} from "../lib/recommendation-tracker";
-import { useShortsFeedbackStore } from "../stores/shorts-feedback-store";
 import type { VideoStream } from "../types/stream";
 import { ShortsActionButton } from "./shorts-action-button";
-import { Toast } from "./toast";
 
 type Props = {
   stream: VideoStream;
@@ -23,12 +15,7 @@ type Props = {
 
 export function ShortsActions({ stream, onOpenComments, className, compact }: Props) {
   const { isAuthed } = useAuth();
-  const { settings } = useSettings();
-  const shortsIntent = "auto" as const;
   const { copied, share } = useShareUrl();
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const hideVideo = useShortsFeedbackStore((s) => s.hideVideo);
-  const hideChannel = useShortsFeedbackStore((s) => s.hideChannel);
   const {
     add: addFavorite,
     remove: removeFavorite,
@@ -44,12 +31,6 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
 
   const favorited = isInFavorites(stream.id);
   const watchLater = isInWatchLater(stream.id);
-
-  useEffect(() => {
-    if (!toastMsg) return;
-    const timer = setTimeout(() => setToastMsg(null), 1800);
-    return () => clearTimeout(timer);
-  }, [toastMsg]);
 
   function requireAuth(): boolean {
     if (isAuthed) return true;
@@ -70,10 +51,6 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
       thumbnail: stream.thumbnail,
       duration: stream.duration,
     });
-    trackRecommendationEvent("favorite", stream, {
-      serviceId: settings.defaultService,
-      intent: shortsIntent,
-    });
   }
 
   async function toggleWatchLater() {
@@ -88,28 +65,11 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
       thumbnail: stream.thumbnail,
       duration: stream.duration,
     });
-    trackRecommendationEvent("watch_later_add", stream, {
-      serviceId: settings.defaultService,
-      intent: shortsIntent,
-    });
   }
 
   function handleShare() {
     const watchUrl = `${window.location.origin}/watch?v=${encodeURIComponent(stream.id)}`;
     void share(watchUrl);
-  }
-
-  function markNotInterested() {
-    sendRecommendationFeedback("not_interested", stream);
-    hideVideo(stream.id);
-    setToastMsg("Understood. We will fine-tune your Shorts.");
-  }
-
-  function showLessFromChannel() {
-    if (!stream.channelUrl) return;
-    sendRecommendationFeedback("less_from_channel", stream);
-    hideChannel(stream.channelUrl);
-    setToastMsg("Okay. We will show less from this channel.");
   }
 
   return (
@@ -133,20 +93,6 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
         onClick={() => void toggleWatchLater()}
       />
       <ShortsActionButton
-        icon={Ban}
-        label="Not interested"
-        compact={compact}
-        onClick={markNotInterested}
-      />
-      <ShortsActionButton
-        icon={UserMinus}
-        label="Less channel"
-        stateLabel="Less channel"
-        compact={compact}
-        onClick={showLessFromChannel}
-        disabled={!stream.channelUrl}
-      />
-      <ShortsActionButton
         icon={MessageCircle}
         label="Comments"
         compact={compact}
@@ -159,7 +105,6 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
         compact={compact}
         onClick={handleShare}
       />
-      <Toast message={toastMsg} />
     </div>
   );
 }

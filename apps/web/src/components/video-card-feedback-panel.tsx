@@ -1,9 +1,8 @@
 import { useAuth } from "../hooks/use-auth";
 import { useBlocked } from "../hooks/use-blocked";
-import { sendRecommendationFeedback } from "../lib/recommendation-tracker";
 import { goto } from "../lib/route-redirect";
 import type { VideoStream } from "../types/stream";
-import { RecommendationFeedbackDropdown } from "./recommendation-feedback-dropdown";
+import { VideoBlockActionsDropdown } from "./video-block-actions-dropdown";
 
 type Props = {
   stream: VideoStream;
@@ -49,25 +48,9 @@ export function VideoCardFeedbackPanel({ stream, anchorEl, onClose }: Props) {
   }
 
   return (
-    <RecommendationFeedbackDropdown
-      stream={stream}
+    <VideoBlockActionsDropdown
       anchorEl={anchorEl}
       onClose={onClose}
-      onNotInterested={() =>
-        sendRecommendationFeedback("not_interested", {
-          id: stream.id,
-          channelUrl: stream.channelUrl,
-        })
-      }
-      onLessFromChannel={
-        stream.channelUrl
-          ? () =>
-              sendRecommendationFeedback("less_from_channel", {
-                id: stream.id,
-                channelUrl: stream.channelUrl,
-              })
-          : undefined
-      }
       onToggleVideoBlock={toggleVideoBlock}
       onToggleChannelBlock={stream.channelUrl ? toggleChannelBlock : undefined}
       videoBlocked={videoBlocked}

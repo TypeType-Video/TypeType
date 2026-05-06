@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { fetchSearch } from "../lib/api";
 import { fetchShortsRecommendations, type RecommendationIntent } from "../lib/api-recommendations";
 import { fetchSubscriptionShorts } from "../lib/api-user";
-import { useShortsFeedbackStore } from "../stores/shorts-feedback-store";
 import type { VideoStream } from "../types/stream";
 import {
   blendRecommendationsWithSubscriptions,
@@ -31,8 +30,6 @@ export function useShortsFeed(): ShortsFeed {
   const { authReady, isAuthed } = useAuth();
   const { settings } = useSettings();
   const { filter } = useBlockedFilter();
-  const hiddenVideoIds = useShortsFeedbackStore((s) => s.hiddenVideoIds);
-  const hiddenChannelUrls = useShortsFeedbackStore((s) => s.hiddenChannelUrls);
   const intent: RecommendationIntent = "auto";
 
   const recommendations = useInfiniteQuery({
@@ -80,13 +77,7 @@ export function useShortsFeed(): ShortsFeed {
         ? blendRecommendationsWithSubscriptions(recommendationShorts, fallbackShorts)
         : fallbackShorts
       : fromDiscovery(discovery.data?.pages);
-    return filter(
-      interleaveByChannel(dedupeShorts(merged)).filter((stream) => {
-        if (hiddenVideoIds.includes(stream.id)) return false;
-        if (!stream.channelUrl) return true;
-        return !hiddenChannelUrls.includes(stream.channelUrl);
-      }),
-    );
+    return filter(interleaveByChannel(dedupeShorts(merged)));
   }, [
     isAuthed,
     hasRecommendationShorts,
@@ -94,8 +85,6 @@ export function useShortsFeed(): ShortsFeed {
     fallbackSubscriptions.data,
     discovery.data,
     filter,
-    hiddenVideoIds,
-    hiddenChannelUrls,
   ]);
 
   const useRecommendations = authReady && isAuthed && hasRecommendationShorts;

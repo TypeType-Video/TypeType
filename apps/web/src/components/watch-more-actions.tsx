@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
 import { useBlocked } from "../hooks/use-blocked";
-import { sendRecommendationFeedback } from "../lib/recommendation-tracker";
 import { goto } from "../lib/route-redirect";
 import type { VideoStream } from "../types/stream";
-import { RecommendationFeedbackDropdown } from "./recommendation-feedback-dropdown";
+import { VideoBlockActionsDropdown } from "./video-block-actions-dropdown";
 import { MoreIcon } from "./watch-icons";
 
 type Props = {
@@ -55,20 +54,6 @@ export function WatchMoreActions({ stream, isAuthed, onSaved, className }: Props
     onSaved(`Channel blocked: ${stream.channelName}`);
   }
 
-  function handleNotInterested() {
-    sendRecommendationFeedback("not_interested", { id: stream.id, channelUrl: stream.channelUrl });
-    onSaved("We'll show fewer videos like this");
-  }
-
-  function handleLessFromChannel() {
-    if (!stream.channelUrl) return;
-    sendRecommendationFeedback("less_from_channel", {
-      id: stream.id,
-      channelUrl: stream.channelUrl,
-    });
-    onSaved(`We'll show less from ${stream.channelName}`);
-  }
-
   return (
     <>
       <button
@@ -81,12 +66,9 @@ export function WatchMoreActions({ stream, isAuthed, onSaved, className }: Props
         More
       </button>
       {menuOpen && (
-        <RecommendationFeedbackDropdown
-          stream={stream}
+        <VideoBlockActionsDropdown
           anchorEl={menuAnchorRef.current}
           onClose={() => setMenuOpen(false)}
-          onNotInterested={handleNotInterested}
-          onLessFromChannel={stream.channelUrl ? handleLessFromChannel : undefined}
           onToggleVideoBlock={toggleVideoBlock}
           onToggleChannelBlock={stream.channelUrl ? toggleChannelBlock : undefined}
           videoBlocked={videoBlocked}

@@ -53,7 +53,6 @@ export type SettingsItem = {
   defaultSubtitleLanguage: string;
   defaultAudioLanguage: string;
   preferOriginalLanguage: boolean;
-  recommendationPersonalizationEnabled: boolean;
 };
 
 export type SearchHistoryItem = {

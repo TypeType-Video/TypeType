@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ShortsPlayerStage } from "../components/shorts-player-stage";
 import { ShortsShellLoader } from "../components/shorts-shell-loader";
 import { useMobile } from "../hooks/use-mobile";
@@ -13,11 +13,8 @@ import {
   getOriginalAudioTrackId,
   getPreferredDefaultAudioTrackId,
 } from "../lib/audio-track";
-import { trackRecommendationEvent } from "../lib/recommendation-tracker";
 import { useShortsNavigation } from "../lib/shorts-navigation";
-import { trackShortsAutoAdvance, trackShortsUserMove } from "../lib/shorts-tracking";
 import { useUiStore } from "../stores/ui-store";
-import type { VideoStream } from "../types/stream";
 
 type Props = {
   targetUrl?: string;
@@ -27,30 +24,13 @@ export function ShortsPlayerShell({ targetUrl }: Props) {
   const isMobile = useMobile();
   const { shorts, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useShortsFeed();
   const { settings, update, query: settingsQuery } = useSettings();
-  const shortsIntent = "auto" as const;
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const playerRef = useRef<HTMLDivElement>(null);
-  const activeEnteredAtRef = useRef<number>(Date.now());
-  const activeStreamRef = useRef<VideoStream | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const settingsReady =
     (settingsQuery.isSuccess && !settingsQuery.isPlaceholderData) || settingsQuery.isError;
 
-  const onMove = (delta: number, reason: "user" | "auto") => {
-    const stream = activeStreamRef.current;
-    if (reason !== "user" || delta === 0 || !stream) return;
-    trackShortsUserMove(stream, activeEnteredAtRef.current, settings.defaultService, shortsIntent);
-  };
-
   const handleAutoNext = () => {
-    const stream = activeStreamRef.current;
-    if (stream)
-      trackShortsAutoAdvance(
-        stream,
-        activeEnteredAtRef.current,
-        settings.defaultService,
-        shortsIntent,
-      );
     moveBy(1, "auto");
   };
   const { index, moveBy, moveTo, onWheel, onTouchStart, onTouchEnd } = useShortsNavigation(
@@ -58,22 +38,9 @@ export function ShortsPlayerShell({ targetUrl }: Props) {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-    onMove,
   );
   const { active, activeId, stream, streamQuery, current, errorMessage, isMemberOnlyShort } =
     useShortsActiveStream({ shorts, index });
-  useEffect(() => {
-    if (!active) {
-      activeStreamRef.current = null;
-      return;
-    }
-    activeStreamRef.current = active;
-    activeEnteredAtRef.current = Date.now();
-    trackRecommendationEvent("impression", active, {
-      serviceId: settings.defaultService,
-      intent: shortsIntent,
-    });
-  }, [active, settings.defaultService, shortsIntent]);
   const originalAudioTrackId = getOriginalAudioTrackId(stream);
   const preferredDefaultAudioTrackId = getPreferredDefaultAudioTrackId(stream);
   const originalAudioLocale = getOriginalAudioLocale(stream);

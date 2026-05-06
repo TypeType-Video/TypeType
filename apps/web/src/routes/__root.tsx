@@ -4,7 +4,7 @@ import { Navbar } from "../components/navbar";
 import { Sidebar } from "../components/sidebar";
 import { useAuth } from "../hooks/use-auth";
 import { useMobile } from "../hooks/use-mobile";
-import { useRecommendationOnboardingState } from "../hooks/use-recommendation-onboarding";
+import { useSessionActivityReporting } from "../hooks/use-session-activity-reporting";
 import { isAdminRoute, isAuthPage, requiresAuth } from "../lib/auth-routes";
 import { bootstrapSession } from "../lib/auth-session";
 import { applyTheme } from "../lib/theme";
@@ -34,11 +34,9 @@ function RootLayout() {
   const cinemaMode = useWatchLayoutStore((s) => s.cinemaMode);
   const { isAuthed, isAdmin, status } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const onboardingPage = pathname === "/onboarding";
   const shortsPage = pathname === "/shorts";
   const watchCinemaPage = pathname === "/watch" && cinemaMode;
-  const onboardingState = useRecommendationOnboardingState(status === "authenticated");
-  const onboardingRequired = onboardingState.data?.requiresOnboarding === true;
+  useSessionActivityReporting();
 
   useEffect(() => {
     void bootstrapSession();
@@ -74,34 +72,12 @@ function RootLayout() {
       window.location.replace("/");
       return;
     }
-    if (status !== "authenticated") return;
-    if (onboardingState.isError) return;
-    if (onboardingRequired && !onboardingPage) {
-      window.location.replace("/onboarding");
-      return;
-    }
-  }, [
-    isAuthed,
-    isAdmin,
-    status,
-    pathname,
-    onboardingState.isError,
-    onboardingRequired,
-    onboardingPage,
-  ]);
+  }, [isAuthed, isAdmin, status, pathname]);
 
   if (status === "loading" && (requiresAuth(pathname) || isAdminRoute(pathname))) {
     return (
       <div className="min-h-screen bg-app text-fg flex items-center justify-center">
         <p className="text-sm text-fg-muted">Loading session...</p>
-      </div>
-    );
-  }
-
-  if (status === "authenticated" && !onboardingPage && onboardingState.isPending) {
-    return (
-      <div className="min-h-screen bg-app text-fg flex items-center justify-center">
-        <p className="text-sm text-fg-muted">Loading recommendations...</p>
       </div>
     );
   }
