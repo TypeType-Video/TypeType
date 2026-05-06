@@ -38,6 +38,17 @@ The app focuses on a calm interface for watching videos, managing subscriptions,
 - Download jobs through a separate downloader service.
 - A Docker Compose stack for self-hosting the frontend, backend, cache, database, token service, and artifact storage.
 
+## Source repositories
+
+If you only want the source code, clone the repositories directly:
+
+```sh
+git clone https://github.com/Priveetee/TypeType.git
+git clone https://github.com/Priveetee/TypeType-Server.git
+git clone https://github.com/Priveetee/TypeType-Downloader.git
+git clone https://github.com/Priveetee/TypeType-Token.git
+```
+
 ## Stack
 
 | Role | Tool |
@@ -58,13 +69,19 @@ The app focuses on a calm interface for watching videos, managing subscriptions,
 
 ## Self-hosting
 
-The fastest path is the installer:
+The installer is for running the stack, not just cloning the source repositories:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash
 ```
 
 It installs to `~/typetype-stack`, generates local downloader credentials, chooses free ports when needed, starts the services, and bootstraps Garage.
+
+To download stack files without starting Docker:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash -s -- --download-only
+```
 
 For an interactive setup from a cloned repository:
 
@@ -121,10 +138,6 @@ bun run knip
 bun run sherif
 ```
 
-## Docker images
-
-Images are published to GitHub Container Registry: `typetype`, `typetype-server`, `typetype-downloader`, and `typetype-token`. Published tags include `latest`, `main`, branch tags, release tags, and `sha-<short-sha>`.
-
 ## Updating
 
 Update the whole stack:
@@ -141,13 +154,6 @@ Update only the frontend:
 docker compose pull typetype
 docker compose up -d --force-recreate --no-deps typetype
 ```
-
-## Related projects
-
-- [TypeType-Server](https://github.com/Priveetee/TypeType-Server) is the Kotlin backend.
-- [TypeType-Downloader](https://github.com/Priveetee/TypeType-Downloader) handles downloadable artifacts.
-- [TypeType-Token](https://github.com/Priveetee/TypeType-Token) provides proof-of-origin tokens.
-- [TypeType-Android](https://github.com/Priveetee/TypeType-Android) is the native Android client.
 
 ## Acknowledgments
 

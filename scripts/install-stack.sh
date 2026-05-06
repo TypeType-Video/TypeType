@@ -311,8 +311,10 @@ if [[ ${START_STACK} -eq 0 ]]; then
 fi
 
 if ! confirm_tty "Proceed with Docker pull + startup in ${INSTALL_DIR}?"; then
-  echo "[install] Cancelled by user."
-  exit 1
+  echo "[install] Stack files are ready in ${INSTALL_DIR}."
+  echo "[install] Docker startup skipped."
+  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/setup-stack.sh"
+  exit 0
 fi
 
 echo "[install] Pulling Docker images..."
