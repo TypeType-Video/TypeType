@@ -19,7 +19,6 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlaylistsRouteImport } from './routes/playlists'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as HistoryRouteImport } from './routes/history'
@@ -27,7 +26,6 @@ import { Route as ChannelRouteImport } from './routes/channel'
 import { Route as AdminConsoleRouteImport } from './routes/admin-console'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ImportIndexRouteImport } from './routes/import/index'
-import { Route as SettingsRecommendationsRouteImport } from './routes/settings/recommendations'
 import { Route as PlaylistsIdRouteImport } from './routes/playlists_.$id'
 import { Route as ImportYoutubeRouteImport } from './routes/import/youtube'
 import { Route as ImportPipepipeRouteImport } from './routes/import/pipepipe'
@@ -82,11 +80,6 @@ const PlaylistsRoute = PlaylistsRouteImport.update({
   path: '/playlists',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -122,11 +115,6 @@ const ImportIndexRoute = ImportIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ImportRoute,
 } as any)
-const SettingsRecommendationsRoute = SettingsRecommendationsRouteImport.update({
-  id: '/recommendations',
-  path: '/recommendations',
-  getParentRoute: () => SettingsRoute,
-} as any)
 const PlaylistsIdRoute = PlaylistsIdRouteImport.update({
   id: '/playlists_/$id',
   path: '/playlists/$id',
@@ -150,21 +138,19 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
-  '/onboarding': typeof OnboardingRoute
   '/playlists': typeof PlaylistsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
-  '/settings/recommendations': typeof SettingsRecommendationsRoute
   '/import/': typeof ImportIndexRoute
 }
 export interface FileRoutesByTo {
@@ -173,21 +159,19 @@ export interface FileRoutesByTo {
   '/channel': typeof ChannelRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
-  '/onboarding': typeof OnboardingRoute
   '/playlists': typeof PlaylistsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
-  '/settings/recommendations': typeof SettingsRecommendationsRoute
   '/import': typeof ImportIndexRoute
 }
 export interface FileRoutesById {
@@ -198,21 +182,19 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
-  '/onboarding': typeof OnboardingRoute
   '/playlists': typeof PlaylistsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/shorts': typeof ShortsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists_/$id': typeof PlaylistsIdRoute
-  '/settings/recommendations': typeof SettingsRecommendationsRoute
   '/import/': typeof ImportIndexRoute
 }
 export interface FileRouteTypes {
@@ -224,7 +206,6 @@ export interface FileRouteTypes {
     | '/history'
     | '/import'
     | '/login'
-    | '/onboarding'
     | '/playlists'
     | '/privacy'
     | '/profile'
@@ -238,7 +219,6 @@ export interface FileRouteTypes {
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
-    | '/settings/recommendations'
     | '/import/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -247,7 +227,6 @@ export interface FileRouteTypes {
     | '/channel'
     | '/history'
     | '/login'
-    | '/onboarding'
     | '/playlists'
     | '/privacy'
     | '/profile'
@@ -261,7 +240,6 @@ export interface FileRouteTypes {
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
-    | '/settings/recommendations'
     | '/import'
   id:
     | '__root__'
@@ -271,7 +249,6 @@ export interface FileRouteTypes {
     | '/history'
     | '/import'
     | '/login'
-    | '/onboarding'
     | '/playlists'
     | '/privacy'
     | '/profile'
@@ -285,7 +262,6 @@ export interface FileRouteTypes {
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists_/$id'
-    | '/settings/recommendations'
     | '/import/'
   fileRoutesById: FileRoutesById
 }
@@ -296,14 +272,13 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   ImportRoute: typeof ImportRouteWithChildren
   LoginRoute: typeof LoginRoute
-  OnboardingRoute: typeof OnboardingRoute
   PlaylistsRoute: typeof PlaylistsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
-  SettingsRoute: typeof SettingsRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   ShortsRoute: typeof ShortsRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   WatchRoute: typeof WatchRoute
@@ -382,13 +357,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlaylistsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -438,13 +406,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportIndexRouteImport
       parentRoute: typeof ImportRoute
     }
-    '/settings/recommendations': {
-      id: '/settings/recommendations'
-      path: '/recommendations'
-      fullPath: '/settings/recommendations'
-      preLoaderRoute: typeof SettingsRecommendationsRouteImport
-      parentRoute: typeof SettingsRoute
-    }
     '/playlists_/$id': {
       id: '/playlists_/$id'
       path: '/playlists/$id'
@@ -484,18 +445,6 @@ const ImportRouteChildren: ImportRouteChildren = {
 const ImportRouteWithChildren =
   ImportRoute._addFileChildren(ImportRouteChildren)
 
-interface SettingsRouteChildren {
-  SettingsRecommendationsRoute: typeof SettingsRecommendationsRoute
-}
-
-const SettingsRouteChildren: SettingsRouteChildren = {
-  SettingsRecommendationsRoute: SettingsRecommendationsRoute,
-}
-
-const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
-  SettingsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminConsoleRoute: AdminConsoleRoute,
@@ -503,14 +452,13 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   ImportRoute: ImportRouteWithChildren,
   LoginRoute: LoginRoute,
-  OnboardingRoute: OnboardingRoute,
   PlaylistsRoute: PlaylistsRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
-  SettingsRoute: SettingsRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   ShortsRoute: ShortsRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   WatchRoute: WatchRoute,
