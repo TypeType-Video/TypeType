@@ -78,16 +78,6 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    label: "Profile",
-    to: "/profile",
-    icon: (
-      <>
-        <circle cx="12" cy="8" r="3" />
-        <path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" />
-      </>
-    ),
-  },
-  {
     label: "Privacy",
     to: "/privacy",
     icon: (

@@ -112,7 +112,7 @@ Protected user routes:
 - `/history`, `/subscriptions`, `/subscriptions/feed`, `/subscriptions/shorts`
 - `/playlists`, `/watch-later`, `/progress`, `/favorites`, `/settings`
 - `/search-history`, `/blocked/channels`, `/blocked/videos`
-- `/recommendations/events`, `/recommendations/feedback`, `/recommendations/home`
+- `/recommendations/home`, `/recommendations/shorts`
 - `/recommendations/home/metrics`, `/restore/pipepipe`, `/imports/youtube-takeout`, `/bug-reports`
 
 Protected admin routes:
@@ -125,14 +125,12 @@ Protected admin routes:
 - YouTube uses `/streams/native-manifest` first, then fallback to `/streams/manifest` on `422`
 - NicoNico can return `422` on `/streams/manifest`; expected for non-DASH cases
 - `GET /search-history` supports backend pagination: `page` and `limit`, total from `X-Total-Count`
-- `settings.recommendationPersonalizationEnabled=false` disables recommendation event/feedback personalization while keeping Home recommendations available
-- Shorts recommendations can emit `short_skip` with optional `watchDurationMs` for skip-depth signals
+- Home and Shorts recommendations are fetched without client event reporting
 
 ## Recommendation and Privacy Flow
 
-- Frontend stores user preference through `PUT /settings` (`recommendationPersonalizationEnabled`).
-- Recommendation events are posted to `/recommendations/events` with optional fields such as `watchRatio` and `watchDurationMs`.
 - Home feed requests call `/recommendations/home` with `intent` (currently default `auto`).
+- Shorts feed requests call `/recommendations/shorts` with `intent` (currently default `auto`).
 - Optional offline quality metrics are available via `/recommendations/home/metrics`.
 
 ## Import and Restore Flow

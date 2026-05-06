@@ -2,8 +2,6 @@ export type RedirectTarget =
   | "/"
   | "/import"
   | "/history"
-  | "/onboarding"
-  | "/settings/recommendations"
   | "/playlists"
   | "/privacy"
   | "/profile"
@@ -16,8 +14,6 @@ const SHORTS_REDIRECT_PREFIX = "/shorts?v=";
 const PROTECTED_PREFIXES = [
   "/import",
   "/history",
-  "/onboarding",
-  "/settings/recommendations",
   "/playlists",
   "/privacy",
   "/profile",
@@ -50,8 +46,6 @@ export function sanitizeRedirect(value: string | undefined): RedirectTarget {
   if (value.startsWith(SHORTS_REDIRECT_PREFIX)) return value as `/shorts?v=${string}`;
   if (value === "/import") return "/import";
   if (value === "/history") return "/history";
-  if (value === "/onboarding") return "/onboarding";
-  if (value === "/settings/recommendations") return "/settings/recommendations";
   if (value === "/privacy") return "/privacy";
   if (value === "/profile") return "/profile";
   if (value === "/settings") return "/settings";
