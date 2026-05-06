@@ -3,22 +3,30 @@ import { useEffect, useState } from "react";
 import { AdminBugReportsSection } from "../components/admin-bug-reports-section";
 import { AdminConsoleHeader } from "../components/admin-console-header";
 import { AdminConsoleNav } from "../components/admin-console-nav";
+import { AdminSessionsSection } from "../components/admin-sessions-section";
 import { AdminSettingsSection } from "../components/admin-settings-section";
 import { AdminUsersSection } from "../components/admin-users-section";
 import { Toast } from "../components/toast";
 import { useAuth } from "../hooks/use-auth";
 import { goto } from "../lib/route-redirect";
 
-type AdminSection = "settings" | "users" | "issues";
+type AdminSection = "settings" | "users" | "sessions" | "issues";
 
 function isSection(value: unknown): value is AdminSection {
-  return value === "settings" || value === "users" || value === "issues";
+  return value === "settings" || value === "users" || value === "sessions" || value === "issues";
 }
 
 function availableSections(isAdmin: boolean, isModerator: boolean): AdminSection[] {
-  if (isAdmin) return ["settings", "users", "issues"];
+  if (isAdmin) return ["settings", "users", "sessions", "issues"];
   if (isModerator) return ["issues"];
   return [];
+}
+
+function sectionLabel(section: AdminSection): string {
+  if (section === "issues") return "Issues";
+  if (section === "users") return "Users";
+  if (section === "sessions") return "Sessions";
+  return "Settings";
 }
 
 function AdminConsolePage() {
@@ -51,7 +59,7 @@ function AdminConsolePage() {
       <AdminConsoleNav
         items={sections.map((key) => ({
           key,
-          label: key === "issues" ? "Issues" : key === "users" ? "Users" : "Settings",
+          label: sectionLabel(key),
         }))}
         active={activeSection}
         onSelect={(next) => navigate({ search: { section: next } })}
@@ -63,6 +71,7 @@ function AdminConsolePage() {
       {activeSection === "users" && isAdmin && (
         <AdminUsersSection enabled={isAdmin} currentUserId={me?.id ?? null} onToast={setToast} />
       )}
+      {activeSection === "sessions" && isAdmin && <AdminSessionsSection enabled={isAdmin} />}
       {activeSection === "issues" && (
         <AdminBugReportsSection enabled={canAccessAdmin} isAdmin={isAdmin} onToast={setToast} />
       )}
