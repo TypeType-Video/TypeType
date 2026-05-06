@@ -39,9 +39,15 @@ function WatchPage() {
 
   const addToHistoryRef = useRef(add.mutate);
   addToHistoryRef.current = add.mutate;
+  const historyAddedForRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!stream) return;
+    if (authReady && isAuthed && progressFetch.isPending) return;
+    if (historyAddedForRef.current === stream.id) return;
+    const historyPositionMs = progressFetch.data?.position ?? (stream.startPosition ?? 0) * 1000;
+    const progress = Math.max(0, Math.round(historyPositionMs / 1000));
+    historyAddedForRef.current = stream.id;
     addToHistoryRef.current({
       url: stream.id,
       title: stream.title,
@@ -50,9 +56,9 @@ function WatchPage() {
       channelUrl: stream.channelUrl ?? "",
       channelAvatar: stream.rawChannelAvatar,
       duration: stream.duration,
-      progress: 0,
+      progress,
     });
-  }, [stream]);
+  }, [authReady, isAuthed, progressFetch.data?.position, progressFetch.isPending, stream]);
 
   if (isLoading) return <PlayerOnlyLoader />;
   if (authReady && isAuthed && progressFetch.isPending) return <PlayerOnlyLoader />;

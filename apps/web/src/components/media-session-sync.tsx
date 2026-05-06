@@ -136,7 +136,14 @@ export function MediaSessionSync({
     if (!setPositionState) return;
     if (!Number.isFinite(duration) || duration <= 0) return;
     if (!Number.isFinite(currentTime) || currentTime < 0) return;
-    setPositionState({ duration, playbackRate, position: Math.min(duration, currentTime) });
+    const safePlaybackRate = Number.isFinite(playbackRate) && playbackRate > 0 ? playbackRate : 1;
+    try {
+      setPositionState({
+        duration,
+        playbackRate: safePlaybackRate,
+        position: Math.min(duration, currentTime),
+      });
+    } catch {}
   }, [duration, currentTime, playbackRate]);
 
   return null;
