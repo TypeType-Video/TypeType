@@ -4,6 +4,12 @@ import { authed, authedJson } from "./authed";
 
 import { API_BASE as BASE } from "./env";
 
+async function throwIfFailed(res: Response, fallback: string): Promise<void> {
+  if (res.ok) return;
+  const body = await res.json().catch(() => ({ error: fallback }));
+  throw new ApiError((body as { error: string }).error, res.status);
+}
+
 export async function fetchProgress(videoUrl: string): Promise<ProgressItem> {
   const res = await authed(`${BASE}/progress/${encodeURIComponent(videoUrl)}`);
   if (res.status === 404) return { videoUrl, position: 0, updatedAt: 0 };
@@ -42,7 +48,10 @@ export async function blockChannel(
 }
 
 export async function unblockChannel(url: string): Promise<void> {
-  await authed(`${BASE}/blocked/channels/${encodeURIComponent(url)}`, { method: "DELETE" });
+  const res = await authed(`${BASE}/blocked/channels/${encodeURIComponent(url)}`, {
+    method: "DELETE",
+  });
+  await throwIfFailed(res, "unblock failed");
 }
 
 export function fetchBlockedVideos(): Promise<BlockedItem[]> {
@@ -58,5 +67,8 @@ export async function blockVideo(url: string, global = false): Promise<void> {
 }
 
 export async function unblockVideo(url: string): Promise<void> {
-  await authed(`${BASE}/blocked/videos/${encodeURIComponent(url)}`, { method: "DELETE" });
+  const res = await authed(`${BASE}/blocked/videos/${encodeURIComponent(url)}`, {
+    method: "DELETE",
+  });
+  await throwIfFailed(res, "unblock failed");
 }

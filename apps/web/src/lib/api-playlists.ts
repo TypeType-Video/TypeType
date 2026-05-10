@@ -50,7 +50,7 @@ export async function removeVideoFromPlaylist(playlistId: string, videoUrl: stri
     `${BASE}/playlists/${encodeURIComponent(playlistId)}/videos/${encodeURIComponent(videoUrl)}`,
     { method: "DELETE" },
   );
-  if (!res.ok && res.status !== 404) {
+  if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "remove failed" }));
     throw new ApiError((body as { error: string }).error, res.status);
   }
