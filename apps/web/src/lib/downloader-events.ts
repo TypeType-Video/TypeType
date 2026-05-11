@@ -12,8 +12,11 @@ function toStringOrNull(value: unknown): string | null {
 
 function toStage(value: unknown): DownloaderJobResponse["stage"] {
   if (value === "queued") return "queued";
+  if (value === "extract") return "extract";
   if (value === "running") return "running";
+  if (value === "download") return "download";
   if (value === "downloading") return "downloading";
+  if (value === "mux") return "mux";
   if (value === "finalizing") return "finalizing";
   if (value === "done") return "done";
   if (value === "cached") return "cached";
@@ -94,6 +97,7 @@ export function subscribeDownloaderEvents(
     }
   };
   eventSource.addEventListener("progress", onProgress);
+  eventSource.addEventListener("message", onProgress);
   eventSource.onerror = () => {
     if (closed) return;
     handlers.onError();
@@ -103,6 +107,7 @@ export function subscribeDownloaderEvents(
   return () => {
     closed = true;
     eventSource.removeEventListener("progress", onProgress);
+    eventSource.removeEventListener("message", onProgress);
     eventSource.close();
   };
 }

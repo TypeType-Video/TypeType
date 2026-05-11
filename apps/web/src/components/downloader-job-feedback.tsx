@@ -1,17 +1,26 @@
-import type { DownloaderJobStage, DownloaderResolvedSelection } from "../types/downloader";
-import { CardLiquidFill } from "./card-liquid-fill";
-import { DownloadPhaseMetrics } from "./download-phase-metrics";
+import {
+  DOWNLOADER_STEPS,
+  downloaderProgressValue,
+  downloaderStageIndex,
+  downloaderStatusLabel,
+  downloaderStatusMessage,
+  isCancelledDownloaderJob,
+  isFailedDownloaderJob,
+  shouldShowDownloaderProgress,
+} from "../lib/downloader-display";
+import type {
+  DownloaderJobStage,
+  DownloaderJobStatus,
+  DownloaderResolvedSelection,
+} from "../types/downloader";
 
 type Props = {
+  status: DownloaderJobStatus | null;
   stage: DownloaderJobStage | null;
   progressPercent: number | null;
   resolved: DownloaderResolvedSelection | null;
   errorCode: string | null;
   errorText: string | null;
-  tokenFetchMs: number | null;
-  ytdlpMs: number | null;
-  uploadMs: number | null;
-  totalMs: number | null;
   immersive?: boolean;
   forceWaiting?: boolean;
 };
@@ -39,94 +48,72 @@ function exactUnavailableMessage(resolved: DownloaderResolvedSelection | null): 
   return "Selected format is unavailable. Pick another format.";
 }
 
-function stageLabel(stage: DownloaderJobStage | null): string {
-  if (stage === "queued") return "Queued";
-  if (stage === "running" || stage === "downloading") return "Downloading";
-  if (stage === "finalizing") return "Finalizing";
-  if (stage === "cached") return "Ready from cache";
-  if (stage === "done") return "Done";
-  if (stage === "cancelled") return "Cancelled";
-  if (stage === "failed") return "Failed";
-  return "Preparing";
-}
-
 export function DownloaderJobFeedback({
+  status,
   stage,
   progressPercent,
   resolved,
   errorCode,
   errorText,
-  tokenFetchMs,
-  ytdlpMs,
-  uploadMs,
-  totalMs,
   immersive = false,
   forceWaiting = false,
 }: Props) {
-  const normalizedProgress =
-    typeof progressPercent === "number" ? Math.min(100, Math.max(0, progressPercent)) : 0;
-  const hasProgress = typeof progressPercent === "number";
   const resolvedLabel = formatResolved(resolved);
   const visibleError =
     errorCode === "exact_selection_unavailable"
       ? exactUnavailableMessage(resolved)
       : (errorText ?? null);
-  const showWaiting =
-    (forceWaiting ||
-      stage === "queued" ||
-      stage === "running" ||
-      stage === "downloading" ||
-      stage === "finalizing") &&
-    hasProgress &&
-    !visibleError;
+  const cancelled = isCancelledDownloaderJob(status, stage, errorCode);
+  const failed = isFailedDownloaderJob(status, stage, errorCode);
+  const label = downloaderStatusLabel(status, stage, errorCode, forceWaiting);
+  const message = downloaderStatusMessage(status, stage, errorCode, visibleError, forceWaiting);
+  const progress = downloaderProgressValue(status, stage, progressPercent, forceWaiting);
+  const activeStep = downloaderStageIndex(status, stage);
+  const showProgress = shouldShowDownloaderProgress(status, forceWaiting) && !failed && !cancelled;
+  const showPercent = typeof progressPercent === "number" && status === "running";
+
+  if (!status && !forceWaiting && !resolvedLabel && !visibleError) return null;
 
   return (
-    <>
-      {showWaiting && (
-        <div
-          className={
-            immersive
-              ? "h-[min(52svh,24rem)] min-h-52 overflow-hidden rounded-xl border border-border bg-app/80 p-1.5"
-              : "mt-2 rounded-md border border-border bg-surface/60 p-1.5"
-          }
-        >
-          <div className="h-full overflow-hidden rounded-lg border border-border bg-app/70">
-            <img
-              src="/downloader-waiting.gif"
-              alt="Download in progress"
-              className="h-full w-full object-contain"
-              loading="lazy"
-            />
-          </div>
+    <section
+      className={`mt-3 rounded-2xl border p-3 ${immersive ? "bg-surface/80" : "bg-surface/60"} ${failed ? "border-danger/50" : "border-border-strong"}`}
+      role={failed ? "alert" : "status"}
+      aria-live="polite"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-fg">{label}</p>
+          <p className={`mt-1 text-xs ${failed ? "text-danger-strong" : "text-fg-muted"}`}>
+            {message}
+          </p>
+        </div>
+        {showPercent && (
+          <span className="text-sm font-semibold text-fg">{Math.round(progress)}%</span>
+        )}
+      </div>
+      {showProgress && (
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-app">
+          <div
+            className="h-full rounded-full bg-fg transition-[width] duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       )}
-      {showWaiting && (
-        <div className="mt-2 rounded-lg border border-border bg-surface/70 p-2">
-          <div className="relative h-11 overflow-hidden rounded-md border border-border-strong bg-app/80">
-            <CardLiquidFill progress={normalizedProgress} />
-            <div className="absolute inset-0 flex items-center justify-between px-2 text-xs">
-              <span className="text-fg">{stageLabel(stage)}</span>
-              <span className="font-medium text-fg">{normalizedProgress}%</span>
+      {status === "running" && (
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {DOWNLOADER_STEPS.map((step, index) => (
+            <div key={step} className="flex items-center gap-2 text-[11px] text-fg-muted">
+              <span
+                className={`h-2 w-2 rounded-full ${index <= activeStep ? "bg-fg" : "bg-surface-soft"}`}
+              />
+              <span>{step}</span>
             </div>
-          </div>
+          ))}
         </div>
       )}
-      {resolvedLabel && !showWaiting && !visibleError && (
-        <p className="mt-2 text-xs text-fg-muted">Selected: {resolvedLabel}</p>
+      {resolvedLabel && !failed && (
+        <p className="mt-3 truncate text-xs text-fg-soft">Selected: {resolvedLabel}</p>
       )}
-      {visibleError && (
-        <p className="mt-2 text-xs text-danger-strong" role="alert">
-          {visibleError}
-        </p>
-      )}
-      {!visibleError && (
-        <DownloadPhaseMetrics
-          tokenFetchMs={tokenFetchMs}
-          ytdlpMs={ytdlpMs}
-          uploadMs={uploadMs}
-          totalMs={totalMs}
-        />
-      )}
-    </>
+    </section>
   );
 }

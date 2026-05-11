@@ -129,15 +129,12 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
             </div>
           )}
           <DownloaderJobFeedback
+            status={downloader.status}
             stage={downloader.stage}
             progressPercent={downloader.progressPercent}
             resolved={downloader.resolved}
             errorCode={downloader.errorCode}
             errorText={artifactError ?? errorText}
-            tokenFetchMs={downloader.tokenFetchMs}
-            ytdlpMs={downloader.ytdlpMs}
-            uploadMs={downloader.uploadMs}
-            totalMs={downloader.totalMs}
             immersive={showWorkingState}
             forceWaiting={completion.isCompleting}
           />

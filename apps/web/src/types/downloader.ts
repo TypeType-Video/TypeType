@@ -1,11 +1,14 @@
 export type DownloaderMode = "video" | "audio";
 
-type DownloaderJobStatus = "queued" | "running" | "done" | "failed";
+export type DownloaderJobStatus = "queued" | "running" | "done" | "failed";
 
 export type DownloaderJobStage =
   | "queued"
+  | "extract"
   | "running"
+  | "download"
   | "downloading"
+  | "mux"
   | "finalizing"
   | "done"
   | "cached"

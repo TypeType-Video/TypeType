@@ -11,6 +11,7 @@ import type {
   DownloaderCreateJobRequest,
   DownloaderJobResponse,
   DownloaderJobStage,
+  DownloaderJobStatus,
 } from "../types/downloader";
 
 const POLL_MS = 1_500;
@@ -34,7 +35,7 @@ export function useDownloaderJob() {
     });
   }, [jobId]);
 
-  const status = useQuery({
+  const query = useQuery({
     queryKey: ["downloader-job", jobId],
     enabled: typeof jobId === "string" && jobId.length > 0,
     queryFn: () => fetchDownloaderJob(jobId ?? ""),
@@ -51,34 +52,35 @@ export function useDownloaderJob() {
     },
   });
   const job = useMemo(() => {
-    if (!eventJob) return status.data;
-    if (!status.data || status.data.id !== eventJob.id) return eventJob;
-    if (status.data.status === "done" || status.data.status === "failed") {
+    if (!eventJob) return query.data;
+    if (!query.data || query.data.id !== eventJob.id) return eventJob;
+    if (query.data.status === "done" || query.data.status === "failed") {
       return {
         ...eventJob,
-        ...status.data,
-        resolved: status.data.resolved ?? eventJob.resolved,
-        error: status.data.error ?? eventJob.error,
-        errorCode: status.data.errorCode ?? eventJob.errorCode,
-        tokenFetchMs: status.data.tokenFetchMs ?? eventJob.tokenFetchMs,
-        ytdlpMs: status.data.ytdlpMs ?? eventJob.ytdlpMs,
-        uploadMs: status.data.uploadMs ?? eventJob.uploadMs,
-        totalMs: status.data.totalMs ?? eventJob.totalMs,
+        ...query.data,
+        resolved: query.data.resolved ?? eventJob.resolved,
+        error: query.data.error ?? eventJob.error,
+        errorCode: query.data.errorCode ?? eventJob.errorCode,
+        tokenFetchMs: query.data.tokenFetchMs ?? eventJob.tokenFetchMs,
+        ytdlpMs: query.data.ytdlpMs ?? eventJob.ytdlpMs,
+        uploadMs: query.data.uploadMs ?? eventJob.uploadMs,
+        totalMs: query.data.totalMs ?? eventJob.totalMs,
       };
     }
     return {
-      ...status.data,
+      ...query.data,
       ...eventJob,
-      resolved: eventJob.resolved ?? status.data.resolved,
-      error: eventJob.error ?? status.data.error,
-      errorCode: eventJob.errorCode ?? status.data.errorCode,
+      resolved: eventJob.resolved ?? query.data.resolved,
+      error: eventJob.error ?? query.data.error,
+      errorCode: eventJob.errorCode ?? query.data.errorCode,
     };
-  }, [eventJob, status.data]);
+  }, [eventJob, query.data]);
 
-  const isQueued = create.isPending || job?.status === "queued";
-  const isRunning = job?.status === "running";
-  const isDone = job?.status === "done";
-  const isFailed = job?.status === "failed";
+  const status: DownloaderJobStatus | null = create.isPending ? "queued" : (job?.status ?? null);
+  const isQueued = status === "queued";
+  const isRunning = status === "running";
+  const isDone = status === "done";
+  const isFailed = status === "failed";
   const stage: DownloaderJobStage | null = job?.stage ?? null;
   const progressPercent = typeof job?.progressPercent === "number" ? job.progressPercent : null;
   const resolved = job?.resolved ?? null;
@@ -90,11 +92,12 @@ export function useDownloaderJob() {
   const errorText =
     create.error instanceof Error
       ? create.error.message
-      : job?.error || (status.error instanceof Error ? status.error.message : null);
+      : job?.error || (query.error instanceof Error ? query.error.message : null);
 
   function start(payload: DownloaderCreateJobRequest) {
     setEventJob(null);
     setSseUnavailable(false);
+    create.reset();
     create.mutate(payload);
   }
 
@@ -114,6 +117,7 @@ export function useDownloaderJob() {
     openArtifact,
     reset,
     jobId,
+    status,
     stage,
     progressPercent,
     resolved,
