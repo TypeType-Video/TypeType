@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
+  cancelDownloaderJob,
   canUseIosShareFlow,
   createDownloaderJob,
   downloadDownloaderArtifact,
@@ -24,6 +25,11 @@ export function useDownloaderJob() {
     mutationFn: (payload: DownloaderCreateJobRequest) => createDownloaderJob(payload),
   });
   const jobId = create.data?.id;
+  const cancel = useMutation({
+    mutationFn: (id: string) => cancelDownloaderJob(id),
+    onSuccess: (next) =>
+      setEventJob((current) => (current?.id === next.id ? { ...current, ...next } : next)),
+  });
 
   useEffect(() => {
     if (!jobId) return;
@@ -52,29 +58,30 @@ export function useDownloaderJob() {
     },
   });
   const job = useMemo(() => {
-    if (!eventJob) return query.data;
-    if (!query.data || query.data.id !== eventJob.id) return eventJob;
-    if (query.data.status === "done" || query.data.status === "failed") {
+    const queryJob = query.data ?? create.data;
+    if (!eventJob) return queryJob;
+    if (!queryJob || queryJob.id !== eventJob.id) return eventJob;
+    if (queryJob.status === "done" || queryJob.status === "failed") {
       return {
         ...eventJob,
-        ...query.data,
-        resolved: query.data.resolved ?? eventJob.resolved,
-        error: query.data.error ?? eventJob.error,
-        errorCode: query.data.errorCode ?? eventJob.errorCode,
-        tokenFetchMs: query.data.tokenFetchMs ?? eventJob.tokenFetchMs,
-        ytdlpMs: query.data.ytdlpMs ?? eventJob.ytdlpMs,
-        uploadMs: query.data.uploadMs ?? eventJob.uploadMs,
-        totalMs: query.data.totalMs ?? eventJob.totalMs,
+        ...queryJob,
+        resolved: queryJob.resolved ?? eventJob.resolved,
+        error: queryJob.error ?? eventJob.error,
+        errorCode: queryJob.errorCode ?? eventJob.errorCode,
+        tokenFetchMs: queryJob.tokenFetchMs ?? eventJob.tokenFetchMs,
+        ytdlpMs: queryJob.ytdlpMs ?? eventJob.ytdlpMs,
+        uploadMs: queryJob.uploadMs ?? eventJob.uploadMs,
+        totalMs: queryJob.totalMs ?? eventJob.totalMs,
       };
     }
     return {
-      ...query.data,
+      ...queryJob,
       ...eventJob,
-      resolved: eventJob.resolved ?? query.data.resolved,
-      error: eventJob.error ?? query.data.error,
-      errorCode: eventJob.errorCode ?? query.data.errorCode,
+      resolved: eventJob.resolved ?? queryJob.resolved,
+      error: eventJob.error ?? queryJob.error,
+      errorCode: eventJob.errorCode ?? queryJob.errorCode,
     };
-  }, [eventJob, query.data]);
+  }, [create.data, eventJob, query.data]);
 
   const status: DownloaderJobStatus | null = create.isPending ? "queued" : (job?.status ?? null);
   const isQueued = status === "queued";
@@ -92,7 +99,9 @@ export function useDownloaderJob() {
   const errorText =
     create.error instanceof Error
       ? create.error.message
-      : job?.error || (query.error instanceof Error ? query.error.message : null);
+      : cancel.error instanceof Error
+        ? cancel.error.message
+        : job?.error || (query.error instanceof Error ? query.error.message : null);
 
   function start(payload: DownloaderCreateJobRequest) {
     setEventJob(null);
@@ -106,15 +115,22 @@ export function useDownloaderJob() {
     return downloadDownloaderArtifact(jobId, options);
   }
 
+  function cancelJob() {
+    if (!jobId || (status !== "queued" && status !== "running")) return;
+    cancel.mutate(jobId);
+  }
+
   function reset() {
     setEventJob(null);
     setSseUnavailable(false);
+    cancel.reset();
     create.reset();
   }
 
   return {
     start,
     openArtifact,
+    cancelJob,
     reset,
     jobId,
     status,
@@ -127,6 +143,7 @@ export function useDownloaderJob() {
     totalMs,
     errorCode,
     canUseIosShareFlow: canUseIosShareFlow(),
+    isCancelling: cancel.isPending,
     isQueued,
     isRunning,
     isDone,

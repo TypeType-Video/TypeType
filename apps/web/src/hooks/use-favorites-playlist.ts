@@ -1,11 +1,9 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { createPlaylist } from "../lib/api-playlists";
-import type { PlaylistItem } from "../types/user";
-import { usePlaylists } from "./use-playlists";
+import { addFavorite, fetchFavorites, removeFavorite } from "../lib/api-collections";
+import { useAuth } from "./use-auth";
 
-const KEY = ["playlists"];
-const FAVORITES_NAME = "Favorites";
+const KEY = ["favorites"];
 
 type AddPayload = {
   url: string;
@@ -17,17 +15,18 @@ type AddPayload = {
 type Intent = { url: string; adding: boolean };
 
 export function useFavoritesPlaylist() {
-  const { query, addVideo, removeVideo } = usePlaylists();
-  const qc = useQueryClient();
+  const { authReady, isAuthed } = useAuth();
   const intentRef = useRef<Intent | null>(null);
   const [intent, setIntent] = useState<Intent | null>(null);
-
-  const playlists = query.data ?? [];
-  const favoritesPlaylist = playlists.find((p) => p.name === FAVORITES_NAME);
+  const query = useQuery({
+    queryKey: KEY,
+    queryFn: fetchFavorites,
+    enabled: authReady && isAuthed,
+  });
 
   function isInFavorites(videoUrl: string): boolean {
     if (intentRef.current?.url === videoUrl) return intentRef.current.adding;
-    return favoritesPlaylist?.videos.some((v) => v.url === videoUrl) ?? false;
+    return query.data?.some((item) => item.videoUrl === videoUrl) ?? false;
   }
 
   function applyIntent(value: Intent | null) {
@@ -35,19 +34,12 @@ export function useFavoritesPlaylist() {
     setIntent(value);
   }
 
-  async function ensurePlaylist(): Promise<string> {
-    if (favoritesPlaylist) return favoritesPlaylist.id;
-    const created = await createPlaylist(FAVORITES_NAME);
-    qc.setQueryData<PlaylistItem[]>(KEY, (old) => [...(old ?? []), created]);
-    return created.id;
-  }
-
   async function add(payload: AddPayload): Promise<void> {
     if (isInFavorites(payload.url)) return;
     applyIntent({ url: payload.url, adding: true });
     try {
-      const playlistId = await ensurePlaylist();
-      await addVideo.mutateAsync({ playlistId, video: payload });
+      await addFavorite(payload.url);
+      await query.refetch();
     } catch (e) {
       applyIntent(null);
       throw e;
@@ -56,10 +48,10 @@ export function useFavoritesPlaylist() {
   }
 
   async function remove(videoUrl: string): Promise<void> {
-    if (!favoritesPlaylist) return;
     applyIntent({ url: videoUrl, adding: false });
     try {
-      await removeVideo.mutateAsync({ playlistId: favoritesPlaylist.id, videoUrl });
+      await removeFavorite(videoUrl);
+      await query.refetch();
     } catch (e) {
       applyIntent(null);
       throw e;

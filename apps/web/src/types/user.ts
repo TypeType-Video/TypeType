@@ -37,6 +37,19 @@ export type PlaylistItem = {
   createdAt: number;
 };
 
+export type FavoriteItem = {
+  videoUrl: string;
+  favoritedAt: number;
+};
+
+export type WatchLaterItem = {
+  url: string;
+  title: string;
+  thumbnail: string;
+  duration: number;
+  addedAt: number;
+};
+
 export type ProgressItem = {
   videoUrl: string;
   position: number;

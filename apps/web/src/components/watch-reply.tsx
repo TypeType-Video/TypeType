@@ -6,9 +6,10 @@ import { RichText } from "./rich-text";
 type Props = {
   reply: Comment;
   locale?: string;
+  onSeekTimestamp?: (seconds: number) => void;
 };
 
-export function WatchReply({ reply, locale }: Props) {
+export function WatchReply({ reply, locale, onSeekTimestamp }: Props) {
   const publishedTime = formatCommentPublishedTime(reply.publishedAt, reply.publishedTime, locale);
 
   return (
@@ -26,7 +27,7 @@ export function WatchReply({ reply, locale }: Props) {
           {publishedTime && <span className="text-xs text-fg-soft">{publishedTime}</span>}
         </div>
         <p className="text-sm text-fg leading-relaxed whitespace-pre-wrap">
-          <RichText text={reply.text} />
+          <RichText text={reply.text} onSeekTimestamp={onSeekTimestamp} />
         </p>
         {reply.likeCount >= 0 && (
           <span className="text-xs text-fg-soft">{formatLikes(reply.likeCount)} likes</span>

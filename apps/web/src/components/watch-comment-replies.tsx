@@ -9,9 +9,10 @@ type Props = {
   videoUrl: string;
   repliesPage: string;
   locale?: string;
+  onSeekTimestamp?: (seconds: number) => void;
 };
 
-export function WatchCommentReplies({ videoUrl, repliesPage, locale }: Props) {
+export function WatchCommentReplies({ videoUrl, repliesPage, locale, onSeekTimestamp }: Props) {
   const { data, isFetchingNextPage, hasNextPage, fetchNextPage, isLoading } = useCommentReplies(
     videoUrl,
     repliesPage,
@@ -31,7 +32,7 @@ export function WatchCommentReplies({ videoUrl, repliesPage, locale }: Props) {
           className="animate-card-pop-in"
           style={{ animationDelay: `${Math.min(i * 25, 150)}ms` }}
         >
-          <WatchReply reply={reply} locale={locale} />
+          <WatchReply reply={reply} locale={locale} onSeekTimestamp={onSeekTimestamp} />
         </div>
       ))}
       {(isLoading || isFetchingNextPage) &&

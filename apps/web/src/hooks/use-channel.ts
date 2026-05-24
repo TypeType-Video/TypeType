@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import type { ChannelSort } from "../lib/api";
 import { fetchChannel } from "../lib/api";
 import { mapVideoItem } from "../lib/mappers";
 import { proxyImage } from "../lib/proxy";
@@ -19,11 +20,11 @@ type ChannelPage = {
   nextpage: string | null;
 };
 
-export function useChannel(channelUrl: string) {
+export function useChannel(channelUrl: string, sort?: ChannelSort) {
   const query = useInfiniteQuery({
-    queryKey: ["channel", channelUrl],
+    queryKey: ["channel", channelUrl, sort],
     queryFn: async ({ pageParam }): Promise<ChannelPage> => {
-      const res = await fetchChannel(channelUrl, pageParam as string | undefined);
+      const res = await fetchChannel(channelUrl, pageParam as string | undefined, sort);
       const isFirstPage = pageParam === undefined;
       return {
         meta: isFirstPage
@@ -43,6 +44,7 @@ export function useChannel(channelUrl: string) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: ChannelPage | undefined) => last?.nextpage ?? undefined,
     enabled: channelUrl.length > 0,
+    placeholderData: (previousData) => previousData,
   });
 
   const pages = query.data?.pages ?? [];

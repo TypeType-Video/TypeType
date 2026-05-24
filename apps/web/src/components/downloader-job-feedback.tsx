@@ -23,6 +23,12 @@ type Props = {
   errorText: string | null;
   immersive?: boolean;
   forceWaiting?: boolean;
+  canCancel?: boolean;
+  cancelPending?: boolean;
+  onCancel?: () => void;
+  canClear?: boolean;
+  clearPending?: boolean;
+  onClear?: () => void;
 };
 
 function formatResolved(resolved: DownloaderResolvedSelection | null): string | null {
@@ -57,6 +63,12 @@ export function DownloaderJobFeedback({
   errorText,
   immersive = false,
   forceWaiting = false,
+  canCancel = false,
+  cancelPending = false,
+  onCancel,
+  canClear = false,
+  clearPending = false,
+  onClear,
 }: Props) {
   const resolvedLabel = formatResolved(resolved);
   const visibleError =
@@ -69,6 +81,8 @@ export function DownloaderJobFeedback({
   const message = downloaderStatusMessage(status, stage, errorCode, visibleError, forceWaiting);
   const progress = downloaderProgressValue(status, stage, progressPercent, forceWaiting);
   const activeStep = downloaderStageIndex(status, stage);
+  const showCancel = canCancel && !cancelled && !failed && typeof onCancel === "function";
+  const showClear = canClear && typeof onClear === "function";
   const showProgress = shouldShowDownloaderProgress(status, forceWaiting) && !failed && !cancelled;
   const showPercent = typeof progressPercent === "number" && status === "running";
 
@@ -87,9 +101,31 @@ export function DownloaderJobFeedback({
             {message}
           </p>
         </div>
-        {showPercent && (
-          <span className="text-sm font-semibold text-fg">{Math.round(progress)}%</span>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {showPercent && (
+            <span className="text-sm font-semibold text-fg">{Math.round(progress)}%</span>
+          )}
+          {showCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={cancelPending}
+              className="rounded-full border border-border px-2 py-1 text-[11px] font-medium text-fg-muted hover:border-border-strong hover:text-fg disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {cancelPending ? "Cancelling..." : "Cancel"}
+            </button>
+          )}
+          {showClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              disabled={clearPending}
+              className="rounded-full border border-border px-2 py-1 text-[11px] font-medium text-fg-muted hover:border-border-strong hover:text-fg disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {clearPending ? "Clearing..." : "Clear"}
+            </button>
+          )}
+        </div>
       </div>
       {showProgress && (
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-app">

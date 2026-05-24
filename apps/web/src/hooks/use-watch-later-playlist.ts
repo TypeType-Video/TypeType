@@ -1,11 +1,9 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { createPlaylist } from "../lib/api-playlists";
-import type { PlaylistItem } from "../types/user";
-import { usePlaylists } from "./use-playlists";
+import { addWatchLater, fetchWatchLater, removeWatchLater } from "../lib/api-collections";
+import { useAuth } from "./use-auth";
 
-const KEY = ["playlists"];
-const WATCH_LATER_NAME = "Watch Later";
+const KEY = ["watch-later"];
 
 type AddPayload = {
   url: string;
@@ -17,17 +15,18 @@ type AddPayload = {
 type Intent = { url: string; adding: boolean };
 
 export function useWatchLaterPlaylist() {
-  const { query, addVideo, removeVideo } = usePlaylists();
-  const qc = useQueryClient();
+  const { authReady, isAuthed } = useAuth();
   const intentRef = useRef<Intent | null>(null);
   const [intent, setIntent] = useState<Intent | null>(null);
-
-  const playlists = query.data ?? [];
-  const watchLaterPlaylist = playlists.find((p) => p.name === WATCH_LATER_NAME);
+  const query = useQuery({
+    queryKey: KEY,
+    queryFn: fetchWatchLater,
+    enabled: authReady && isAuthed,
+  });
 
   function isInWatchLater(videoUrl: string): boolean {
     if (intentRef.current?.url === videoUrl) return intentRef.current.adding;
-    return watchLaterPlaylist?.videos.some((v) => v.url === videoUrl) ?? false;
+    return query.data?.some((item) => item.url === videoUrl) ?? false;
   }
 
   function applyIntent(value: Intent | null) {
@@ -35,19 +34,12 @@ export function useWatchLaterPlaylist() {
     setIntent(value);
   }
 
-  async function ensurePlaylist(): Promise<string> {
-    if (watchLaterPlaylist) return watchLaterPlaylist.id;
-    const created = await createPlaylist(WATCH_LATER_NAME);
-    qc.setQueryData<PlaylistItem[]>(KEY, (old) => [...(old ?? []), created]);
-    return created.id;
-  }
-
   async function add(payload: AddPayload): Promise<void> {
     if (isInWatchLater(payload.url)) return;
     applyIntent({ url: payload.url, adding: true });
     try {
-      const playlistId = await ensurePlaylist();
-      await addVideo.mutateAsync({ playlistId, video: payload });
+      await addWatchLater(payload);
+      await query.refetch();
     } catch (e) {
       applyIntent(null);
       throw e;
@@ -56,10 +48,10 @@ export function useWatchLaterPlaylist() {
   }
 
   async function remove(videoUrl: string): Promise<void> {
-    if (!watchLaterPlaylist) return;
     applyIntent({ url: videoUrl, adding: false });
     try {
-      await removeVideo.mutateAsync({ playlistId: watchLaterPlaylist.id, videoUrl });
+      await removeWatchLater(videoUrl);
+      await query.refetch();
     } catch (e) {
       applyIntent(null);
       throw e;

@@ -12,7 +12,19 @@ function withBearer(init: RequestInit | undefined, token: string): RequestInit {
   return { ...init, headers };
 }
 
-export async function authed(url: string, init?: RequestInit): Promise<Response> {
+type AuthedOptions = {
+  silentStatuses?: number[];
+};
+
+function shouldLogStatus(status: number, options: AuthedOptions | undefined): boolean {
+  return !(options?.silentStatuses ?? []).includes(status);
+}
+
+export async function authed(
+  url: string,
+  init?: RequestInit,
+  options?: AuthedOptions,
+): Promise<Response> {
   const method = init?.method ?? "GET";
   const path = sanitizeRequestPath(url);
   let token = useAuthStore.getState().token;
@@ -54,7 +66,7 @@ export async function authed(url: string, init?: RequestInit): Promise<Response>
     try {
       const retryToken = await refreshSession();
       const retryRes = await fetch(url, withBearer(init, retryToken));
-      if (!retryRes.ok) {
+      if (!retryRes.ok && shouldLogStatus(retryRes.status, options)) {
         recordApiError({
           endpoint: url,
           status: retryRes.status,
@@ -82,7 +94,7 @@ export async function authed(url: string, init?: RequestInit): Promise<Response>
       throw new ApiError("Session expired", 401);
     }
   }
-  if (!res.ok) {
+  if (!res.ok && shouldLogStatus(res.status, options)) {
     recordApiError({
       endpoint: url,
       status: res.status,

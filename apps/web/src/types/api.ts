@@ -139,3 +139,27 @@ export type ChannelResponse = {
   videos: VideoItem[];
   nextpage: string | null;
 };
+
+export type PodcastItem = {
+  id: string;
+  title: string;
+  url: string;
+  thumbnailUrl: string;
+  uploaderName: string;
+  streamCount: number;
+  playlistType: string;
+};
+
+export type PodcastPageResponse = {
+  channelName: string;
+  channelUrl: string;
+  podcasts: PodcastItem[];
+  episodes: VideoItem[];
+  nextpage: string | null;
+};
+
+export type PodcastEpisodesResponse = {
+  podcast: PodcastItem;
+  episodes: VideoItem[];
+  nextpage: string | null;
+};

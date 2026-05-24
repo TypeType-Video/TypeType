@@ -9,9 +9,10 @@ import { WatchCommentReplies } from "./watch-comment-replies";
 type Props = {
   comment: Comment;
   videoUrl: string;
+  onSeekTimestamp?: (seconds: number) => void;
 };
 
-export function WatchComment({ comment, videoUrl }: Props) {
+export function WatchComment({ comment, videoUrl, onSeekTimestamp }: Props) {
   const locale = useClientLocale();
   const [showReplies, setShowReplies] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -66,7 +67,7 @@ export function WatchComment({ comment, videoUrl }: Props) {
           ref={textRef}
           className={`text-sm text-fg leading-relaxed whitespace-pre-wrap${expanded ? "" : " line-clamp-5"}`}
         >
-          <RichText text={comment.text} />
+          <RichText text={comment.text} onSeekTimestamp={onSeekTimestamp} />
         </p>
         {(overflows || expanded) && (
           <button
@@ -94,6 +95,7 @@ export function WatchComment({ comment, videoUrl }: Props) {
             videoUrl={videoUrl}
             repliesPage={comment.repliesPage}
             locale={locale}
+            onSeekTimestamp={onSeekTimestamp}
           />
         )}
       </div>

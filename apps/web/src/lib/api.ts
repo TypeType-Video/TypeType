@@ -2,6 +2,8 @@ import type {
   BulletCommentsPageResponse,
   ChannelResponse,
   CommentsPageResponse,
+  PodcastEpisodesResponse,
+  PodcastPageResponse,
   SearchPageResponse,
   StreamResponse,
 } from "../types/api";
@@ -19,6 +21,8 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
+
+export type ChannelSort = "latest" | "popular" | "oldest";
 
 type ErrorLikeBody = {
   error?: string;
@@ -125,10 +129,30 @@ export function fetchCommentReplies(
   return request(`${BASE}/comments/replies?${params}`);
 }
 
-export function fetchChannel(url: string, nextpage?: string): Promise<ChannelResponse> {
+export function fetchChannel(
+  url: string,
+  nextpage?: string,
+  sort?: ChannelSort,
+): Promise<ChannelResponse> {
   const params = new URLSearchParams({ url });
+  if (sort) params.set("sort", sort);
   if (nextpage) params.set("nextpage", nextpage);
   return request(`${BASE}/channel?${params}`);
+}
+
+export function fetchPodcasts(url: string, nextpage?: string): Promise<PodcastPageResponse> {
+  const params = new URLSearchParams({ url });
+  if (nextpage) params.set("nextpage", nextpage);
+  return request(`${BASE}/podcasts?${params}`);
+}
+
+export function fetchPodcastEpisodes(
+  url: string,
+  nextpage?: string,
+): Promise<PodcastEpisodesResponse> {
+  const params = new URLSearchParams({ url });
+  if (nextpage) params.set("nextpage", nextpage);
+  return request(`${BASE}/podcasts/episodes?${params}`);
 }
 
 export function fetchSuggestions(query: string, service: number): Promise<string[]> {

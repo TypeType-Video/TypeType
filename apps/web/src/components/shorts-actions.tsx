@@ -48,7 +48,7 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
     await addFavorite({
       url: stream.id,
       title: stream.title,
-      thumbnail: stream.thumbnail,
+      thumbnail: stream.rawThumbnail || stream.thumbnail,
       duration: stream.duration,
     });
   }
@@ -62,7 +62,7 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
     await addWatchLater({
       url: stream.id,
       title: stream.title,
-      thumbnail: stream.thumbnail,
+      thumbnail: stream.rawThumbnail || stream.thumbnail,
       duration: stream.duration,
     });
   }

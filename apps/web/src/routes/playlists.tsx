@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ConfirmModal } from "../components/confirm-modal";
+import { LibraryCollectionCard } from "../components/library-collection-card";
 import { PlaylistCard } from "../components/playlist-card";
 import { PlaylistCreateModal } from "../components/playlist-create-modal";
 import { Toast } from "../components/toast";
+import { useFavoriteStreams } from "../hooks/use-favorite-streams";
 import { usePlaylists } from "../hooks/use-playlists";
+import { useWatchLaterStreams } from "../hooks/use-watch-later-streams";
 
 function EmptyState() {
   return (
@@ -17,6 +20,8 @@ function EmptyState() {
 
 function PlaylistsPage() {
   const { query, create, remove } = usePlaylists();
+  const favorites = useFavoriteStreams();
+  const watchLater = useWatchLaterStreams();
   const playlists = query.data ?? [];
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -106,10 +111,22 @@ function PlaylistsPage() {
           )}
         </div>
       </div>
-      {playlists.length === 0 ? (
+      {playlists.length === 0 && favorites.count === 0 && watchLater.count === 0 ? (
         <EmptyState />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <LibraryCollectionCard
+            kind="favorites"
+            title="Favorites"
+            count={favorites.count}
+            thumbnail={favorites.videos[0]?.thumbnail}
+          />
+          <LibraryCollectionCard
+            kind="watch-later"
+            title="Watch later"
+            count={watchLater.count}
+            thumbnail={watchLater.videos[0]?.thumbnail}
+          />
           {playlists.map((playlist, index) => (
             <div
               key={playlist.id}

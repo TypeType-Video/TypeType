@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatchLaterRouteImport } from './routes/watch-later'
 import { Route as WatchRouteImport } from './routes/watch'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
 import { Route as ShortsRouteImport } from './routes/shorts'
@@ -18,10 +19,12 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PodcastsRouteImport } from './routes/podcasts'
 import { Route as PlaylistsRouteImport } from './routes/playlists'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as ChannelRouteImport } from './routes/channel'
 import { Route as AdminConsoleRouteImport } from './routes/admin-console'
 import { Route as IndexRouteImport } from './routes/index'
@@ -30,6 +33,11 @@ import { Route as PlaylistsIdRouteImport } from './routes/playlists_.$id'
 import { Route as ImportYoutubeRouteImport } from './routes/import/youtube'
 import { Route as ImportPipepipeRouteImport } from './routes/import/pipepipe'
 
+const WatchLaterRoute = WatchLaterRouteImport.update({
+  id: '/watch-later',
+  path: '/watch-later',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WatchRoute = WatchRouteImport.update({
   id: '/watch',
   path: '/watch',
@@ -75,6 +83,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PodcastsRoute = PodcastsRouteImport.update({
+  id: '/podcasts',
+  path: '/podcasts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlaylistsRoute = PlaylistsRouteImport.update({
   id: '/playlists',
   path: '/playlists',
@@ -93,6 +106,11 @@ const ImportRoute = ImportRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChannelRoute = ChannelRouteImport.update({
@@ -135,10 +153,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin-console': typeof AdminConsoleRoute
   '/channel': typeof ChannelRoute
+  '/favorites': typeof FavoritesRoute
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
   '/playlists': typeof PlaylistsRoute
+  '/podcasts': typeof PodcastsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -148,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/shorts': typeof ShortsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
+  '/watch-later': typeof WatchLaterRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
@@ -157,9 +178,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin-console': typeof AdminConsoleRoute
   '/channel': typeof ChannelRoute
+  '/favorites': typeof FavoritesRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
   '/playlists': typeof PlaylistsRoute
+  '/podcasts': typeof PodcastsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -169,6 +192,7 @@ export interface FileRoutesByTo {
   '/shorts': typeof ShortsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
+  '/watch-later': typeof WatchLaterRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
@@ -179,10 +203,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin-console': typeof AdminConsoleRoute
   '/channel': typeof ChannelRoute
+  '/favorites': typeof FavoritesRoute
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
   '/playlists': typeof PlaylistsRoute
+  '/podcasts': typeof PodcastsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -192,6 +218,7 @@ export interface FileRoutesById {
   '/shorts': typeof ShortsRoute
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
+  '/watch-later': typeof WatchLaterRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists_/$id': typeof PlaylistsIdRoute
@@ -203,10 +230,12 @@ export interface FileRouteTypes {
     | '/'
     | '/admin-console'
     | '/channel'
+    | '/favorites'
     | '/history'
     | '/import'
     | '/login'
     | '/playlists'
+    | '/podcasts'
     | '/privacy'
     | '/profile'
     | '/register'
@@ -216,6 +245,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscriptions'
     | '/watch'
+    | '/watch-later'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
@@ -225,9 +255,11 @@ export interface FileRouteTypes {
     | '/'
     | '/admin-console'
     | '/channel'
+    | '/favorites'
     | '/history'
     | '/login'
     | '/playlists'
+    | '/podcasts'
     | '/privacy'
     | '/profile'
     | '/register'
@@ -237,6 +269,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscriptions'
     | '/watch'
+    | '/watch-later'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
@@ -246,10 +279,12 @@ export interface FileRouteTypes {
     | '/'
     | '/admin-console'
     | '/channel'
+    | '/favorites'
     | '/history'
     | '/import'
     | '/login'
     | '/playlists'
+    | '/podcasts'
     | '/privacy'
     | '/profile'
     | '/register'
@@ -259,6 +294,7 @@ export interface FileRouteTypes {
     | '/shorts'
     | '/subscriptions'
     | '/watch'
+    | '/watch-later'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists_/$id'
@@ -269,10 +305,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminConsoleRoute: typeof AdminConsoleRoute
   ChannelRoute: typeof ChannelRoute
+  FavoritesRoute: typeof FavoritesRoute
   HistoryRoute: typeof HistoryRoute
   ImportRoute: typeof ImportRouteWithChildren
   LoginRoute: typeof LoginRoute
   PlaylistsRoute: typeof PlaylistsRoute
+  PodcastsRoute: typeof PodcastsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
@@ -282,11 +320,19 @@ export interface RootRouteChildren {
   ShortsRoute: typeof ShortsRoute
   SubscriptionsRoute: typeof SubscriptionsRoute
   WatchRoute: typeof WatchRoute
+  WatchLaterRoute: typeof WatchLaterRoute
   PlaylistsIdRoute: typeof PlaylistsIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watch-later': {
+      id: '/watch-later'
+      path: '/watch-later'
+      fullPath: '/watch-later'
+      preLoaderRoute: typeof WatchLaterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watch': {
       id: '/watch'
       path: '/watch'
@@ -350,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/podcasts': {
+      id: '/podcasts'
+      path: '/podcasts'
+      fullPath: '/podcasts'
+      preLoaderRoute: typeof PodcastsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/playlists': {
       id: '/playlists'
       path: '/playlists'
@@ -376,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/channel': {
@@ -449,10 +509,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminConsoleRoute: AdminConsoleRoute,
   ChannelRoute: ChannelRoute,
+  FavoritesRoute: FavoritesRoute,
   HistoryRoute: HistoryRoute,
   ImportRoute: ImportRouteWithChildren,
   LoginRoute: LoginRoute,
   PlaylistsRoute: PlaylistsRoute,
+  PodcastsRoute: PodcastsRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
@@ -462,6 +524,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShortsRoute: ShortsRoute,
   SubscriptionsRoute: SubscriptionsRoute,
   WatchRoute: WatchRoute,
+  WatchLaterRoute: WatchLaterRoute,
   PlaylistsIdRoute: PlaylistsIdRoute,
 }
 export const routeTree = rootRouteImport

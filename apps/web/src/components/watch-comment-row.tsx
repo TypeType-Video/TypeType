@@ -5,9 +5,10 @@ type Props = {
   comment: Comment;
   videoUrl: string;
   index: number;
+  onSeekTimestamp?: (seconds: number) => void;
 };
 
-export function WatchCommentRow({ comment, videoUrl, index }: Props) {
+export function WatchCommentRow({ comment, videoUrl, index, onSeekTimestamp }: Props) {
   return (
     <div
       className="animate-card-pop-in"
@@ -17,7 +18,7 @@ export function WatchCommentRow({ comment, videoUrl, index }: Props) {
         containIntrinsicSize: "160px",
       }}
     >
-      <WatchComment comment={comment} videoUrl={videoUrl} />
+      <WatchComment comment={comment} videoUrl={videoUrl} onSeekTimestamp={onSeekTimestamp} />
     </div>
   );
 }

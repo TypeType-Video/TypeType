@@ -45,15 +45,12 @@ export function SettingsLanguage() {
         </div>
         <div className={ROW}>
           <div className="flex flex-col gap-1">
-            <span className={`text-sm ${settings.subtitlesEnabled ? "text-fg" : "text-fg-soft"}`}>
-              Subtitle language
-            </span>
+            <span className="text-sm text-fg">Subtitle language</span>
             <span className="text-xs text-fg-soft">Preferred subtitle track</span>
           </div>
           <LanguageDropdown
             value={settings.defaultSubtitleLanguage}
             onChange={(v) => update.mutate({ defaultSubtitleLanguage: v })}
-            disabled={!settings.subtitlesEnabled}
           />
         </div>
         <div className={ROW}>

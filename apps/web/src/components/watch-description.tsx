@@ -11,16 +11,18 @@ export function WatchDescription({ description, onSeekTimestamp }: Props) {
 
   if (!expanded) {
     return (
-      <button
-        type="button"
-        className="w-full text-left bg-surface rounded-xl px-4 py-3 hover:bg-surface-strong transition-colors"
-        onClick={() => setExpanded(true)}
-      >
+      <div className="w-full rounded-xl bg-surface px-4 py-3 text-left transition-colors hover:bg-surface-strong">
         <p className="text-sm text-fg leading-relaxed line-clamp-3 whitespace-pre-wrap">
-          {description}
+          <RichText text={description} onSeekTimestamp={onSeekTimestamp} />
         </p>
-        <span className="mt-2 block text-xs font-medium text-fg-muted">Show more</span>
-      </button>
+        <button
+          type="button"
+          className="mt-2 block text-xs font-medium text-fg-muted hover:text-fg transition-colors"
+          onClick={() => setExpanded(true)}
+        >
+          Show more
+        </button>
+      </div>
     );
   }
 

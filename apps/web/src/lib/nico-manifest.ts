@@ -8,22 +8,8 @@ const RESOLUTION_BANDWIDTH: Record<string, number> = {
   "240p": 300000,
 };
 
-function extractDomandBid(url: string): { cleanUrl: string; domandBid: string | null } {
-  const hashIdx = url.indexOf("#");
-  if (hashIdx === -1) return { cleanUrl: url, domandBid: null };
-  const cleanUrl = url.slice(0, hashIdx);
-  const fragment = url.slice(hashIdx + 1);
-  const params = new URLSearchParams(fragment);
-  const cookie = params.get("cookie");
-  if (!cookie) return { cleanUrl, domandBid: null };
-  const match = cookie.match(/domand_bid=([^&]+)/);
-  return { cleanUrl, domandBid: match ? match[1] : null };
-}
-
 function nicoProxyUrl(rawUrl: string, origin: string): string {
-  const { cleanUrl, domandBid } = extractDomandBid(rawUrl);
-  const base = `${origin}/proxy/nicovideo?url=${encodeURIComponent(cleanUrl)}`;
-  return domandBid ? `${base}&domand_bid=${encodeURIComponent(domandBid)}` : base;
+  return `${origin}/proxy/nicovideo?url=${encodeURIComponent(rawUrl)}`;
 }
 
 export function buildNicoMasterPlaylist(

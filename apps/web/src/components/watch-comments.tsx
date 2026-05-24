@@ -9,9 +9,10 @@ const RENDER_STEP = 4;
 
 type Props = {
   videoUrl: string;
+  onSeekTimestamp?: (seconds: number) => void;
 };
 
-export function WatchComments({ videoUrl }: Props) {
+export function WatchComments({ videoUrl, onSeekTimestamp }: Props) {
   const { data, isFetchingNextPage, hasNextPage, fetchNextPage, isLoading } =
     useInfiniteComments(videoUrl);
   const [renderCount, setRenderCount] = useState(INITIAL_RENDER_COUNT);
@@ -42,7 +43,11 @@ export function WatchComments({ videoUrl }: Props) {
         <p className="text-sm text-fg-soft">Comments are disabled for this video.</p>
       ) : (
         <div className="flex flex-col gap-6">
-          <WatchCommentsLazyList comments={visibleComments} videoUrl={videoUrl} />
+          <WatchCommentsLazyList
+            comments={visibleComments}
+            videoUrl={videoUrl}
+            onSeekTimestamp={onSeekTimestamp}
+          />
           {showSkeletons && SKELETON_KEYS.map((k) => <WatchCommentSkeleton key={k} />)}
           {canLoadMore && !isLoading && (
             <button

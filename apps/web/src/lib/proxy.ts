@@ -15,6 +15,16 @@ function isRemoteUrl(url: string): boolean {
   return url.startsWith("http://") || url.startsWith("https://");
 }
 
+function extractProxyTarget(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.pathname.endsWith("/proxy") && !parsed.pathname.endsWith("/api/proxy")) return null;
+    return parsed.searchParams.get("url");
+  } catch {
+    return null;
+  }
+}
+
 export function proxyDashManifest(url: string): string {
   if (!url) return url;
   return isRemoteUrl(url) ? proxyUrl(url) : url;
@@ -33,7 +43,8 @@ function needsProxy(url: string): boolean {
 
 export function proxyImage(url: string): string {
   if (!url) return url;
-  const normalized = url.startsWith("httpss://") ? `https://${url.slice(9)}` : url;
+  const raw = extractProxyTarget(url) ?? url;
+  const normalized = raw.startsWith("httpss://") ? `https://${raw.slice(9)}` : raw;
   if (!needsProxy(normalized)) return normalized;
   return proxyUrl(normalized);
 }
