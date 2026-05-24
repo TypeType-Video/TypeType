@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChannelAvatar } from "../components/channel-avatar";
+import { ChannelPodcastsSection } from "../components/channel-podcasts-section";
 import { PageSpinner } from "../components/page-spinner";
 import { ScrollSentinel } from "../components/scroll-sentinel";
 import { VideoCard } from "../components/video-card";
@@ -7,11 +8,30 @@ import { VerifiedBadgeIcon } from "../components/watch-icons";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useChannel } from "../hooks/use-channel";
 import { useSubscriptions } from "../hooks/use-subscriptions";
-import { ApiError } from "../lib/api";
+import { ApiError, type ChannelSort } from "../lib/api";
 import { formatViews } from "../lib/format";
 
+const CHANNEL_SORT_OPTIONS: { value: ChannelSort; label: string }[] = [
+  { value: "latest", label: "Latest" },
+  { value: "popular", label: "Popular" },
+  { value: "oldest", label: "Oldest" },
+];
+
+function toChannelSort(value: unknown): ChannelSort | undefined {
+  if (value === "latest" || value === "popular" || value === "oldest") return value;
+  return undefined;
+}
+
+function validateChannelSearch(search: Record<string, unknown>) {
+  const url = typeof search.url === "string" ? search.url : "";
+  const sort = toChannelSort(search.sort);
+  return sort ? { url, sort } : { url };
+}
+
 function ChannelPage() {
-  const { url } = Route.useSearch();
+  const { url, sort: searchSort } = Route.useSearch();
+  const sort = searchSort ?? "latest";
+  const navigate = useNavigate({ from: "/channel" });
   const {
     meta,
     videos,
@@ -22,7 +42,7 @@ function ChannelPage() {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useChannel(url);
+  } = useChannel(url, searchSort);
   const { add, remove, isSubscribed } = useSubscriptions();
   const { filter } = useBlockedFilter();
 
@@ -35,6 +55,10 @@ function ChannelPage() {
     } else {
       add.mutate({ channelUrl: url, name: meta.name, avatarUrl: meta.avatarUrl });
     }
+  }
+
+  function selectSort(nextSort: ChannelSort) {
+    navigate({ search: { url, sort: nextSort }, replace: true });
   }
 
   if (isLoading) return <PageSpinner />;
@@ -89,6 +113,21 @@ function ChannelPage() {
           </div>
         </div>
       )}
+      <ChannelPodcastsSection channelUrl={url} channelAvatar={meta?.avatarUrl} />
+      <label className="flex w-fit items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-fg-muted">
+        Sort
+        <select
+          value={sort}
+          onChange={(event) => selectSort(toChannelSort(event.target.value) ?? "latest")}
+          className="bg-transparent text-sm font-medium text-fg outline-none"
+        >
+          {CHANNEL_SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
         {filter(videos).map((v, index) => (
           <div
@@ -106,8 +145,6 @@ function ChannelPage() {
 }
 
 export const Route = createFileRoute("/channel")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    url: typeof search.url === "string" ? search.url : "",
-  }),
+  validateSearch: validateChannelSearch,
   component: ChannelPage,
 });
