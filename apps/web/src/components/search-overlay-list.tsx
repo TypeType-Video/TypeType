@@ -7,8 +7,9 @@ type Props = {
   selectedIndex: number;
   listRef: RefObject<HTMLUListElement | null>;
   onScroll: (e: React.UIEvent<HTMLUListElement>) => void;
-  onClearAll: () => void;
+  onClearAll?: () => void;
   onSelect: (term: string) => void;
+  className?: string;
 };
 
 export function SearchOverlayList({
@@ -19,25 +20,28 @@ export function SearchOverlayList({
   onScroll,
   onClearAll,
   onSelect,
+  className,
 }: Props) {
   if (items.length === 0) return null;
 
+  const listClass =
+    className ??
+    "mt-1 max-h-[22rem] overflow-y-auto scroll-smooth bg-surface border border-border-strong rounded-lg";
+
   return (
-    <ul
-      ref={listRef}
-      onScroll={onScroll}
-      className="mt-1 max-h-[22rem] overflow-y-auto scroll-smooth bg-surface border border-border-strong rounded-lg"
-    >
+    <ul ref={listRef} onScroll={onScroll} className={listClass}>
       {showHistory && (
         <li className="px-4 py-2 flex items-center justify-between">
           <span className="text-xs text-fg-soft uppercase tracking-wider">Recent searches</span>
-          <button
-            type="button"
-            onClick={onClearAll}
-            className="text-xs text-fg-soft hover:text-fg-muted transition-colors"
-          >
-            Clear all
-          </button>
+          {onClearAll && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="text-xs text-fg-soft hover:text-fg-muted transition-colors"
+            >
+              Clear all
+            </button>
+          )}
         </li>
       )}
       {items.map((item, index) => (

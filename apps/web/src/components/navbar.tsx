@@ -10,6 +10,7 @@ import { useUiStore } from "../stores/ui-store";
 import { NavbarAccountControls } from "./navbar-account-controls";
 import { NavbarLeadingControl } from "./navbar-leading-control";
 import { NavbarNotifications } from "./navbar-notifications";
+import { NavbarSearch } from "./navbar-search";
 import { Toast } from "./toast";
 
 const SearchOverlay = lazy(() =>
@@ -41,7 +42,7 @@ export function Navbar() {
     window.location.assign("/");
   }
 
-  useSearchShortcut({ enabled: canOpenSearch, onOpen: () => setSearchOpen(true) });
+  useSearchShortcut({ enabled: canOpenSearch && isMobile, onOpen: () => setSearchOpen(true) });
 
   return (
     <>
@@ -72,24 +73,7 @@ export function Navbar() {
           </button>
         )}
 
-        {canOpenSearch && !isMobile && (
-          <div className="mx-4 flex min-w-0 flex-1 justify-center">
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              className="hidden h-10 w-full max-w-xl items-center justify-between rounded-full border border-border-strong bg-surface px-4 text-sm text-fg-muted hover:border-border-strong hover:bg-surface-strong sm:inline-flex"
-              aria-label="Search"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Search size={18} />
-                <span>Search videos, channels...</span>
-              </span>
-              <span className="rounded-md border border-border-strong px-2 py-0.5 text-xs text-fg-muted">
-                /
-              </span>
-            </button>
-          </div>
-        )}
+        {canOpenSearch && !isMobile && <NavbarSearch />}
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <NavbarNotifications />

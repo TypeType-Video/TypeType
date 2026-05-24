@@ -1,4 +1,5 @@
 import { useRouterState } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedValue } from "../hooks/use-debounced-value";
 import { useSearchHistory } from "../hooks/use-search-history";
@@ -94,6 +95,12 @@ export function SearchOverlay({ onClose }: Props) {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex((index) => (index <= 0 ? items.length - 1 : index - 1));
+    } else if (e.key === "Tab") {
+      const selected = selectedIndex >= 0 ? items[selectedIndex] : items[0];
+      if (!selected) return;
+      e.preventDefault();
+      setQuery(selected.label);
+      setSelectedIndex(-1);
     }
   }
 
@@ -112,20 +119,20 @@ export function SearchOverlay({ onClose }: Props) {
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4"
-    >
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-label="Close search"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
-        onClick={onClose}
-      />
-      <div className="relative w-full max-w-3xl flex flex-col">
-        <form onSubmit={handleSubmit}>
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-app text-fg">
+      <div className="flex h-full flex-col pt-[env(safe-area-inset-top)]">
+        <form
+          onSubmit={handleSubmit}
+          className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-app px-2"
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-fg hover:bg-surface-strong"
+            aria-label="Back"
+          >
+            <ArrowLeft size={20} />
+          </button>
           <input
             ref={inputRef}
             type="search"
@@ -137,18 +144,21 @@ export function SearchOverlay({ onClose }: Props) {
             }}
             onKeyDown={handleKeyDown}
             placeholder="Search videos, channels..."
-            className="w-full h-14 bg-surface border border-border-strong rounded-xl px-5 text-lg text-fg placeholder-zinc-500 focus:outline-none focus:border-border-strong"
+            className="h-10 min-w-0 flex-1 rounded-full bg-surface-strong px-4 text-base text-fg placeholder:text-fg-soft focus:outline-none"
           />
         </form>
-        <SearchOverlayList
-          items={items}
-          showHistory={showHistory}
-          selectedIndex={selectedIndex}
-          listRef={listRef}
-          onScroll={handleHistoryScroll}
-          onClearAll={() => setConfirmClearOpen(true)}
-          onSelect={submitTerm}
-        />
+        <div className="min-h-0 flex-1 overflow-hidden px-2 pt-2">
+          <SearchOverlayList
+            items={items}
+            showHistory={showHistory}
+            selectedIndex={selectedIndex}
+            listRef={listRef}
+            onScroll={handleHistoryScroll}
+            onClearAll={() => setConfirmClearOpen(true)}
+            onSelect={submitTerm}
+            className="max-h-full overflow-y-auto scroll-smooth rounded-xl border border-border bg-surface"
+          />
+        </div>
       </div>
       {confirmClearOpen && (
         <ConfirmModal
