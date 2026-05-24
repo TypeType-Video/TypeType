@@ -13,11 +13,6 @@ function isWebKitEngine(): boolean {
   return hasWebKit && !otherIosBrowser;
 }
 
-function isAndroidDevice(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /Android/i.test(navigator.userAgent);
-}
-
 export function isIosDevice(): boolean {
   if (typeof navigator === "undefined") return false;
   return /iPhone|iPad|iPod/.test(navigator.userAgent) || isTouchMac();
@@ -25,8 +20,4 @@ export function isIosDevice(): boolean {
 
 export function isIosWebKitBrowser(): boolean {
   return isIosDevice() && isWebKitEngine();
-}
-
-export function isMobileDownloadDevice(): boolean {
-  return isIosDevice() || isAndroidDevice();
 }

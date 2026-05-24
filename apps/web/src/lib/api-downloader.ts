@@ -5,7 +5,7 @@ import type {
 } from "../types/downloader";
 import { ApiError } from "./api";
 import { API_BASE as BASE } from "./env";
-import { isIosWebKitBrowser, isMobileDownloadDevice } from "./ios-device";
+import { isIosWebKitBrowser } from "./ios-device";
 
 type ErrorBody = {
   error?: string;
@@ -15,6 +15,9 @@ type ErrorBody = {
 type DownloadArtifactOptions = {
   preferShare?: boolean;
 };
+
+const CANCEL_POLL_DELAY_MS = 300;
+const CANCEL_POLL_ATTEMPTS = 8;
 
 async function readJson(res: Response): Promise<unknown> {
   return res.json().catch(() => ({}));
@@ -28,6 +31,10 @@ function readErrorMessage(body: unknown, fallback: string): string {
       return candidate.message;
   }
   return fallback;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 export async function createDownloaderJob(
@@ -52,6 +59,31 @@ export async function fetchDownloaderJob(jobId: string): Promise<DownloaderJobRe
     throw new ApiError(readErrorMessage(body, "Failed to fetch download job"), res.status);
   }
   return body as DownloaderJobResponse;
+}
+
+export async function cancelDownloaderJob(jobId: string): Promise<DownloaderJobResponse> {
+  const res = await fetch(`${BASE}/downloader/jobs/${encodeURIComponent(jobId)}/cancel`, {
+    method: "POST",
+  });
+  const body = await readJson(res);
+  if (!res.ok) {
+    throw new ApiError(readErrorMessage(body, "Failed to cancel download job"), res.status);
+  }
+  for (let attempt = 0; attempt < CANCEL_POLL_ATTEMPTS; attempt += 1) {
+    const job = await fetchDownloaderJob(jobId);
+    if (job.status !== "queued" && job.status !== "running") return job;
+    await delay(CANCEL_POLL_DELAY_MS);
+  }
+  return fetchDownloaderJob(jobId);
+}
+
+export async function deleteDownloaderJob(jobId: string): Promise<void> {
+  const res = await fetch(`${BASE}/downloader/jobs/${encodeURIComponent(jobId)}`, {
+    method: "DELETE",
+  });
+  if (res.ok || res.status === 404) return;
+  const body = await readJson(res);
+  throw new ApiError(readErrorMessage(body, "Failed to delete download job"), res.status);
 }
 
 function extensionFromType(contentType: string | null): string {
@@ -123,25 +155,5 @@ export async function downloadDownloaderArtifact(
     await shareDownloaderArtifact(endpoint, jobId);
     return;
   }
-  if (isMobileDownloadDevice()) {
-    openArtifactLocation(endpoint);
-    return;
-  }
-  const res = await fetch(endpoint);
-  if (!res.ok) {
-    const body = await readJson(res);
-    throw new ApiError(readErrorMessage(body, "Failed to download artifact"), res.status);
-  }
-  const blob = await res.blob();
-  const fileName = fallbackFileName(jobId, res.headers);
-  const objectUrl = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = objectUrl;
-  a.download = fileName;
-  a.rel = "noopener";
-  a.target = "_blank";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+  openArtifactLocation(endpoint);
 }

@@ -44,11 +44,6 @@ export type DownloaderCreateJobRequest = {
   options: DownloaderJobOptions;
 };
 
-export type DownloaderCreateJobResponse = {
-  id: string;
-  cached: boolean;
-};
-
 export type DownloaderResolvedSelection = {
   videoItag?: string | null;
   audioItag?: string | null;
@@ -70,11 +65,14 @@ export type DownloaderJobResponse = {
   totalBytes?: number | null;
   etaSeconds?: number | null;
   resolved?: DownloaderResolvedSelection | null;
-  artifactUrl?: string | null;
   errorCode?: string | null;
   error?: string | null;
   tokenFetchMs?: number | null;
   ytdlpMs?: number | null;
   uploadMs?: number | null;
   totalMs?: number | null;
+};
+
+export type DownloaderCreateJobResponse = DownloaderJobResponse & {
+  cached?: boolean | null;
 };

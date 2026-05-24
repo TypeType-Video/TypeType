@@ -3,6 +3,7 @@ import { useArtifactDownloadOnDone } from "../hooks/use-artifact-download-on-don
 import { useDownloaderJob } from "../hooks/use-downloader-job";
 import { useOverlayLock } from "../hooks/use-overlay-lock";
 import { useSmoothDismiss } from "../hooks/use-smooth-dismiss";
+import { deleteDownloaderJob } from "../lib/api-downloader";
 import type { VideoStream } from "../types/stream";
 import {
   buildDownloaderCreatePayload,
@@ -28,13 +29,17 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
     isQueued,
     isRunning,
     errorText,
+    isFailed,
     openArtifact,
     reset,
     start,
     canUseIosShareFlow,
+    cancelJob,
+    isCancelling,
   } = downloader;
   const isBusy = isQueued || isRunning;
   const [artifactError, setArtifactError] = useState<string | null>(null);
+  const [clearPending, setClearPending] = useState(false);
   const options = useMemo(() => buildDownloadOptions(stream), [stream]);
   const [mode, setMode] = useState<DownloadMode>("video");
   const [selectedId, setSelectedId] = useState(
@@ -67,6 +72,19 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
     if (!selected) return;
     setArtifactError(null);
     start(buildDownloaderCreatePayload(stream.id, selected));
+  }
+
+  async function clearJob() {
+    if (!jobId) return reset();
+    setClearPending(true);
+    try {
+      await deleteDownloaderJob(jobId);
+      reset();
+      setArtifactError(null);
+    } catch (error) {
+      setArtifactError(error instanceof Error ? error.message : "Failed to clear download job");
+    }
+    setClearPending(false);
   }
 
   return (
@@ -137,6 +155,12 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
             errorText={artifactError ?? errorText}
             immersive={showWorkingState}
             forceWaiting={completion.isCompleting}
+            canCancel={isBusy}
+            cancelPending={isCancelling}
+            onCancel={cancelJob}
+            canClear={Boolean(jobId) && (isDone || isFailed)}
+            clearPending={clearPending}
+            onClear={() => void clearJob()}
           />
         </div>
       </div>
