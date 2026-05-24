@@ -80,11 +80,11 @@ export function WatchLayout({ stream, startTime }: Props) {
       <PlayerFocuser />
       <PlayerDefaults
         defaultQuality={qualityFailed ? undefined : settings.defaultQuality}
-        defaultAudioLanguage={settings.defaultAudioLanguage || "en"}
+        defaultAudioLanguage={settings.defaultAudioLanguage || undefined}
         preferOriginalLanguage={settings.preferOriginalLanguage}
         requireOriginalLanguage
         onOriginalLanguageUnavailable={() => {
-          setToast("Original audio unavailable, switched to English");
+          setToast("Original audio unavailable");
         }}
         originalAudioTrackId={originalTrackId}
         preferredDefaultAudioTrackId={preferredAudioTrackId}
@@ -102,7 +102,7 @@ export function WatchLayout({ stream, startTime }: Props) {
     ? "overflow-hidden bg-black"
     : "min-w-0 flex-[2] max-w-[133.333vh] flex flex-col gap-4";
   const playerBoxClass = cinemaMode
-    ? "mx-auto h-[min(calc(100vw*9/16),82svh)] w-[min(100vw,calc(82svh*16/9))]"
+    ? "mx-auto aspect-video w-[min(100%,calc((100svh-4.5rem)*16/9))]"
     : "overflow-hidden rounded-lg";
 
   return (

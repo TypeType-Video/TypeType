@@ -131,11 +131,11 @@ export function ShortsVideoPlayer({
           }}
         />
         <PlayerDefaults
-          defaultAudioLanguage={defaultAudioLanguage || "en"}
+          defaultAudioLanguage={defaultAudioLanguage || undefined}
           preferOriginalLanguage={shouldPreferOriginalLanguage}
           requireOriginalLanguage
           onOriginalLanguageUnavailable={() => {
-            setToast("Original audio unavailable, switched to English");
+            setToast("Original audio unavailable");
           }}
           originalAudioTrackId={originalAudioTrackId}
           preferredDefaultAudioTrackId={preferredDefaultAudioTrackId}

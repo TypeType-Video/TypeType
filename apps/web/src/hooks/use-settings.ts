@@ -13,7 +13,7 @@ const DEFAULTS: SettingsItem = {
   muted: false,
   subtitlesEnabled: false,
   defaultSubtitleLanguage: "",
-  defaultAudioLanguage: "en",
+  defaultAudioLanguage: "",
   preferOriginalLanguage: true,
 };
 
