@@ -15,6 +15,7 @@ const DEFAULTS: SettingsItem = {
   defaultSubtitleLanguage: "",
   defaultAudioLanguage: "",
   preferOriginalLanguage: true,
+  enableHighQualityPlayback: false,
 };
 
 export function useSettings() {
@@ -27,6 +28,8 @@ export function useSettings() {
     enabled: authReady && isAuthed,
     placeholderData: DEFAULTS,
   });
+  const settingsReady =
+    (authReady && !isAuthed) || (query.isSuccess && !query.isPlaceholderData) || query.isError;
 
   const update = useMutation({
     mutationFn: (patch: Partial<SettingsItem>) => {
@@ -43,5 +46,5 @@ export function useSettings() {
     },
   });
 
-  return { query, update, settings: query.data ?? DEFAULTS };
+  return { query, update, settings: query.data ?? DEFAULTS, settingsReady };
 }

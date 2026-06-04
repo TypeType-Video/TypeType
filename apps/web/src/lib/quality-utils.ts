@@ -1,11 +1,13 @@
 import type { VideoQualityOption } from "./vidstack";
 
-type CodecFamily = "H.264" | "VP9";
+export type CodecFamily = "H.264" | "VP9" | "AV1";
 
-function codecFamily(codec: string | null): CodecFamily | null {
+export function codecFamily(codec: string | null): CodecFamily | null {
   if (!codec) return null;
-  if (codec.startsWith("avc1")) return "H.264";
-  if (codec.startsWith("vp09") || codec === "vp9") return "VP9";
+  const normalized = codec.toLowerCase();
+  if (normalized.includes("avc1")) return "H.264";
+  if (normalized.includes("vp09") || normalized.includes("vp9")) return "VP9";
+  if (normalized.includes("av01")) return "AV1";
   return null;
 }
 

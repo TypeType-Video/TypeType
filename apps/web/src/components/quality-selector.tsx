@@ -1,4 +1,7 @@
+import type * as dashjs from "dashjs";
 import { useRef } from "react";
+import { useDashPlayerSnapshot } from "../lib/dash-player-store";
+import { dashQualityOptions, selectDashTrack, selectedDashHeight } from "../lib/dash-video";
 import type { DefaultLayoutIcon, MenuInstance } from "../lib/vidstack";
 import {
   ClipIcon,
@@ -29,9 +32,51 @@ function collectResolutionOptions(options: QualityOption[]): QualityOption[] {
   return [...grouped.values()];
 }
 
+function activeDashTrack(
+  player: dashjs.MediaPlayerClass,
+  selectedVideoTrack: dashjs.MediaInfo | null,
+): dashjs.MediaInfo | null {
+  return selectedVideoTrack ?? player.getCurrentTrackFor("video");
+}
+
 export function QualitySelector() {
   const menuRef = useRef<MenuInstance>(null);
+  const { player, selectedVideoTrack } = useDashPlayerSnapshot();
   const options = useVideoQualityOptions({ sort: "descending" });
+
+  const dashTrack = player ? activeDashTrack(player, selectedVideoTrack) : null;
+  if (player && dashTrack) {
+    const dashPlayer = player;
+    const activeTrack = dashTrack;
+    const selectedHeight = selectedDashHeight(dashPlayer, activeTrack);
+    const dashOptions = dashQualityOptions(activeTrack, selectedHeight);
+    const selected = dashOptions.find((option) => option.selected) ?? dashOptions[0];
+
+    if (dashOptions.length > 1 && selected) {
+      function onDashChange(value: string) {
+        const height = Number(value);
+        if (!Number.isFinite(height)) return;
+        selectDashTrack(dashPlayer, activeTrack, height);
+        menuRef.current?.close();
+      }
+
+      return (
+        <Menu.Root ref={menuRef} className="vds-quality-menu vds-menu">
+          <DefaultMenuButton label="Quality" hint={selected.label} Icon={qualityIcon} />
+          <Menu.Items className={MENU_ITEMS_CLASS}>
+            <DefaultMenuRadioGroup
+              value={selected.value}
+              options={dashOptions.map((option) => ({
+                label: option.label,
+                value: option.value,
+              }))}
+              onChange={onDashChange}
+            />
+          </Menu.Items>
+        </Menu.Root>
+      );
+    }
+  }
 
   const videoOptions = options.filter((o) => o.quality !== null);
   const filteredOptions = collectResolutionOptions(videoOptions);

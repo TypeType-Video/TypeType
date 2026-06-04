@@ -15,12 +15,9 @@ type ResolveManifestOptions = {
   preferOriginalLanguage?: boolean;
   maxCompactAudioTracks?: number;
   compatibilityMode?: boolean;
+  enableHighQualityPlayback?: boolean;
+  highQualityFailed?: boolean;
 };
-
-function isFirefoxBrowser(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return navigator.userAgent.includes("Firefox/");
-}
 
 function fallbackSrc(
   stream: VideoStream,
@@ -101,7 +98,7 @@ export function resolveManifestSrc(
   const compactAudioTracks = options?.compactAudioTracks ?? isShort;
   const maxCompactAudioTracks = options?.maxCompactAudioTracks ?? (isShort ? 3 : 8);
   const provider = detectProvider(stream.id);
-  const isFirefox = isFirefoxBrowser();
+  const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox/");
 
   if (stream.hlsUrl) {
     return {
@@ -132,6 +129,20 @@ export function resolveManifestSrc(
   if (!isLive && compatibilityMode) {
     const progressiveSrc = pickCompatibleProgressiveSrc(stream);
     if (progressiveSrc) return progressiveSrc;
+  }
+
+  if (
+    !isLive &&
+    provider === "youtube" &&
+    options?.enableHighQualityPlayback &&
+    !options.highQualityFailed &&
+    stream.videoOnlyStreams?.length &&
+    !compatibilityMode
+  ) {
+    return {
+      src: proxyDashManifest(`${BASE}/streams/manifest?url=${encodeURIComponent(stream.id)}`),
+      type: "application/dash+xml",
+    };
   }
 
   if (

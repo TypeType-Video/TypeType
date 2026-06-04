@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { recordClientEvent } from "../lib/client-debug-log";
 import { sanitizeVideoContext } from "../lib/debug-sanitize";
 import { isIosDevice } from "../lib/ios-device";
+import { detectProvider } from "../lib/provider";
 import { resolveManifestSrc } from "../lib/stream-src";
 import type { MediaSrc } from "../lib/vidstack";
 import type { VideoStream } from "../types/stream";
@@ -32,11 +33,26 @@ function hasMultipleAudioLanguages(stream: VideoStream): boolean {
   return false;
 }
 
-export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerErrorReturn {
+export function usePlayerError(
+  stream: VideoStream,
+  isLive: boolean,
+  enableHighQualityPlayback = false,
+): UsePlayerErrorReturn {
   const streamId = stream.id;
   const debugVideo = sanitizeVideoContext(streamId) ?? "unknown";
-  const preferNativeManifest = !isIosDevice() && !hasMultipleAudioLanguages(stream);
-  const nativeEnabled = !isLive && Boolean(stream.videoOnlyStreams?.length) && preferNativeManifest;
+  const provider = detectProvider(stream.id);
+  const iosDevice = isIosDevice();
+  const preferNativeManifest = !iosDevice && !hasMultipleAudioLanguages(stream);
+  const videoOnlyCount = stream.videoOnlyStreams?.length ?? 0;
+  const highQualityEnabled =
+    enableHighQualityPlayback &&
+    !isLive &&
+    !iosDevice &&
+    !stream.hlsUrl &&
+    videoOnlyCount > 0 &&
+    provider === "youtube";
+  const nativeEnabled = !isLive && videoOnlyCount > 0 && preferNativeManifest;
+  const [highQualityFailed, setHighQualityFailed] = useState(false);
   const [nativeFailed, setNativeFailed] = useState(false);
   const [qualityFailed, setQualityFailed] = useState(false);
   const [compatibilityFallback, setCompatibilityFallback] = useState(false);
@@ -48,15 +64,32 @@ export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerE
       return resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
         preferNativeManifest,
         compatibilityMode: true,
+        enableHighQualityPlayback: highQualityEnabled,
+        highQualityFailed,
       });
     }
     return resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
       preferNativeManifest,
+      enableHighQualityPlayback: highQualityEnabled,
+      highQualityFailed,
     });
-  }, [stream, isLive, nativeFailed, qualityFailed, preferNativeManifest, compatibilityFallback]);
+  }, [
+    stream,
+    isLive,
+    nativeFailed,
+    qualityFailed,
+    preferNativeManifest,
+    compatibilityFallback,
+    highQualityEnabled,
+    highQualityFailed,
+  ]);
 
   const handleError = useCallback(() => {
-    if (nativeEnabled && !nativeFailed) {
+    if (highQualityEnabled && !highQualityFailed) {
+      recordClientEvent("player.high_quality_failed", { video: debugVideo });
+      setHighQualityFailed(true);
+      setRetryKey((k) => k + 1);
+    } else if (nativeEnabled && !nativeFailed) {
       recordClientEvent("player.native_manifest_failed", { video: debugVideo });
       setNativeFailed(true);
       setRetryKey((k) => k + 1);
@@ -72,9 +105,19 @@ export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerE
       recordClientEvent("player.failed", { video: debugVideo });
       setPlayerFailed(true);
     }
-  }, [debugVideo, nativeEnabled, nativeFailed, qualityFailed, compatibilityFallback, isLive]);
+  }, [
+    debugVideo,
+    highQualityEnabled,
+    highQualityFailed,
+    nativeEnabled,
+    nativeFailed,
+    qualityFailed,
+    compatibilityFallback,
+    isLive,
+  ]);
 
   const reset = useCallback(() => {
+    setHighQualityFailed(false);
     setNativeFailed(false);
     setQualityFailed(false);
     setCompatibilityFallback(false);
@@ -84,6 +127,7 @@ export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerE
 
   useEffect(() => {
     if (streamId.length === 0) return;
+    setHighQualityFailed(false);
     setNativeFailed(false);
     setQualityFailed(false);
     setCompatibilityFallback(false);
