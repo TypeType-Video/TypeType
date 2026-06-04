@@ -119,6 +119,34 @@ export function SettingsPlayback() {
         </div>
         <div className={ROW}>
           <div className="flex flex-col gap-1">
+            <span className="text-sm text-fg">Enable high quality playback</span>
+            <span className="text-xs text-fg-soft">
+              Allows VP9/AV1 adaptive streams when supported. May not work on all browsers or
+              devices.
+            </span>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.enableHighQualityPlayback}
+            onClick={() =>
+              update.mutate({ enableHighQualityPlayback: !settings.enableHighQualityPlayback })
+            }
+            className={`relative w-10 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ml-6 ${
+              settings.enableHighQualityPlayback ? "bg-fg" : "bg-surface-soft"
+            }`}
+          >
+            <span
+              className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full transition-all duration-200 ${
+                settings.enableHighQualityPlayback
+                  ? "translate-x-5 bg-surface"
+                  : "translate-x-0 bg-surface-soft"
+              }`}
+            />
+          </button>
+        </div>
+        <div className={ROW}>
+          <div className="flex flex-col gap-1">
             <span className="text-sm text-fg">Compatibility playback mode</span>
             <span className="text-xs text-fg-soft">
               Prioritize reliable iOS legacy playback over adaptive behavior

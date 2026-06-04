@@ -33,13 +33,12 @@ type Props = {
 export function WatchLayout({ stream, startTime }: Props) {
   const navigate = useNavigate();
   const save = useSaveProgress(stream.id);
-  const { settings, update, query: settingsQuery } = useSettings();
-  const settingsReady =
-    (settingsQuery.isSuccess && !settingsQuery.isPlaceholderData) || settingsQuery.isError;
+  const { settings, update, settingsReady } = useSettings();
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
   const { manifestSrc, playerFailed, qualityFailed, handleError, reset, retryKey } = usePlayerError(
     stream,
     isLive,
+    settings.enableHighQualityPlayback,
   );
   const { on: bulletCommentsOn } = useDanmakuStore();
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
@@ -52,6 +51,7 @@ export function WatchLayout({ stream, startTime }: Props) {
   const [toast, setToast] = useState<string | null>(null);
   const handleVolumeChange = useVolumeSync(update.mutate);
   const { thumbnailVtt, chaptersVtt } = useWatchVttAssets(stream);
+  const playerKey = `${stream.id}:${retryKey}:${settings.enableHighQualityPlayback ? "hq" : "std"}`;
 
   useEffect(() => {
     if (!toast) return;
@@ -109,36 +109,44 @@ export function WatchLayout({ stream, startTime }: Props) {
     <div className={containerClass}>
       <div className={playerWrapClass}>
         <div className={playerBoxClass}>
-          <VideoPlayer
-            key={`${stream.id}:${retryKey}`}
-            src={manifestSrc}
-            title={stream.title}
-            poster={stream.thumbnail}
-            streamType={isLive ? "live" : "on-demand"}
-            startTime={startTime}
-            subtitles={stream.subtitles}
-            sponsorBlockSegments={stream.sponsorBlockSegments}
-            thumbnailVtt={thumbnailVtt}
-            chaptersVtt={chaptersVtt}
-            initialVolume={settings.volume}
-            initialMuted={settings.muted}
-            settingsReady={settingsReady}
-            autoplay={settingsReady}
-            originalAudioLocale={originalLocale}
-            overlay={overlay}
-            onVolumeChange={handleVolumeChange}
-            onTimeUpdate={playerEvents.handleTimeUpdate}
-            onPause={playerEvents.handlePause}
-            onSeeked={playerEvents.handleSeeked}
-            onError={handleError}
-            onEnded={playerEvents.handleEnded}
-            onSeekReady={(s) => {
-              seekRef.current = s;
-            }}
-            className={cinemaMode ? "w-full h-full dark [--video-aspect-ratio:16/9]" : undefined}
-            mediaClassName={cinemaMode ? "object-cover" : undefined}
-          />
-          {playerFailed && <PlayerError onRetry={reset} />}
+          {settingsReady ? (
+            <>
+              <VideoPlayer
+                key={playerKey}
+                src={manifestSrc}
+                title={stream.title}
+                poster={stream.thumbnail}
+                streamType={isLive ? "live" : "on-demand"}
+                startTime={startTime}
+                subtitles={stream.subtitles}
+                sponsorBlockSegments={stream.sponsorBlockSegments}
+                thumbnailVtt={thumbnailVtt}
+                chaptersVtt={chaptersVtt}
+                initialVolume={settings.volume}
+                initialMuted={settings.muted}
+                settingsReady={settingsReady}
+                autoplay={settingsReady}
+                originalAudioLocale={originalLocale}
+                overlay={overlay}
+                onVolumeChange={handleVolumeChange}
+                onTimeUpdate={playerEvents.handleTimeUpdate}
+                onPause={playerEvents.handlePause}
+                onSeeked={playerEvents.handleSeeked}
+                onError={handleError}
+                onEnded={playerEvents.handleEnded}
+                onSeekReady={(s) => {
+                  seekRef.current = s;
+                }}
+                className={
+                  cinemaMode ? "w-full h-full dark [--video-aspect-ratio:16/9]" : undefined
+                }
+                mediaClassName={cinemaMode ? "object-cover" : undefined}
+              />
+              {playerFailed && <PlayerError onRetry={reset} />}
+            </>
+          ) : (
+            <div className="aspect-video w-full bg-black" />
+          )}
         </div>
         {!cinemaMode && (
           <WatchMeta stream={stream} onSeekTimestamp={(seconds) => seekRef.current?.(seconds)} />
