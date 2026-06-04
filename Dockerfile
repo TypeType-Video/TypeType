@@ -13,6 +13,8 @@ RUN bun run --cwd apps/web build
 
 FROM nginx:1.31.0-alpine AS runner
 
+RUN apk upgrade --no-cache libxml2
+
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
