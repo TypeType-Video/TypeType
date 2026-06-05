@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { bilibiliVariantCount } from "../lib/bilibili-manifest";
 import { recordClientEvent } from "../lib/client-debug-log";
 import { sanitizeVideoContext } from "../lib/debug-sanitize";
 import { isIosDevice } from "../lib/ios-device";
@@ -56,8 +57,13 @@ export function usePlayerError(
   const [nativeFailed, setNativeFailed] = useState(false);
   const [qualityFailed, setQualityFailed] = useState(false);
   const [compatibilityFallback, setCompatibilityFallback] = useState(false);
+  const [bilibiliVariant, setBilibiliVariant] = useState(0);
   const [playerFailed, setPlayerFailed] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const bilibiliVariants =
+    provider === "bilibili"
+      ? bilibiliVariantCount(stream.videoOnlyStreams ?? [], stream.audioStreams ?? [])
+      : 0;
 
   const manifestSrc = useMemo(() => {
     if (compatibilityFallback) {
@@ -66,12 +72,14 @@ export function usePlayerError(
         compatibilityMode: true,
         enableHighQualityPlayback: highQualityEnabled,
         highQualityFailed,
+        bilibiliVariant,
       });
     }
     return resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
       preferNativeManifest,
       enableHighQualityPlayback: highQualityEnabled,
       highQualityFailed,
+      bilibiliVariant,
     });
   }, [
     stream,
@@ -82,10 +90,15 @@ export function usePlayerError(
     compatibilityFallback,
     highQualityEnabled,
     highQualityFailed,
+    bilibiliVariant,
   ]);
 
   const handleError = useCallback(() => {
-    if (highQualityEnabled && !highQualityFailed) {
+    if (provider === "bilibili" && bilibiliVariant < bilibiliVariants - 1) {
+      recordClientEvent("player.bilibili_variant_failed", { video: debugVideo });
+      setBilibiliVariant((variant) => variant + 1);
+      setRetryKey((k) => k + 1);
+    } else if (highQualityEnabled && !highQualityFailed) {
       recordClientEvent("player.high_quality_failed", { video: debugVideo });
       setHighQualityFailed(true);
       setRetryKey((k) => k + 1);
@@ -107,6 +120,9 @@ export function usePlayerError(
     }
   }, [
     debugVideo,
+    provider,
+    bilibiliVariant,
+    bilibiliVariants,
     highQualityEnabled,
     highQualityFailed,
     nativeEnabled,
@@ -121,6 +137,7 @@ export function usePlayerError(
     setNativeFailed(false);
     setQualityFailed(false);
     setCompatibilityFallback(false);
+    setBilibiliVariant(0);
     setPlayerFailed(false);
     setRetryKey((k) => k + 1);
   }, []);
@@ -131,6 +148,7 @@ export function usePlayerError(
     setNativeFailed(false);
     setQualityFailed(false);
     setCompatibilityFallback(false);
+    setBilibiliVariant(0);
     setPlayerFailed(false);
     setRetryKey(0);
   }, [streamId]);

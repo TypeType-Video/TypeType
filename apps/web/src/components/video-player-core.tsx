@@ -32,7 +32,21 @@ export function onProviderChange(provider: MediaProviderAdapter | null) {
     player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onDashUpdate);
     player.on(dashjs.MediaPlayer.events.TRACK_CHANGE_RENDERED, onDashUpdate);
     player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, onDashUpdate);
-    player.updateSettings({ streaming: { cmcd: { enabled: false } } });
+    player.updateSettings({
+      streaming: {
+        cmcd: { enabled: false },
+        retryAttempts: {
+          MediaSegment: 3,
+          InitializationSegment: 3,
+          IndexSegment: 3,
+        },
+        retryIntervals: {
+          MediaSegment: 500,
+          InitializationSegment: 500,
+          IndexSegment: 500,
+        },
+      },
+    });
     shimDashjsQualityApi(player);
   });
 }

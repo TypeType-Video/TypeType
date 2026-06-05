@@ -1,11 +1,12 @@
 import type { VideoStream } from "../types/stream";
+import { buildBilibiliDashManifest } from "./bilibili-manifest";
 import { buildDashManifest } from "./dash-manifest";
 import { API_BASE as BASE } from "./env";
-import { buildNicoMasterPlaylist } from "./nico-manifest";
 import { isCompatibilityPlaybackMode } from "./playback-mode";
 import { detectProvider } from "./provider";
 import { proxyDashManifest } from "./proxy";
 import { pickCompactAudioTracks } from "./stream-audio-compact";
+import { hasCompatibleMp4, pickCompatibleProgressiveSrc } from "./stream-compatibility";
 import type { MediaSrc } from "./vidstack";
 
 type ResolveManifestOptions = {
@@ -17,6 +18,7 @@ type ResolveManifestOptions = {
   compatibilityMode?: boolean;
   enableHighQualityPlayback?: boolean;
   highQualityFailed?: boolean;
+  bilibiliVariant?: number;
 };
 
 function fallbackSrc(
@@ -49,40 +51,8 @@ function fallbackSrc(
   };
 }
 
-function pickCompatibleProgressiveSrc(stream: VideoStream): MediaSrc | null {
-  const progressive = [...(stream.videoStreams ?? [])]
-    .filter(
-      (candidate) =>
-        typeof candidate.codec === "string" &&
-        candidate.codec.includes("avc1") &&
-        candidate.codec.includes("mp4a") &&
-        candidate.mimeType.includes("video/mp4"),
-    )
-    .sort((left, right) => (right.bitrate ?? 0) - (left.bitrate ?? 0))[0];
-
-  if (!progressive) return null;
-  return {
-    src: proxyDashManifest(progressive.url),
-    type: "video/mp4",
-  };
-}
-
-function hasCompatibleMp4(stream: VideoStream): boolean {
-  const videos = stream.videoOnlyStreams ?? [];
-  const audios = stream.audioStreams ?? [];
-  const hasMp4Video = videos.some(
-    (video) =>
-      typeof video.codec === "string" &&
-      video.codec.startsWith("avc1") &&
-      (video.mimeType?.includes("video/mp4") ?? true),
-  );
-  const hasMp4Audio = audios.some(
-    (audio) =>
-      typeof audio.codec === "string" &&
-      (audio.codec.startsWith("mp4a") || audio.codec === "mp4a") &&
-      (audio.mimeType?.includes("audio/mp4") ?? true),
-  );
-  return hasMp4Video && hasMp4Audio;
+function pickNicoHlsUrl(stream: VideoStream): string | null {
+  return stream.videoOnlyStreams?.[0]?.url ?? stream.audioStreams?.[0]?.url ?? null;
 }
 
 export function resolveManifestSrc(
@@ -107,21 +77,21 @@ export function resolveManifestSrc(
     };
   }
 
-  if (provider === "nicovideo" && stream.videoOnlyStreams?.length) {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const src = buildNicoMasterPlaylist(stream.videoOnlyStreams, stream.audioStreams ?? [], origin);
-    if (src) return { src, type: "application/x-mpegurl" };
-    return {
-      src: proxyDashManifest(
-        `${BASE}/proxy/nicovideo?url=${encodeURIComponent(stream.videoOnlyStreams[0].url)}`,
-      ),
-      type: "application/x-mpegurl",
-    };
+  if (provider === "nicovideo") {
+    const hlsUrl = pickNicoHlsUrl(stream);
+    if (hlsUrl) return { src: proxyDashManifest(hlsUrl), type: "application/x-mpegurl" };
   }
 
   if (provider === "bilibili") {
+    const built = buildBilibiliDashManifest(
+      stream.videoOnlyStreams ?? [],
+      stream.audioStreams ?? [],
+      stream.duration,
+      options?.bilibiliVariant,
+    );
     return {
-      src: proxyDashManifest(`${BASE}/streams/manifest?url=${encodeURIComponent(stream.id)}`),
+      src:
+        built ?? proxyDashManifest(`${BASE}/streams/manifest?url=${encodeURIComponent(stream.id)}`),
       type: "application/dash+xml",
     };
   }

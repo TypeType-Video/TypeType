@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBulletComments } from "../hooks/use-bullet-comments";
 import { usePlayerError } from "../hooks/use-player-error";
+import { usePlayerErrorResume } from "../hooks/use-player-error-resume";
 import { useSaveProgress } from "../hooks/use-progress";
 import { useSettings } from "../hooks/use-settings";
 import { useVolumeSync } from "../hooks/use-volume-sync";
@@ -20,10 +21,10 @@ import { DanmakuOverlay } from "./danmaku-overlay";
 import { PlayerDefaults } from "./player-defaults";
 import { PlayerError } from "./player-error";
 import { PlayerFocuser } from "./player-internals";
-import { RelatedVideos } from "./related-videos";
 import { Toast } from "./toast";
 import { VideoPlayer } from "./video-player";
 import { WatchMeta } from "./watch-meta";
+import { WatchSecondaryContent } from "./watch-secondary-content";
 
 type Props = {
   stream: VideoStream;
@@ -71,6 +72,12 @@ export function WatchLayout({ stream, startTime }: Props) {
     mutate: save.mutate,
     onEnded: handleEnded,
   });
+  const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
+    stream.id,
+    stream.duration,
+    playerEvents.positionRef,
+    handleError,
+  );
 
   const overlay = (
     <>
@@ -95,7 +102,6 @@ export function WatchLayout({ stream, startTime }: Props) {
     </>
   );
 
-  const relatedStreams = stream.related ?? [];
   const anim = "[animation:page-fade-in_0.2s_ease-out]";
   const containerClass = `flex flex-col gap-6 ${cinemaMode ? "" : "lg:flex-row lg:items-start"} ${anim}`;
   const playerWrapClass = cinemaMode
@@ -117,7 +123,7 @@ export function WatchLayout({ stream, startTime }: Props) {
                 title={stream.title}
                 poster={stream.thumbnail}
                 streamType={isLive ? "live" : "on-demand"}
-                startTime={startTime}
+                startTime={retryStartTime > 0 ? retryStartTime : startTime}
                 subtitles={stream.subtitles}
                 sponsorBlockSegments={stream.sponsorBlockSegments}
                 thumbnailVtt={thumbnailVtt}
@@ -132,7 +138,7 @@ export function WatchLayout({ stream, startTime }: Props) {
                 onTimeUpdate={playerEvents.handleTimeUpdate}
                 onPause={playerEvents.handlePause}
                 onSeeked={playerEvents.handleSeeked}
-                onError={handleError}
+                onError={handlePlayerError}
                 onEnded={playerEvents.handleEnded}
                 onSeekReady={(s) => {
                   seekRef.current = s;
@@ -148,25 +154,14 @@ export function WatchLayout({ stream, startTime }: Props) {
             <div className="aspect-video w-full bg-black" />
           )}
         </div>
-        {!cinemaMode && (
-          <WatchMeta stream={stream} onSeekTimestamp={(seconds) => seekRef.current?.(seconds)} />
-        )}
+        {!cinemaMode && <WatchMeta stream={stream} onSeekTimestamp={(s) => seekRef.current?.(s)} />}
       </div>
-      {!cinemaMode && (
-        <div className="w-full lg:flex-1 lg:min-w-64 flex flex-col gap-6">
-          <RelatedVideos streams={relatedStreams} />
-        </div>
-      )}
-      {cinemaMode && (
-        <div className="mx-auto flex w-full max-w-[1700px] flex-col gap-6 px-4 lg:flex-row lg:items-start">
-          <div className="min-w-0 flex-[2] max-w-[1200px] flex flex-col gap-4">
-            <WatchMeta stream={stream} onSeekTimestamp={(seconds) => seekRef.current?.(seconds)} />
-          </div>
-          <div className="w-full lg:flex-1 lg:min-w-64">
-            <RelatedVideos streams={relatedStreams} />
-          </div>
-        </div>
-      )}
+      <WatchSecondaryContent
+        cinemaMode={cinemaMode}
+        stream={stream}
+        relatedStreams={stream.related ?? []}
+        onSeekTimestamp={(seconds) => seekRef.current?.(seconds)}
+      />
       <Toast message={toast} />
     </div>
   );
