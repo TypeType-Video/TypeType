@@ -11,9 +11,20 @@ type Props = {
   isLoading?: boolean;
 };
 
+function uniqueStreams(streams: VideoStream[]): VideoStream[] {
+  const seen = new Set<string>();
+  const unique: VideoStream[] = [];
+  for (const stream of streams) {
+    if (seen.has(stream.id)) continue;
+    seen.add(stream.id);
+    unique.push(stream);
+  }
+  return unique;
+}
+
 export function RelatedVideos({ streams, isLoading = false }: Props) {
   const { filter } = useBlockedFilter();
-  const visible = filter(streams);
+  const visible = uniqueStreams(filter(streams));
   return (
     <div className="flex flex-col gap-3">
       <AutoplayToggle />
