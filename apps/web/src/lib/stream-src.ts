@@ -2,6 +2,7 @@ import type { VideoStream } from "../types/stream";
 import { buildBilibiliDashManifest } from "./bilibili-manifest";
 import { buildDashManifest } from "./dash-manifest";
 import { API_BASE as BASE } from "./env";
+import { buildNicoHlsManifest } from "./nico-hls-manifest";
 import { isCompatibilityPlaybackMode } from "./playback-mode";
 import { detectProvider } from "./provider";
 import { proxyDashManifest } from "./proxy";
@@ -51,10 +52,6 @@ function fallbackSrc(
   };
 }
 
-function pickNicoHlsUrl(stream: VideoStream): string | null {
-  return stream.videoOnlyStreams?.[0]?.url ?? stream.audioStreams?.[0]?.url ?? null;
-}
-
 export function resolveManifestSrc(
   stream: VideoStream,
   isLive: boolean,
@@ -78,8 +75,8 @@ export function resolveManifestSrc(
   }
 
   if (provider === "nicovideo") {
-    const hlsUrl = pickNicoHlsUrl(stream);
-    if (hlsUrl) return { src: proxyDashManifest(hlsUrl), type: "application/x-mpegurl" };
+    const built = buildNicoHlsManifest(stream.videoOnlyStreams ?? [], stream.audioStreams ?? []);
+    if (built) return { src: built, type: "application/x-mpegurl" };
   }
 
   if (provider === "bilibili") {
