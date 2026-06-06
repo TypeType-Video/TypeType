@@ -1,6 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import type { ChannelSort } from "../lib/api";
 import { fetchChannel } from "../lib/api";
+import { buildChannelRequestUrl } from "../lib/channel-search-url";
 import { mapVideoItem } from "../lib/mappers";
 import { proxyImage } from "../lib/proxy";
 import type { VideoStream } from "../types/stream";
@@ -20,11 +22,18 @@ type ChannelPage = {
   nextpage: string | null;
 };
 
-export function useChannel(channelUrl: string, sort?: ChannelSort) {
-  const query = useInfiniteQuery({
-    queryKey: ["channel", channelUrl, sort],
+type CachedChannelMeta = {
+  channelUrl: string;
+  meta: ChannelMeta;
+};
+
+export function useChannel(channelUrl: string, sort: ChannelSort, searchQuery: string) {
+  const lastMeta = useRef<CachedChannelMeta | null>(null);
+  const requestUrl = buildChannelRequestUrl(channelUrl, searchQuery);
+  const channelQuery = useInfiniteQuery({
+    queryKey: ["channel", channelUrl, sort, searchQuery],
     queryFn: async ({ pageParam }): Promise<ChannelPage> => {
-      const res = await fetchChannel(channelUrl, pageParam as string | undefined, sort);
+      const res = await fetchChannel(requestUrl, pageParam as string | undefined, sort);
       const isFirstPage = pageParam === undefined;
       return {
         meta: isFirstPage
@@ -44,15 +53,20 @@ export function useChannel(channelUrl: string, sort?: ChannelSort) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: ChannelPage | undefined) => last?.nextpage ?? undefined,
     enabled: channelUrl.length > 0,
-    placeholderData: (previousData) => previousData,
   });
 
-  const pages = query.data?.pages ?? [];
-  const meta = pages.find((p) => p.meta !== null)?.meta ?? null;
+  const pages = channelQuery.data?.pages ?? [];
+  const currentMeta = pages.find((p) => p.meta !== null)?.meta ?? null;
+  const cachedMeta = lastMeta.current?.channelUrl === channelUrl ? lastMeta.current.meta : null;
+  const meta = currentMeta ?? cachedMeta;
   const avatarUrl = meta?.avatarUrl ?? "";
   const videos = pages.flatMap((p) =>
     p.videos.map((v) => (v.channelAvatar || !avatarUrl ? v : { ...v, channelAvatar: avatarUrl })),
   );
 
-  return { ...query, meta, videos };
+  useEffect(() => {
+    if (currentMeta) lastMeta.current = { channelUrl, meta: currentMeta };
+  }, [channelUrl, currentMeta]);
+
+  return { ...channelQuery, meta, videos };
 }
