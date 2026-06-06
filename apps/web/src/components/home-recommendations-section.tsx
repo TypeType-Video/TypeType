@@ -2,20 +2,8 @@ import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useHomeRecommendations } from "../hooks/use-home-recommendations";
 import { HomeFallbackSection } from "./home-fallback-section";
 import { ScrollSentinel } from "./scroll-sentinel";
-import { VideoCardSkeleton } from "./video-card-skeleton";
 import { VideoGrid } from "./video-grid";
-
-const SKELETON_KEYS = Array.from({ length: 12 }, (_, i) => `hrs-${i}`);
-
-function SkeletonGrid() {
-  return (
-    <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
-      {SKELETON_KEYS.map((k) => (
-        <VideoCardSkeleton key={k} />
-      ))}
-    </div>
-  );
-}
+import { VideoGridSkeleton } from "./video-grid-skeleton";
 
 export function HomeRecommendationsSection() {
   const { streams, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
@@ -23,11 +11,12 @@ export function HomeRecommendationsSection() {
   const { filter } = useBlockedFilter();
   const filtered = filter(streams);
 
-  if (isLoading) return <SkeletonGrid />;
+  if (isLoading) return <VideoGridSkeleton idPrefix="home-recommendations" />;
   if (isError || filtered.length === 0) return <HomeFallbackSection />;
   return (
     <>
       <VideoGrid streams={filtered} />
+      {isFetchingNextPage && <VideoGridSkeleton idPrefix="home-recommendations-next" />}
       <ScrollSentinel onIntersect={fetchNextPage} enabled={hasNextPage && !isFetchingNextPage} />
     </>
   );
