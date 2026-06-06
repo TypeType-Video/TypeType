@@ -2,16 +2,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { ScrollSentinel } from "../components/scroll-sentinel";
-import { VideoCardSkeleton } from "../components/video-card-skeleton";
 import { VideoGrid } from "../components/video-grid";
+import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { streamQueryOptions } from "../hooks/use-stream";
 import { useSubscriptionFeed } from "../hooks/use-subscription-feed";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import { ApiError } from "../lib/api";
-
-const SKELETON_COUNT = 12;
-const SKELETON_KEYS = Array.from({ length: SKELETON_COUNT }, (_, i) => `subs-sk-${i}`);
 
 function SubscriptionsPage() {
   const queryClient = useQueryClient();
@@ -35,6 +32,8 @@ function SubscriptionsPage() {
     }
   }, [streams, queryClient]);
 
+  if (query.isLoading) return <VideoGridSkeleton idPrefix="subscriptions-list" />;
+
   if (subscriptions.length === 0) {
     return (
       <div className="flex items-center justify-center pt-32">
@@ -43,19 +42,12 @@ function SubscriptionsPage() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-6 sm:gap-y-8">
-        {SKELETON_KEYS.map((key) => (
-          <VideoCardSkeleton key={key} />
-        ))}
-      </div>
-    );
-  }
+  if (isLoading) return <VideoGridSkeleton idPrefix="subscriptions" />;
 
   return (
     <>
       <VideoGrid streams={filter(streams)} />
+      {isFetchingNextPage && <VideoGridSkeleton idPrefix="subscriptions-next" />}
       <ScrollSentinel onIntersect={fetchNextPage} enabled={hasNextPage && !isFetchingNextPage} />
     </>
   );

@@ -1,12 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { ScrollSentinel } from "../components/scroll-sentinel";
-import { VideoCard } from "../components/video-card";
-import { VideoCardSkeleton } from "../components/video-card-skeleton";
+import { VideoGrid } from "../components/video-grid";
+import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useSearch } from "../hooks/use-search";
-
-const SKELETON_KEYS = Array.from({ length: 12 }, (_, i) => `skeleton-${i}`);
 
 function SearchPage() {
   const { q, service } = Route.useSearch();
@@ -28,15 +26,7 @@ function SearchPage() {
     navigate({ to: "/search", search: { q: suggestion, service } });
   }
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-6 sm:gap-y-8">
-        {SKELETON_KEYS.map((k) => (
-          <VideoCardSkeleton key={k} />
-        ))}
-      </div>
-    );
-  }
+  if (isLoading) return <VideoGridSkeleton idPrefix="search" />;
 
   return (
     <div>
@@ -68,19 +58,9 @@ function SearchPage() {
       {streams.length === 0 ? (
         <p className="text-fg-muted text-sm">No results for &ldquo;{q}&rdquo;</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-6 sm:gap-y-8">
-          {streams.map((stream, index) => (
-            <div
-              key={stream.id}
-              className="animate-card-pop-in"
-              style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
-            >
-              <VideoCard stream={stream} />
-            </div>
-          ))}
-          {isFetchingNextPage && SKELETON_KEYS.map((k) => <VideoCardSkeleton key={k} />)}
-        </div>
+        <VideoGrid streams={streams} />
       )}
+      {isFetchingNextPage && <VideoGridSkeleton idPrefix="search-next" />}
       <ScrollSentinel onIntersect={loadMore} enabled={!!hasNextPage && !isFetchingNextPage} />
     </div>
   );

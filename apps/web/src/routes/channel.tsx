@@ -1,36 +1,38 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChannelAvatar } from "../components/channel-avatar";
+import { ChannelFilterBar } from "../components/channel-filter-bar";
 import { ChannelPodcastsSection } from "../components/channel-podcasts-section";
 import { PageSpinner } from "../components/page-spinner";
 import { ScrollSentinel } from "../components/scroll-sentinel";
 import { VideoCard } from "../components/video-card";
+import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { VerifiedBadgeIcon } from "../components/watch-icons";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useChannel } from "../hooks/use-channel";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import { ApiError, type ChannelSort } from "../lib/api";
+import { splitChannelSearchUrl } from "../lib/channel-search-url";
+import { channelSortOrDefault } from "../lib/channel-sort";
 import { formatViews } from "../lib/format";
+import { detectProvider } from "../lib/provider";
 
-const CHANNEL_SORT_OPTIONS: { value: ChannelSort; label: string }[] = [
-  { value: "latest", label: "Latest" },
-  { value: "popular", label: "Popular" },
-  { value: "oldest", label: "Oldest" },
-];
+type ChannelRouteSearch = { url: string; sort?: ChannelSort; q?: string };
 
-function toChannelSort(value: unknown): ChannelSort | undefined {
-  if (value === "latest" || value === "popular" || value === "oldest") return value;
-  return undefined;
+function channelRouteSearch(url: string, sort: ChannelSort, query: string): ChannelRouteSearch {
+  const q = query.trim();
+  return q.length > 0 ? { url, sort, q } : { url, sort };
 }
 
 function validateChannelSearch(search: Record<string, unknown>) {
-  const url = typeof search.url === "string" ? search.url : "";
-  const sort = toChannelSort(search.sort);
-  return sort ? { url, sort } : { url };
+  const parsed = splitChannelSearchUrl(typeof search.url === "string" ? search.url : "");
+  const query = typeof search.q === "string" ? search.q.trim() : parsed.query;
+  return channelRouteSearch(parsed.channelUrl, channelSortOrDefault(search.sort), query);
 }
 
 function ChannelPage() {
-  const { url, sort: searchSort } = Route.useSearch();
+  const { url, sort: searchSort, q } = Route.useSearch();
   const sort = searchSort ?? "latest";
+  const searchQuery = q ?? "";
   const navigate = useNavigate({ from: "/channel" });
   const {
     meta,
@@ -40,13 +42,18 @@ function ChannelPage() {
     error,
     refetch,
     hasNextPage,
+    isFetching,
     isFetchingNextPage,
     fetchNextPage,
-  } = useChannel(url, searchSort);
+  } = useChannel(url, sort, searchQuery);
   const { add, remove, isSubscribed } = useSubscriptions();
   const { filter } = useBlockedFilter();
 
   const subscribed = isSubscribed(url);
+  const searchAvailable = detectProvider(url) === "youtube";
+  const visibleVideos = filter(videos);
+  const isInitialLoading = isLoading && !meta;
+  const isReplacingVideos = isFetching && !isFetchingNextPage && visibleVideos.length === 0;
 
   function handleSubscribe() {
     if (!meta) return;
@@ -58,10 +65,15 @@ function ChannelPage() {
   }
 
   function selectSort(nextSort: ChannelSort) {
-    navigate({ search: { url, sort: nextSort }, replace: true });
+    navigate({ search: channelRouteSearch(url, nextSort, searchQuery), replace: true });
   }
 
-  if (isLoading) return <PageSpinner />;
+  function searchChannel(nextQuery: string) {
+    const query = searchAvailable ? nextQuery : "";
+    navigate({ search: channelRouteSearch(url, sort, query), replace: true });
+  }
+
+  if (isInitialLoading) return <PageSpinner />;
   if (isError) {
     const message = error instanceof ApiError ? error.message : "Unable to load channel right now.";
     return (
@@ -114,32 +126,33 @@ function ChannelPage() {
         </div>
       )}
       <ChannelPodcastsSection channelUrl={url} channelAvatar={meta?.avatarUrl} />
-      <label className="flex w-fit items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-fg-muted">
-        Sort
-        <select
-          value={sort}
-          onChange={(event) => selectSort(toChannelSort(event.target.value) ?? "latest")}
-          className="bg-transparent text-sm font-medium text-fg outline-none"
-        >
-          {CHANNEL_SORT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
+      <ChannelFilterBar
+        sort={sort}
+        query={searchQuery}
+        searchAvailable={searchAvailable}
+        onSearch={searchChannel}
+        onSortChange={selectSort}
+      />
+      {isReplacingVideos ? (
+        <VideoGridSkeleton idPrefix="channel-replace" />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+          {visibleVideos.map((v, index) => (
+            <div
+              key={v.id}
+              className="animate-card-pop-in"
+              style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
+            >
+              <VideoCard stream={v} />
+            </div>
           ))}
-        </select>
-      </label>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
-        {filter(videos).map((v, index) => (
-          <div
-            key={v.id}
-            className="animate-card-pop-in"
-            style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
-          >
-            <VideoCard stream={v} />
-          </div>
-        ))}
-      </div>
-      <ScrollSentinel onIntersect={fetchNextPage} enabled={hasNextPage && !isFetchingNextPage} />
+        </div>
+      )}
+      {isFetchingNextPage && <VideoGridSkeleton idPrefix="channel-next" />}
+      <ScrollSentinel
+        onIntersect={fetchNextPage}
+        enabled={hasNextPage && !isFetchingNextPage && !isReplacingVideos}
+      />
     </div>
   );
 }

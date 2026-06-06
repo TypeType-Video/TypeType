@@ -7,52 +7,78 @@ const CACHE_MS = 30 * 60 * 1000;
 type CacheEntry = {
   updatedAt: number;
   avatarUrl: string;
+  uploaderVerified: boolean;
+};
+
+type HistoryChannelMeta = {
+  avatarUrl: string | null;
+  uploaderVerified: boolean;
 };
 
 const avatarCache = new Map<string, CacheEntry>();
-const pendingByChannel = new Map<string, Promise<string | null>>();
+const pendingByChannel = new Map<string, Promise<HistoryChannelMeta>>();
 
-function fromStream(stream: StreamResponse): string | null {
-  return stream.uploaderAvatarUrl && stream.uploaderAvatarUrl.length > 0
-    ? stream.uploaderAvatarUrl
-    : null;
+function fromStream(stream: StreamResponse): HistoryChannelMeta {
+  return {
+    avatarUrl:
+      stream.uploaderAvatarUrl && stream.uploaderAvatarUrl.length > 0
+        ? stream.uploaderAvatarUrl
+        : null,
+    uploaderVerified: stream.uploaderVerified,
+  };
 }
 
-function cached(channelUrl: string): string | null {
+function cached(channelUrl: string): HistoryChannelMeta | null {
   const hit = avatarCache.get(channelUrl);
   if (!hit) return null;
   if (Date.now() - hit.updatedAt > CACHE_MS) {
     avatarCache.delete(channelUrl);
     return null;
   }
-  return hit.avatarUrl;
+  return { avatarUrl: hit.avatarUrl || null, uploaderVerified: hit.uploaderVerified };
 }
 
-function setCache(channelUrl: string, avatarUrl: string): void {
-  avatarCache.set(channelUrl, { avatarUrl, updatedAt: Date.now() });
+function setCache(channelUrl: string, meta: HistoryChannelMeta): void {
+  avatarCache.set(channelUrl, {
+    avatarUrl: meta.avatarUrl ?? "",
+    uploaderVerified: meta.uploaderVerified,
+    updatedAt: Date.now(),
+  });
 }
 
-export async function resolveHistoryAvatar(item: HistoryItem): Promise<string | null> {
-  if (item.channelAvatar) return item.channelAvatar;
+export async function resolveHistoryChannelMeta(item: HistoryItem): Promise<HistoryChannelMeta> {
+  const current = {
+    avatarUrl: item.channelAvatar ?? null,
+    uploaderVerified: item.uploaderVerified ?? false,
+  };
+  if (item.channelAvatar && item.uploaderVerified !== undefined) return current;
   const channelUrl = item.channelUrl;
-  if (!channelUrl) return null;
+  if (!channelUrl) return current;
   const hit = cached(channelUrl);
-  if (hit) return hit;
+  if (hit)
+    return {
+      avatarUrl: current.avatarUrl ?? hit.avatarUrl,
+      uploaderVerified: hit.uploaderVerified,
+    };
   const pending = pendingByChannel.get(channelUrl);
-  if (pending) return pending;
+  if (pending)
+    return pending.then((meta) => ({ ...meta, avatarUrl: current.avatarUrl ?? meta.avatarUrl }));
   const task = (async () => {
     try {
       const stream = await fetchStream(item.url);
-      const avatarUrl = fromStream(stream);
-      if (!avatarUrl) return null;
-      setCache(channelUrl, avatarUrl);
-      return avatarUrl;
+      const meta = fromStream(stream);
+      setCache(channelUrl, meta);
+      return meta;
     } catch {
-      return null;
+      return current;
     } finally {
       pendingByChannel.delete(channelUrl);
     }
   })();
   pendingByChannel.set(channelUrl, task);
   return task;
+}
+
+export async function resolveHistoryAvatar(item: HistoryItem): Promise<string | null> {
+  return resolveHistoryChannelMeta(item).then((meta) => meta.avatarUrl);
 }

@@ -2,29 +2,18 @@ import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useSubscriptionFeed } from "../hooks/use-subscription-feed";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import { ScrollSentinel } from "./scroll-sentinel";
-import { VideoCardSkeleton } from "./video-card-skeleton";
 import { VideoGrid } from "./video-grid";
-
-const SKELETON_KEYS = Array.from({ length: 12 }, (_, i) => `hfs-${i}`);
-
-function SkeletonGrid() {
-  return (
-    <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
-      {SKELETON_KEYS.map((k) => (
-        <VideoCardSkeleton key={k} />
-      ))}
-    </div>
-  );
-}
+import { VideoGridSkeleton } from "./video-grid-skeleton";
 
 function FeedSection() {
   const { streams, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useSubscriptionFeed();
   const { filter } = useBlockedFilter();
-  if (isLoading) return <SkeletonGrid />;
+  if (isLoading) return <VideoGridSkeleton idPrefix="home-feed" />;
   return (
     <>
       <VideoGrid streams={filter(streams)} />
+      {isFetchingNextPage && <VideoGridSkeleton idPrefix="home-feed-next" />}
       <ScrollSentinel onIntersect={fetchNextPage} enabled={hasNextPage && !isFetchingNextPage} />
     </>
   );
@@ -33,7 +22,7 @@ function FeedSection() {
 export function HomeFallbackSection() {
   const { query } = useSubscriptions();
   const hasSubs = (query.data ?? []).length > 0;
-  if (query.isLoading) return <SkeletonGrid />;
+  if (query.isLoading) return <VideoGridSkeleton idPrefix="home-fallback" />;
   if (hasSubs) return <FeedSection />;
   return (
     <section className="rounded-xl border border-border bg-surface/70 p-6 text-center">
