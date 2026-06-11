@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
+import { watchRouteSearch } from "../lib/watch-url";
 import type { PlaylistVideoItem } from "../types/user";
 
 function XIcon() {
@@ -33,7 +34,7 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
     <div className="flex flex-col gap-2 group relative">
       <Link
         to="/watch"
-        search={{ v: video.url }}
+        search={watchRouteSearch(video.url)}
         className="block"
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
@@ -63,7 +64,7 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
       </Link>
       <Link
         to="/watch"
-        search={{ v: video.url }}
+        search={watchRouteSearch(video.url)}
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
       >

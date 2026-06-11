@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { PageSpinner } from "../components/page-spinner";
 import { StreamError } from "../components/stream-error";
 import { useAuth } from "../hooks/use-auth";
+import { useDocumentTitle } from "../hooks/use-document-title";
 import { useHistory } from "../hooks/use-history";
 import { useProgress } from "../hooks/use-progress";
 import {
@@ -12,6 +13,7 @@ import {
   useStream,
 } from "../hooks/use-stream";
 import { ApiError } from "../lib/api";
+import { toPublicWatchParam, toWatchSourceUrl } from "../lib/watch-url";
 
 const WatchLayout = lazy(() =>
   import("../components/watch-layout").then((module) => ({ default: module.WatchLayout })),
@@ -32,14 +34,24 @@ function PlayerOnlyLoader() {
 
 function WatchPage() {
   const { v } = Route.useSearch();
+  const navigate = useNavigate({ from: "/watch" });
+  const sourceUrl = toWatchSourceUrl(v);
+  const publicParam = toPublicWatchParam(sourceUrl);
   const { authReady, isAuthed } = useAuth();
-  const { data: stream, isLoading, isError, error, refetch } = useStream(v);
+  const { data: stream, isLoading, isError, error, refetch } = useStream(sourceUrl);
   const { add } = useHistory();
-  const progressFetch = useProgress(v);
+  const progressFetch = useProgress(sourceUrl);
+  useDocumentTitle(stream?.title);
 
   const addToHistoryRef = useRef(add.mutate);
   addToHistoryRef.current = add.mutate;
   const historyAddedForRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (v.trim() && publicParam !== v.trim()) {
+      navigate({ search: { v: publicParam }, replace: true });
+    }
+  }, [navigate, publicParam, v]);
 
   useEffect(() => {
     if (!stream) return;
@@ -106,7 +118,7 @@ function WatchPage() {
 
 export const Route = createFileRoute("/watch")({
   validateSearch: (search: Record<string, unknown>) => ({
-    v: typeof search.v === "string" ? search.v : "",
+    v: typeof search.v === "string" ? search.v.trim() : "",
   }),
   component: WatchPage,
 });
