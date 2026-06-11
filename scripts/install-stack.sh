@@ -290,10 +290,16 @@ ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_SERVER" "8080" "API")"
 HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_TOKEN" "8081" "token")"
 HOST_PORT_WEB_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_WEB" "8082" "frontend")"
+HOST_PORT_GARAGE_S3_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_GARAGE_S3" "3900" "Garage S3")"
+set_env_var "${INSTALL_DIR}/.env" "DOWNLOADER_S3_PUBLIC_ENDPOINT" "http://localhost:${HOST_PORT_GARAGE_S3_RESOLVED}"
 
 current_origins="$(grep '^ALLOWED_ORIGINS=' "${INSTALL_DIR}/.env" | cut -d= -f2- || true)"
-if [[ -z "${current_origins}" || "${current_origins}" == "http://localhost:8082,http://localhost:5173" ]]; then
-  default_origins="http://localhost:${HOST_PORT_WEB_RESOLVED},http://localhost:5173"
+legacy_origins="http://localhost:${HOST_PORT_WEB_RESOLVED},http://localhost:5173"
+packaged_origins="http://localhost:8082,http://localhost:5173"
+packaged_current_origins="http://localhost:8082,http://127.0.0.1:8082,http://localhost:5173,http://127.0.0.1:5173"
+generated_origins="http://localhost:${HOST_PORT_WEB_RESOLVED},http://127.0.0.1:${HOST_PORT_WEB_RESOLVED},http://localhost:5173,http://127.0.0.1:5173"
+if [[ -z "${current_origins}" || "${current_origins}" == "${packaged_origins}" || "${current_origins}" == "${packaged_current_origins}" || "${current_origins}" == "${legacy_origins}" ]]; then
+  default_origins="${generated_origins}"
 else
   default_origins="${current_origins}"
 fi

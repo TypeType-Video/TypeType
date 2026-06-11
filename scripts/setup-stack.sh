@@ -4,10 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${ROOT_DIR}/.env"
 
-DEFAULT_ALLOWED_ORIGINS="http://localhost:8082,http://localhost:5173"
+DEFAULT_ALLOWED_ORIGINS="http://localhost:8082,http://127.0.0.1:8082,http://localhost:5173,http://127.0.0.1:5173"
 DEFAULT_HOST_PORT_WEB="8082"
 DEFAULT_HOST_PORT_SERVER="8080"
 DEFAULT_HOST_PORT_TOKEN="8081"
+DEFAULT_HOST_PORT_GARAGE_S3="3900"
 DEFAULT_DATABASE_URL="jdbc:postgresql://postgres:5432/typetype"
 DEFAULT_DATABASE_USER="typetype"
 DEFAULT_DATABASE_PASSWORD="typetype"
@@ -219,10 +220,15 @@ cd "${ROOT_DIR}"
 HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_SERVER" "${DEFAULT_HOST_PORT_SERVER}" "API")"
 HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_TOKEN" "${DEFAULT_HOST_PORT_TOKEN}" "token")"
 HOST_PORT_WEB_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_WEB" "${DEFAULT_HOST_PORT_WEB}" "frontend")"
+HOST_PORT_GARAGE_S3_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_GARAGE_S3" "${DEFAULT_HOST_PORT_GARAGE_S3}" "Garage S3")"
+set_env_var "${ENV_FILE}" "DOWNLOADER_S3_PUBLIC_ENDPOINT" "http://localhost:${HOST_PORT_GARAGE_S3_RESOLVED}"
 
 CURRENT_ALLOWED_ORIGINS="$(get_env_var "${ENV_FILE}" "ALLOWED_ORIGINS")"
-if [[ -z "${CURRENT_ALLOWED_ORIGINS}" || "${CURRENT_ALLOWED_ORIGINS}" == "http://localhost:8082,http://localhost:5173" ]]; then
-  set_env_var "${ENV_FILE}" "ALLOWED_ORIGINS" "http://localhost:${HOST_PORT_WEB_RESOLVED},http://localhost:5173"
+LEGACY_ALLOWED_ORIGINS="http://localhost:${HOST_PORT_WEB_RESOLVED},http://localhost:5173"
+PACKAGED_ALLOWED_ORIGINS="http://localhost:8082,http://localhost:5173"
+GENERATED_ALLOWED_ORIGINS="http://localhost:${HOST_PORT_WEB_RESOLVED},http://127.0.0.1:${HOST_PORT_WEB_RESOLVED},http://localhost:5173,http://127.0.0.1:5173"
+if [[ -z "${CURRENT_ALLOWED_ORIGINS}" || "${CURRENT_ALLOWED_ORIGINS}" == "${PACKAGED_ALLOWED_ORIGINS}" || "${CURRENT_ALLOWED_ORIGINS}" == "${DEFAULT_ALLOWED_ORIGINS}" || "${CURRENT_ALLOWED_ORIGINS}" == "${LEGACY_ALLOWED_ORIGINS}" ]]; then
+  set_env_var "${ENV_FILE}" "ALLOWED_ORIGINS" "${GENERATED_ALLOWED_ORIGINS}"
 fi
 
 echo
