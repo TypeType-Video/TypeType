@@ -2,7 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
+import { watchRouteSearch } from "../lib/watch-url";
 import type { HistoryItem } from "../types/user";
+import { ChannelRouteLink } from "./channel-route-link";
 import { HistoryChannelAvatar } from "./history-channel-avatar";
 import { VideoProgressBar } from "./video-progress-bar";
 
@@ -50,7 +52,7 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
     >
       <Link
         to="/watch"
-        search={{ v: item.url }}
+        search={watchRouteSearch(item.url)}
         className="block"
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
@@ -84,29 +86,28 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
       </Link>
       <div className="flex gap-2">
         {item.channelUrl ? (
-          <Link to="/channel" search={{ url: item.channelUrl }} className="flex-shrink-0 mt-0.5">
+          <ChannelRouteLink url={item.channelUrl} className="flex-shrink-0 mt-0.5">
             <HistoryChannelAvatar item={item} className="w-7 h-7" />
-          </Link>
+          </ChannelRouteLink>
         ) : (
           <HistoryChannelAvatar item={item} className="w-7 h-7" />
         )}
         <div className="flex flex-col gap-0.5 min-w-0">
           <Link
             to="/watch"
-            search={{ v: item.url }}
+            search={watchRouteSearch(item.url)}
             onMouseEnter={prefetch.onMouseEnter}
             onMouseLeave={prefetch.onMouseLeave}
           >
             <p className="text-sm font-medium text-fg line-clamp-2 leading-snug">{item.title}</p>
           </Link>
           {item.channelUrl ? (
-            <Link
-              to="/channel"
-              search={{ url: item.channelUrl }}
+            <ChannelRouteLink
+              url={item.channelUrl}
               className="text-xs text-fg-muted hover:text-fg transition-colors w-fit"
             >
               {item.channelName}
-            </Link>
+            </ChannelRouteLink>
           ) : (
             <p className="text-xs text-fg-muted">{item.channelName}</p>
           )}

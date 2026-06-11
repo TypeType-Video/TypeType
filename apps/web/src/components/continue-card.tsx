@@ -4,7 +4,9 @@ import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration } from "../lib/format";
 import { resolveHistoryChannelMeta } from "../lib/history-enrichment";
 import { proxyImage } from "../lib/proxy";
+import { watchRouteSearch } from "../lib/watch-url";
 import type { HistoryItem } from "../types/user";
+import { ChannelRouteLink } from "./channel-route-link";
 import { HistoryChannelAvatar } from "./history-channel-avatar";
 import { VideoProgressBar } from "./video-progress-bar";
 import { VerifiedBadgeIcon } from "./watch-icons";
@@ -37,7 +39,7 @@ export function ContinueCard({ item }: ContinueCardProps) {
     <div className="w-44 flex-shrink-0">
       <Link
         to="/watch"
-        search={{ v: item.url }}
+        search={watchRouteSearch(item.url)}
         className="group flex flex-col gap-2"
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
@@ -61,21 +63,20 @@ export function ContinueCard({ item }: ContinueCardProps) {
       </Link>
       <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
         {item.channelUrl ? (
-          <Link to="/channel" search={{ url: item.channelUrl }} className="flex-shrink-0">
+          <ChannelRouteLink url={item.channelUrl} className="flex-shrink-0">
             <HistoryChannelAvatar item={item} className="h-5 w-5" />
-          </Link>
+          </ChannelRouteLink>
         ) : (
           <HistoryChannelAvatar item={item} className="h-5 w-5" />
         )}
         {item.channelUrl ? (
-          <Link
-            to="/channel"
-            search={{ url: item.channelUrl }}
+          <ChannelRouteLink
+            url={item.channelUrl}
             className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft transition-colors hover:text-fg"
           >
             <span className="min-w-0 truncate">{item.channelName}</span>
             {uploaderVerified && <VerifiedBadgeIcon />}
-          </Link>
+          </ChannelRouteLink>
         ) : (
           <span className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft">
             <span className="min-w-0 truncate">{item.channelName}</span>

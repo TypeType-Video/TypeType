@@ -3,6 +3,7 @@ import { useClientLocale } from "../hooks/use-client-locale";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatPublishedDate } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
+import { watchRouteSearch } from "../lib/watch-url";
 import type { NotificationItem } from "../types/notifications";
 
 type Props = {
@@ -23,7 +24,7 @@ export function NotificationRow({ item, onOpen }: Props) {
   return (
     <Link
       to="/watch"
-      search={{ v: videoId }}
+      search={watchRouteSearch(videoId)}
       className="grid grid-cols-[96px_1fr] gap-3 rounded-lg px-2 py-2 hover:bg-surface-strong [animation:card-pop-in_0.24s_ease-out]"
       onClick={onOpen}
       onMouseEnter={prefetch.onMouseEnter}

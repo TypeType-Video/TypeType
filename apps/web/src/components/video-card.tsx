@@ -5,17 +5,15 @@ import { useClientLocale } from "../hooks/use-client-locale";
 import { isMemberOnlyApiError, streamQueryOptions } from "../hooks/use-stream";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration, formatPublishedDate, formatViews } from "../lib/format";
+import { watchRouteSearch } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
+import { ChannelRouteLink } from "./channel-route-link";
 import { VideoCardFeedbackMenu } from "./video-card-feedback-menu";
 import { VideoPreview } from "./video-preview";
 import { VerifiedBadgeIcon } from "./watch-icons";
 
-type Props = {
-  stream: VideoStream;
-  onOpen?: () => void;
-  onImpression?: () => void;
-};
+type Props = { stream: VideoStream; onOpen?: () => void; onImpression?: () => void };
 
 export function VideoCard({ stream, onOpen, onImpression }: Props) {
   const locale = useClientLocale();
@@ -93,7 +91,7 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
     >
       <Link
         to="/watch"
-        search={{ v: stream.id }}
+        search={watchRouteSearch(stream.id)}
         className="block"
         onMouseDown={onOpen}
         onTouchStart={onOpen}
@@ -122,20 +120,20 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
       </Link>
       <div className="flex gap-2 px-1 sm:px-0">
         {stream.channelUrl ? (
-          <Link to="/channel" search={{ url: stream.channelUrl }} className="flex-shrink-0 mt-0.5">
+          <ChannelRouteLink url={stream.channelUrl} className="flex-shrink-0 mt-0.5">
             <ChannelAvatar
               src={stream.channelAvatar}
               name={stream.channelName}
               className="w-8 h-8"
             />
-          </Link>
+          </ChannelRouteLink>
         ) : (
           <ChannelAvatar src={stream.channelAvatar} name={stream.channelName} className="w-8 h-8" />
         )}
         <div className="flex flex-col gap-0.5 min-w-0">
           <Link
             to="/watch"
-            search={{ v: stream.id }}
+            search={watchRouteSearch(stream.id)}
             className="text-sm font-medium text-fg line-clamp-2 leading-snug hover:text-white"
             onMouseDown={onOpen}
             onTouchStart={onOpen}
@@ -144,14 +142,13 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
             {stream.title}
           </Link>
           {stream.channelUrl ? (
-            <Link
-              to="/channel"
-              search={{ url: stream.channelUrl }}
+            <ChannelRouteLink
+              url={stream.channelUrl}
               className="text-xs text-fg-muted hover:text-fg transition-colors w-fit flex items-center gap-1"
             >
               {stream.channelName}
               {stream.uploaderVerified && <VerifiedBadgeIcon />}
-            </Link>
+            </ChannelRouteLink>
           ) : (
             <p className="text-xs text-fg-muted flex items-center gap-1">
               {stream.channelName}

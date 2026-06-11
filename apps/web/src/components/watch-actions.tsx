@@ -4,6 +4,7 @@ import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
 import { useShareUrl } from "../hooks/use-share-url";
 import { detectProvider } from "../lib/provider";
 import { goto } from "../lib/route-redirect";
+import { toPublicWatchUrl } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { DanmakuControls } from "./danmaku-controls";
 import { DownloadSheet } from "./download-sheet";
@@ -80,7 +81,7 @@ export function WatchActions({ stream }: Props) {
         <DownloadIcon />
         Download
       </WatchActionButton>
-      <WatchActionButton onClick={() => share(window.location.href)}>
+      <WatchActionButton onClick={() => share(toPublicWatchUrl(stream.id, window.location.origin))}>
         <ShareIcon />
         Share
       </WatchActionButton>

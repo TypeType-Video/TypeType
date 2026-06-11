@@ -1,9 +1,9 @@
-import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
+import { ChannelRouteLink } from "./channel-route-link";
 import { Toast } from "./toast";
 
 type Props = {
@@ -145,12 +145,8 @@ type ChannelLinkProps = {
 function ChannelLink({ url, children }: ChannelLinkProps) {
   if (!url) return <>{children}</>;
   return (
-    <Link
-      to="/channel"
-      search={{ url }}
-      className="pointer-events-auto hover:opacity-80 transition-opacity"
-    >
+    <ChannelRouteLink url={url} className="pointer-events-auto hover:opacity-80 transition-opacity">
       {children}
-    </Link>
+    </ChannelRouteLink>
   );
 }

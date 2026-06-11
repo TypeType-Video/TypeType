@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/use-auth";
 import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
 import { useShareUrl } from "../hooks/use-share-url";
 import { useWatchLaterPlaylist } from "../hooks/use-watch-later-playlist";
+import { toPublicWatchUrl } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { ShortsActionButton } from "./shorts-action-button";
 
@@ -68,8 +69,7 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
   }
 
   function handleShare() {
-    const watchUrl = `${window.location.origin}/watch?v=${encodeURIComponent(stream.id)}`;
-    void share(watchUrl);
+    void share(toPublicWatchUrl(stream.id, window.location.origin));
   }
 
   return (

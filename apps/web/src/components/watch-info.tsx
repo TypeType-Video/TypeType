@@ -1,10 +1,10 @@
-import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useClientLocale } from "../hooks/use-client-locale";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import { formatPublishedDate, formatSubscribers, formatViews } from "../lib/format";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
+import { ChannelRouteLink } from "./channel-route-link";
 import { Toast } from "./toast";
 import { VerifiedBadgeIcon } from "./watch-icons";
 
@@ -68,9 +68,8 @@ export function WatchInfo({ stream }: Props) {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           {stream.channelUrl ? (
-            <Link
-              to="/channel"
-              search={{ url: stream.channelUrl }}
+            <ChannelRouteLink
+              url={stream.channelUrl}
               className="flex items-center gap-3 min-w-0 group"
             >
               <ChannelAvatar
@@ -88,7 +87,7 @@ export function WatchInfo({ stream }: Props) {
                   {publishedText && ` · ${publishedText}`}
                 </p>
               </div>
-            </Link>
+            </ChannelRouteLink>
           ) : (
             <div className="flex items-center gap-3 min-w-0">
               <ChannelAvatar
