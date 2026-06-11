@@ -32,6 +32,7 @@ import { Route as ImportIndexRouteImport } from './routes/import/index'
 import { Route as PlaylistsIdRouteImport } from './routes/playlists_.$id'
 import { Route as ImportYoutubeRouteImport } from './routes/import/youtube'
 import { Route as ImportPipepipeRouteImport } from './routes/import/pipepipe'
+import { Route as ChannelChannelIdRouteImport } from './routes/channel_.$channelId'
 
 const WatchLaterRoute = WatchLaterRouteImport.update({
   id: '/watch-later',
@@ -148,6 +149,11 @@ const ImportPipepipeRoute = ImportPipepipeRouteImport.update({
   path: '/pipepipe',
   getParentRoute: () => ImportRoute,
 } as any)
+const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
+  id: '/channel_/$channelId',
+  path: '/channel/$channelId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/watch-later': typeof WatchLaterRoute
+  '/channel/$channelId': typeof ChannelChannelIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/watch-later': typeof WatchLaterRoute
+  '/channel/$channelId': typeof ChannelChannelIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/watch-later': typeof WatchLaterRoute
+  '/channel_/$channelId': typeof ChannelChannelIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists_/$id': typeof PlaylistsIdRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/watch'
     | '/watch-later'
+    | '/channel/$channelId'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/watch'
     | '/watch-later'
+    | '/channel/$channelId'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/watch'
     | '/watch-later'
+    | '/channel_/$channelId'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists_/$id'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   SubscriptionsRoute: typeof SubscriptionsRoute
   WatchRoute: typeof WatchRoute
   WatchLaterRoute: typeof WatchLaterRoute
+  ChannelChannelIdRoute: typeof ChannelChannelIdRoute
   PlaylistsIdRoute: typeof PlaylistsIdRoute
 }
 
@@ -487,6 +500,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportPipepipeRouteImport
       parentRoute: typeof ImportRoute
     }
+    '/channel_/$channelId': {
+      id: '/channel_/$channelId'
+      path: '/channel/$channelId'
+      fullPath: '/channel/$channelId'
+      preLoaderRoute: typeof ChannelChannelIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -525,6 +545,7 @@ const rootRouteChildren: RootRouteChildren = {
   SubscriptionsRoute: SubscriptionsRoute,
   WatchRoute: WatchRoute,
   WatchLaterRoute: WatchLaterRoute,
+  ChannelChannelIdRoute: ChannelChannelIdRoute,
   PlaylistsIdRoute: PlaylistsIdRoute,
 }
 export const routeTree = rootRouteImport
