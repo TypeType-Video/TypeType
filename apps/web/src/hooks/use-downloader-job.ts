@@ -7,6 +7,7 @@ import {
   downloadDownloaderArtifact,
   fetchDownloaderJob,
 } from "../lib/api-downloader";
+import { downloaderErrorCode } from "../lib/downloader-errors";
 import { subscribeDownloaderEvents } from "../lib/downloader-events";
 import type {
   DownloaderCreateJobRequest,
@@ -23,6 +24,7 @@ export function useDownloaderJob() {
 
   const create = useMutation({
     mutationFn: (payload: DownloaderCreateJobRequest) => createDownloaderJob(payload),
+    retry: false,
   });
   const jobId = create.data?.id;
   const cancel = useMutation({
@@ -83,25 +85,29 @@ export function useDownloaderJob() {
     };
   }, [create.data, eventJob, query.data]);
 
-  const status: DownloaderJobStatus | null = create.isPending ? "queued" : (job?.status ?? null);
+  const createError = create.error instanceof Error ? create.error : null;
+  const status: DownloaderJobStatus | null = create.isPending
+    ? "queued"
+    : createError
+      ? "failed"
+      : (job?.status ?? null);
   const isQueued = status === "queued";
   const isRunning = status === "running";
   const isDone = status === "done";
   const isFailed = status === "failed";
-  const stage: DownloaderJobStage | null = job?.stage ?? null;
+  const stage: DownloaderJobStage | null = createError ? "failed" : (job?.stage ?? null);
   const progressPercent = typeof job?.progressPercent === "number" ? job.progressPercent : null;
   const resolved = job?.resolved ?? null;
-  const errorCode = job?.errorCode ?? null;
+  const errorCode = downloaderErrorCode(createError) ?? job?.errorCode ?? null;
   const tokenFetchMs = typeof job?.tokenFetchMs === "number" ? job.tokenFetchMs : null;
   const ytdlpMs = typeof job?.ytdlpMs === "number" ? job.ytdlpMs : null;
   const uploadMs = typeof job?.uploadMs === "number" ? job.uploadMs : null;
   const totalMs = typeof job?.totalMs === "number" ? job.totalMs : null;
-  const errorText =
-    create.error instanceof Error
-      ? create.error.message
-      : cancel.error instanceof Error
-        ? cancel.error.message
-        : job?.error || (query.error instanceof Error ? query.error.message : null);
+  const errorText = createError
+    ? createError.message
+    : cancel.error instanceof Error
+      ? cancel.error.message
+      : job?.error || (query.error instanceof Error ? query.error.message : null);
 
   function start(payload: DownloaderCreateJobRequest) {
     setEventJob(null);

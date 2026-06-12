@@ -4,13 +4,14 @@ import type {
   DownloaderJobResponse,
 } from "../types/downloader";
 import { ApiError } from "./api";
+import {
+  DOWNLOADER_INSUFFICIENT_STORAGE_CODE,
+  DOWNLOADER_INSUFFICIENT_STORAGE_MESSAGE,
+  DownloaderApiError,
+  normalizeDownloaderErrorCode,
+} from "./downloader-errors";
 import { API_BASE as BASE } from "./env";
 import { isIosWebKitBrowser } from "./ios-device";
-
-type ErrorBody = {
-  error?: string;
-  message?: string;
-};
 
 type DownloadArtifactOptions = {
   preferShare?: boolean;
@@ -23,14 +24,26 @@ async function readJson(res: Response): Promise<unknown> {
   return res.json().catch(() => ({}));
 }
 
+function readStringField(body: unknown, field: "code" | "error" | "message"): string | null {
+  if (!body || typeof body !== "object") return null;
+  let value: unknown;
+  if (field === "code" && "code" in body) value = body.code;
+  if (field === "error" && "error" in body) value = body.error;
+  if (field === "message" && "message" in body) value = body.message;
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
 function readErrorMessage(body: unknown, fallback: string): string {
-  if (body && typeof body === "object") {
-    const candidate = body as ErrorBody;
-    if (typeof candidate.error === "string" && candidate.error.length > 0) return candidate.error;
-    if (typeof candidate.message === "string" && candidate.message.length > 0)
-      return candidate.message;
-  }
-  return fallback;
+  return readStringField(body, "error") ?? readStringField(body, "message") ?? fallback;
+}
+
+function readDownloaderError(body: unknown, status: number, fallback: string): DownloaderApiError {
+  const code = normalizeDownloaderErrorCode(status, readStringField(body, "code"));
+  const message =
+    code === DOWNLOADER_INSUFFICIENT_STORAGE_CODE
+      ? DOWNLOADER_INSUFFICIENT_STORAGE_MESSAGE
+      : readErrorMessage(body, fallback);
+  return new DownloaderApiError(message, status, code);
 }
 
 function delay(ms: number): Promise<void> {
@@ -47,7 +60,7 @@ export async function createDownloaderJob(
   });
   const body = await readJson(res);
   if (!res.ok) {
-    throw new ApiError(readErrorMessage(body, "Failed to create download job"), res.status);
+    throw readDownloaderError(body, res.status, "Failed to create download job");
   }
   return body as DownloaderCreateJobResponse;
 }

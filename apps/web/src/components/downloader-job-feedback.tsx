@@ -8,11 +8,13 @@ import {
   isFailedDownloaderJob,
   shouldShowDownloaderProgress,
 } from "../lib/downloader-display";
+import { DOWNLOADER_INSUFFICIENT_STORAGE_CODE } from "../lib/downloader-errors";
 import type {
   DownloaderJobStage,
   DownloaderJobStatus,
   DownloaderResolvedSelection,
 } from "../types/downloader";
+import { DownloaderStorageError } from "./downloader-storage-error";
 
 type Props = {
   status: DownloaderJobStatus | null;
@@ -79,6 +81,7 @@ export function DownloaderJobFeedback({
   const failed = isFailedDownloaderJob(status, stage, errorCode);
   const label = downloaderStatusLabel(status, stage, errorCode, forceWaiting);
   const message = downloaderStatusMessage(status, stage, errorCode, visibleError, forceWaiting);
+  const insufficientStorage = errorCode === DOWNLOADER_INSUFFICIENT_STORAGE_CODE;
   const progress = downloaderProgressValue(status, stage, progressPercent, forceWaiting);
   const activeStep = downloaderStageIndex(status, stage);
   const showCancel = canCancel && !cancelled && !failed && typeof onCancel === "function";
@@ -127,6 +130,7 @@ export function DownloaderJobFeedback({
           )}
         </div>
       </div>
+      {insufficientStorage && <DownloaderStorageError />}
       {showProgress && (
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-app">
           <div
