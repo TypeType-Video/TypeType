@@ -4,6 +4,7 @@
 @import "./styles/theme.css";
 @import "./styles/shorts-overrides.css";
 @import "./styles/player-menu-overrides.css";
+@import "./styles/player-hotkeys.css";
 
 @keyframes card-pop-in {
   from {

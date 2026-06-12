@@ -13,6 +13,7 @@ import { AudioTrackSelector } from "./audio-track-selector";
 import { CinemaModeControl } from "./cinema-mode-control";
 import { FormatSelector } from "./format-selector";
 import { MediaSessionSync } from "./media-session-sync";
+import { PlayerHotkeys } from "./player-hotkeys";
 import { PlayerSeeker, SeekBridge, SponsorBlockSkipper } from "./player-internals";
 import { QualitySelector } from "./quality-selector";
 import { SponsorBlockBar } from "./sponsorblock-bar";
@@ -162,6 +163,7 @@ export function VideoPlayer({
         canSeek={streamType !== "live"}
         isLive={streamType === "live"}
       />
+      <PlayerHotkeys canSeek={streamType !== "live"} />
       {sponsorBlockSegments && <SponsorBlockSkipper segments={sponsorBlockSegments} />}
       {sponsorBlockSegments && <SponsorBlockBar segments={sponsorBlockSegments} />}
       {onSeekReady && <SeekBridge onSeekReady={onSeekReady} />}
