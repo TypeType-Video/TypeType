@@ -59,10 +59,11 @@ function toErrorMessage(status: number, statusText: string, body: unknown): stri
   return "Request failed";
 }
 
-async function request<T>(url: string): Promise<T> {
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const method = init?.method ?? "GET";
   let res: Response;
   try {
-    res = await fetch(url);
+    res = await fetch(url, init);
   } catch (error) {
     const message = error instanceof Error ? error.message : "network_error";
     recordApiError({
@@ -72,7 +73,7 @@ async function request<T>(url: string): Promise<T> {
       message,
     });
     recordClientEvent("api.network_error", {
-      method: "GET",
+      method,
       path: sanitizeRequestPath(url),
       message: sanitizeDebugText(message),
     });
@@ -90,7 +91,7 @@ async function request<T>(url: string): Promise<T> {
       requestId,
     });
     recordClientEvent("api.response_error", {
-      method: "GET",
+      method,
       path: sanitizeRequestPath(url),
       status: res.status,
       requestId,
@@ -134,10 +135,11 @@ export function fetchChannel(
   nextpage?: string,
   sort?: ChannelSort,
 ): Promise<ChannelResponse> {
-  const params = new URLSearchParams({ url });
-  if (sort) params.set("sort", sort);
-  if (nextpage) params.set("nextpage", nextpage);
-  return request(`${BASE}/channel?${params}`);
+  return request(`${BASE}/channel/page`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, nextpage: nextpage ?? null, sort: sort ?? null }),
+  });
 }
 
 export function fetchPodcasts(url: string, nextpage?: string): Promise<PodcastPageResponse> {
