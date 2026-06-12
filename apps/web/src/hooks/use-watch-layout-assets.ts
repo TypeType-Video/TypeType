@@ -25,7 +25,9 @@ export function useWatchVttAssets(
     const vtt = buildThumbnailVtt(proxied);
     setThumbnailVtt(vtt);
     return () => {
-      URL.revokeObjectURL(vtt);
+      if (vtt) {
+        URL.revokeObjectURL(vtt);
+      }
     };
   }, [stream.previewFrames]);
 
