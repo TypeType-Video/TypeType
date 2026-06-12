@@ -37,15 +37,15 @@ export function splitChannelSearchUrl(url: string): ChannelSearchUrl {
   }
 }
 
-export function buildChannelRequestUrl(channelUrl: string, query: string): string {
+export function buildChannelRequestUrl(channelUrl: string, query: string, live: boolean): string {
   const trimmedQuery = query.trim();
-  if (trimmedQuery.length === 0) return channelUrl;
+  if (!live && trimmedQuery.length === 0) return channelUrl;
   try {
     const parsed = new URL(splitChannelSearchUrl(channelUrl).channelUrl);
     if (!isYoutubeHost(parsed.hostname)) return channelUrl;
-    parsed.pathname = `${parsed.pathname.replace(/\/+$/, "")}/search`;
+    parsed.pathname = `${parsed.pathname.replace(/\/+$/, "")}/${live ? "streams" : "search"}`;
     parsed.search = "";
-    parsed.searchParams.set("query", trimmedQuery);
+    if (!live) parsed.searchParams.set("query", trimmedQuery);
     parsed.hash = "";
     return parsed.toString();
   } catch {

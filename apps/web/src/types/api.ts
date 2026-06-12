@@ -31,6 +31,9 @@ export type VideoItem = {
   uploadDate: string;
   uploaded: number;
   streamType: string;
+  isLive: boolean;
+  isPostLive: boolean;
+  isLiveContent: boolean;
   isShortFormContent: boolean;
   shortDescription: string | null;
 };
@@ -57,6 +60,10 @@ export type StreamResponse = {
   visibility: string;
   tags: string[];
   streamType: string;
+  isLive: boolean;
+  isPostLive: boolean;
+  isLiveContent: boolean;
+  hasLiveManifest: boolean;
   isShortFormContent: boolean;
   requiresMembership: boolean;
   startPosition: number;

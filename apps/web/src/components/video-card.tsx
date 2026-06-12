@@ -11,6 +11,7 @@ import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
 import { VideoCardFeedbackMenu } from "./video-card-feedback-menu";
 import { VideoPreview } from "./video-preview";
+import { VideoStatusBadge } from "./video-status-badge";
 import { VerifiedBadgeIcon } from "./watch-icons";
 
 type Props = { stream: VideoStream; onOpen?: () => void; onImpression?: () => void };
@@ -111,7 +112,12 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
               Members only
             </span>
           )}
-          {stream.duration > 0 && (
+          {(stream.isLive || stream.isPostLive) && (
+            <span className="absolute bottom-1.5 left-1.5">
+              <VideoStatusBadge stream={stream} />
+            </span>
+          )}
+          {!stream.isLive && stream.duration > 0 && (
             <span className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1 rounded">
               {formatDuration(stream.duration)}
             </span>

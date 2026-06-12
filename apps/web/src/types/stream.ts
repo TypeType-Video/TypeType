@@ -25,6 +25,10 @@ export type VideoStream = {
   likes?: number;
   dislikes?: number;
   streamType?: string;
+  isLive?: boolean;
+  isPostLive?: boolean;
+  isLiveContent?: boolean;
+  hasLiveManifest?: boolean;
   isShortFormContent?: boolean;
   requiresMembership?: boolean;
   startPosition?: number;

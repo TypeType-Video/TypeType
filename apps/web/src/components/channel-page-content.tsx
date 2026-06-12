@@ -18,10 +18,11 @@ type Props = {
   sourceUrl: string;
   sort: ChannelSort;
   searchQuery: string;
-  onNavigate: (sort: ChannelSort, query: string) => void;
+  live: boolean;
+  onNavigate: (sort: ChannelSort, query: string, live: boolean) => void;
 };
 
-export function ChannelPageContent({ sourceUrl, sort, searchQuery, onNavigate }: Props) {
+export function ChannelPageContent({ sourceUrl, sort, searchQuery, live, onNavigate }: Props) {
   const {
     meta,
     videos,
@@ -33,7 +34,7 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, onNavigate }:
     isFetching,
     isFetchingNextPage,
     fetchNextPage,
-  } = useChannel(sourceUrl, sort, searchQuery);
+  } = useChannel(sourceUrl, sort, searchQuery, live);
   const { add, remove, isSubscribed } = useSubscriptions();
   const { filter } = useBlockedFilter();
   useDocumentTitle(meta?.name);
@@ -54,11 +55,15 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, onNavigate }:
   }
 
   function selectSort(nextSort: ChannelSort) {
-    onNavigate(nextSort, searchQuery);
+    onNavigate(nextSort, searchQuery, live);
   }
 
   function searchChannel(nextQuery: string) {
-    onNavigate(sort, searchAvailable ? nextQuery : "");
+    onNavigate(sort, searchAvailable && !live ? nextQuery : "", live);
+  }
+
+  function selectLive(nextLive: boolean) {
+    onNavigate(sort, "", searchAvailable && nextLive);
   }
 
   if (isInitialLoading) return <PageSpinner />;
@@ -117,8 +122,10 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, onNavigate }:
       <ChannelFilterBar
         sort={sort}
         query={searchQuery}
+        live={live}
         searchAvailable={searchAvailable}
         onSearch={searchChannel}
+        onLiveChange={selectLive}
         onSortChange={selectSort}
       />
       {isReplacingVideos ? (

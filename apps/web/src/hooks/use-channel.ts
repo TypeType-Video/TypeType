@@ -27,11 +27,16 @@ type CachedChannelMeta = {
   meta: ChannelMeta;
 };
 
-export function useChannel(channelUrl: string, sort: ChannelSort, searchQuery: string) {
+export function useChannel(
+  channelUrl: string,
+  sort: ChannelSort,
+  searchQuery: string,
+  live: boolean,
+) {
   const lastMeta = useRef<CachedChannelMeta | null>(null);
-  const requestUrl = buildChannelRequestUrl(channelUrl, searchQuery);
+  const requestUrl = buildChannelRequestUrl(channelUrl, searchQuery, live);
   const channelQuery = useInfiniteQuery({
-    queryKey: ["channel", channelUrl, sort, searchQuery],
+    queryKey: ["channel", channelUrl, sort, searchQuery, live],
     queryFn: async ({ pageParam }): Promise<ChannelPage> => {
       const res = await fetchChannel(requestUrl, pageParam as string | undefined, sort);
       const isFirstPage = pageParam === undefined;

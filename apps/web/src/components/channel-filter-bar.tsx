@@ -3,15 +3,30 @@ import { useEffect, useState } from "react";
 import type { ChannelSort } from "../lib/api";
 import { CHANNEL_SORT_OPTIONS, channelSortOrDefault } from "../lib/channel-sort";
 
+const CHANNEL_TABS = [
+  { live: false, label: "Videos" },
+  { live: true, label: "Live" },
+];
+
 type Props = {
   sort: ChannelSort;
   query: string;
+  live: boolean;
   searchAvailable: boolean;
   onSearch: (query: string) => void;
+  onLiveChange: (live: boolean) => void;
   onSortChange: (sort: ChannelSort) => void;
 };
 
-export function ChannelFilterBar({ sort, query, searchAvailable, onSearch, onSortChange }: Props) {
+export function ChannelFilterBar({
+  sort,
+  query,
+  live,
+  searchAvailable,
+  onSearch,
+  onLiveChange,
+  onSortChange,
+}: Props) {
   const [input, setInput] = useState(query);
   const trimmedInput = input.trim();
   const isSearching = query.length > 0;
@@ -33,6 +48,24 @@ export function ChannelFilterBar({ sort, query, searchAvailable, onSearch, onSor
   return (
     <section className="border-y border-border py-3">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {searchAvailable && (
+          <div className="flex w-fit items-center gap-2 text-sm">
+            {CHANNEL_TABS.map((tab) => (
+              <button
+                key={tab.label}
+                type="button"
+                onClick={() => onLiveChange(tab.live)}
+                className={`border-border-strong border-b py-1 font-medium transition-colors ${
+                  live === tab.live
+                    ? "border-fg text-fg"
+                    : "border-transparent text-fg-soft hover:text-fg"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
         {searchAvailable && (
           <div className="min-w-0 flex-1 md:max-w-lg">
             <form onSubmit={submitSearch} className="flex min-w-0 items-end gap-3">

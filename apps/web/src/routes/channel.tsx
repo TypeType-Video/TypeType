@@ -12,20 +12,22 @@ import {
 import { splitChannelSearchUrl } from "../lib/channel-search-url";
 import { channelSortOrDefault } from "../lib/channel-sort";
 
-type ChannelRouteSearch = { url: string; sort?: ChannelSort; q?: string };
+type ChannelRouteSearch = { url: string; sort?: ChannelSort; q?: string; tab?: "live" };
 
 function validateChannelSearch(search: Record<string, unknown>): ChannelRouteSearch {
   const rawUrl = typeof search.url === "string" ? search.url : "";
   const parsed = splitChannelSearchUrl(toChannelSourceUrl(rawUrl));
   const sort = channelSortOrDefault(search.sort);
   const query = typeof search.q === "string" ? search.q.trim() : parsed.query;
-  return channelLegacySearch(parsed.channelUrl, sort, query);
+  const live = search.tab === "live";
+  return channelLegacySearch(parsed.channelUrl, sort, query, live);
 }
 
 function LegacyChannelPage() {
   const { url, sort: searchSort, q } = Route.useSearch();
   const sort = searchSort ?? "latest";
   const searchQuery = q ?? "";
+  const live = Route.useSearch().tab === "live";
   const sourceUrl = toChannelSourceUrl(url);
   const channelId = toChannelPathParam(sourceUrl);
   const navigate = useNavigate({ from: "/channel" });
@@ -35,10 +37,10 @@ function LegacyChannelPage() {
     navigate({
       to: "/channel/$channelId",
       params: { channelId },
-      search: channelPathSearch(sort, searchQuery),
+      search: channelPathSearch(sort, searchQuery, live),
       replace: true,
     });
-  }, [channelId, navigate, searchQuery, sort]);
+  }, [channelId, live, navigate, searchQuery, sort]);
 
   if (channelId) return <PageSpinner />;
 
@@ -47,8 +49,12 @@ function LegacyChannelPage() {
       sourceUrl={sourceUrl}
       sort={sort}
       searchQuery={searchQuery}
-      onNavigate={(nextSort, nextQuery) =>
-        navigate({ search: channelLegacySearch(sourceUrl, nextSort, nextQuery), replace: true })
+      live={live}
+      onNavigate={(nextSort, nextQuery, nextLive) =>
+        navigate({
+          search: channelLegacySearch(sourceUrl, nextSort, nextQuery, nextLive),
+          replace: true,
+        })
       }
     />
   );

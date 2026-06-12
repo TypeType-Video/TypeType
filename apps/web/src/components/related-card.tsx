@@ -5,6 +5,7 @@ import { watchRouteSearch } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
+import { VideoStatusBadge } from "./video-status-badge";
 import { VerifiedBadgeIcon } from "./watch-icons";
 
 type Props = {
@@ -35,7 +36,12 @@ export function RelatedCard({ stream }: Props) {
             Members only
           </span>
         )}
-        {stream.duration > 0 && (
+        {(stream.isLive || stream.isPostLive) && (
+          <span className="absolute bottom-1 left-1">
+            <VideoStatusBadge stream={stream} compact />
+          </span>
+        )}
+        {!stream.isLive && stream.duration > 0 && (
           <span className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 rounded">
             {formatDuration(stream.duration)}
           </span>

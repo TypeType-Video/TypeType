@@ -6,6 +6,7 @@ const YOUTUBE_HANDLE_PATTERN = /^@[A-Za-z0-9._-]{2,48}$/;
 export type ChannelPathSearch = {
   sort?: ChannelSort;
   q?: string;
+  tab?: "live";
 };
 
 export type ChannelLegacySearch = ChannelPathSearch & {
@@ -50,11 +51,16 @@ export function toChannelPathParam(sourceUrl: string): string | null {
     : null;
 }
 
-export function channelPathSearch(sort: ChannelSort, query: string): ChannelPathSearch {
+export function channelPathSearch(
+  sort: ChannelSort,
+  query: string,
+  live = false,
+): ChannelPathSearch {
   const trimmedQuery = query.trim();
   const search: ChannelPathSearch = {};
   if (sort !== "latest") search.sort = sort;
   if (trimmedQuery.length > 0) search.q = trimmedQuery;
+  if (live) search.tab = "live";
   return search;
 }
 
@@ -62,6 +68,7 @@ export function channelLegacySearch(
   sourceUrl: string,
   sort: ChannelSort,
   query: string,
+  live = false,
 ): ChannelLegacySearch {
-  return { url: toPublicChannelParam(sourceUrl), ...channelPathSearch(sort, query) };
+  return { url: toPublicChannelParam(sourceUrl), ...channelPathSearch(sort, query, live) };
 }

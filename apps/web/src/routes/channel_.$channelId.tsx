@@ -4,12 +4,13 @@ import type { ChannelSort } from "../lib/api";
 import { channelPathSearch, toChannelSourceUrl } from "../lib/channel-route-url";
 import { channelSortOrDefault } from "../lib/channel-sort";
 
-type ChannelPathRouteSearch = { sort?: ChannelSort; q?: string };
+type ChannelPathRouteSearch = { sort?: ChannelSort; q?: string; tab?: "live" };
 
 function validateChannelPathSearch(search: Record<string, unknown>): ChannelPathRouteSearch {
   const sort = channelSortOrDefault(search.sort);
   const query = typeof search.q === "string" ? search.q.trim() : "";
-  return channelPathSearch(sort, query);
+  const live = search.tab === "live";
+  return channelPathSearch(sort, query, live);
 }
 
 function ChannelPathPage() {
@@ -17,6 +18,7 @@ function ChannelPathPage() {
   const { sort: searchSort, q } = Route.useSearch();
   const sort = searchSort ?? "latest";
   const searchQuery = q ?? "";
+  const live = Route.useSearch().tab === "live";
   const sourceUrl = toChannelSourceUrl(channelId);
   const navigate = useNavigate({ from: "/channel/$channelId" });
 
@@ -25,8 +27,9 @@ function ChannelPathPage() {
       sourceUrl={sourceUrl}
       sort={sort}
       searchQuery={searchQuery}
-      onNavigate={(nextSort, nextQuery) =>
-        navigate({ search: channelPathSearch(nextSort, nextQuery), replace: true })
+      live={live}
+      onNavigate={(nextSort, nextQuery, nextLive) =>
+        navigate({ search: channelPathSearch(nextSort, nextQuery, nextLive), replace: true })
       }
     />
   );
