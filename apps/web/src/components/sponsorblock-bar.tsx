@@ -1,18 +1,11 @@
 import { useEffect, useRef } from "react";
+import {
+  getSponsorBlockCategoryColor,
+  getSponsorBlockEndTime,
+  getSponsorBlockStartTime,
+} from "../lib/sponsorblock-settings";
 import { useMediaState } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
-
-const CATEGORY_COLORS: Record<string, string> = {
-  sponsor: "#00d400",
-  selfpromo: "#ffff00",
-  interaction: "#cc00ff",
-  poi_highlight: "#ff1684",
-  intro: "#00ffff",
-  outro: "#0202ed",
-  preview: "#008fd6",
-  filler: "#7300ff",
-  music_offtopic: "#ff9900",
-};
 
 const TRACK_HEIGHT = 5;
 const THUMB_MARGIN = 7.5;
@@ -23,10 +16,12 @@ type SegmentBarProps = {
 };
 
 function SegmentBar({ segment, duration }: SegmentBarProps) {
-  const color = CATEGORY_COLORS[segment.category];
+  const color = getSponsorBlockCategoryColor(segment.category);
   if (!color) return null;
-  const left = (segment.startTime / 1000 / duration) * 100;
-  const width = ((segment.endTime - segment.startTime) / 1000 / duration) * 100;
+  const startTime = getSponsorBlockStartTime(segment, duration);
+  const endTime = getSponsorBlockEndTime(segment, duration);
+  const left = (startTime / duration) * 100;
+  const width = ((endTime - startTime) / duration) * 100;
   return (
     <div
       style={{

@@ -1,4 +1,9 @@
-import type { StreamSegmentItem } from "../types/api";
+import type { SponsorBlockSegmentItem, StreamSegmentItem } from "../types/api";
+import {
+  getSponsorBlockCategoryLabel,
+  getSponsorBlockEndTime,
+  getSponsorBlockStartTime,
+} from "./sponsorblock-settings";
 
 function formatVttTime(seconds: number): string {
   const totalSeconds = Math.floor(seconds);
@@ -28,6 +33,28 @@ export function buildChaptersVtt(
     lines.push(seg.title);
     lines.push("");
   }
+
+  const blob = new Blob([lines.join("\n")], { type: "text/vtt" });
+  return URL.createObjectURL(blob);
+}
+
+export function buildSponsorBlockChaptersVtt(
+  segments: SponsorBlockSegmentItem[],
+  durationSeconds: number,
+): string | null {
+  if (segments.length === 0) return null;
+
+  const sorted = [...segments].sort((a, b) => a.startTime - b.startTime);
+  const lines: string[] = ["WEBVTT", ""];
+
+  sorted.forEach((segment, index) => {
+    lines.push(String(index + 1));
+    lines.push(
+      `${formatVttTime(getSponsorBlockStartTime(segment, durationSeconds))} --> ${formatVttTime(getSponsorBlockEndTime(segment, durationSeconds))}`,
+    );
+    lines.push(getSponsorBlockCategoryLabel(segment.category));
+    lines.push("");
+  });
 
   const blob = new Blob([lines.join("\n")], { type: "text/vtt" });
   return URL.createObjectURL(blob);

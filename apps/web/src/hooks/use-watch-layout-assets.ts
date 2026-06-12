@@ -1,39 +1,48 @@
-import { useEffect, useRef } from "react";
-import { buildChaptersVtt } from "../lib/chapters-vtt";
+import { useEffect, useState } from "react";
+import { buildChaptersVtt, buildSponsorBlockChaptersVtt } from "../lib/chapters-vtt";
 import { proxyUrl } from "../lib/proxy";
 import { buildThumbnailVtt } from "../lib/thumbnail-vtt";
+import type { SponsorBlockSegmentItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
 
-export function useWatchVttAssets(stream: VideoStream) {
-  const thumbnailVtt = useRef<string | null>(null);
-  const chaptersVtt = useRef<string | null>(null);
+export function useWatchVttAssets(
+  stream: VideoStream,
+  sponsorBlockSegments: SponsorBlockSegmentItem[] | undefined,
+  showSponsorBlockChapters: boolean,
+) {
+  const [thumbnailVtt, setThumbnailVtt] = useState<string | null>(null);
+  const [chaptersVtt, setChaptersVtt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!stream.previewFrames) {
-      thumbnailVtt.current = null;
+      setThumbnailVtt(null);
       return;
     }
     const proxied = stream.previewFrames.map((frame) => ({
       ...frame,
       urls: frame.urls.map(proxyUrl),
     }));
-    thumbnailVtt.current = buildThumbnailVtt(proxied);
+    const vtt = buildThumbnailVtt(proxied);
+    setThumbnailVtt(vtt);
     return () => {
-      if (thumbnailVtt.current) URL.revokeObjectURL(thumbnailVtt.current);
+      URL.revokeObjectURL(vtt);
     };
   }, [stream.previewFrames]);
 
   useEffect(() => {
-    chaptersVtt.current = stream.streamSegments
+    const vtt = stream.streamSegments
       ? buildChaptersVtt(stream.streamSegments, stream.duration)
-      : null;
+      : showSponsorBlockChapters
+        ? buildSponsorBlockChaptersVtt(sponsorBlockSegments ?? [], stream.duration)
+        : null;
+    setChaptersVtt(vtt);
     return () => {
-      if (chaptersVtt.current) URL.revokeObjectURL(chaptersVtt.current);
+      if (vtt) URL.revokeObjectURL(vtt);
     };
-  }, [stream.streamSegments, stream.duration]);
+  }, [stream.streamSegments, stream.duration, sponsorBlockSegments, showSponsorBlockChapters]);
 
   return {
-    thumbnailVtt: thumbnailVtt.current ?? undefined,
-    chaptersVtt: chaptersVtt.current ?? undefined,
+    thumbnailVtt: thumbnailVtt ?? undefined,
+    chaptersVtt: chaptersVtt ?? undefined,
   };
 }
