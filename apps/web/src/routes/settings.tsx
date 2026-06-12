@@ -6,6 +6,7 @@ import { SettingsLanguage } from "../settings/settings-language";
 import { SettingsPlayback } from "../settings/settings-playback";
 import { SettingsPrivacy } from "../settings/settings-privacy";
 import { SettingsService } from "../settings/settings-service";
+import { SettingsVideoPreferences } from "../settings/settings-video-preferences";
 
 function SettingsPage() {
   const { settings } = useSettings();
@@ -14,6 +15,7 @@ function SettingsPage() {
     <div className="flex flex-col gap-6 sm:gap-8 [animation:page-fade-in_0.2s_ease-out]">
       <h1 className="text-lg font-semibold text-fg">Settings</h1>
       <SettingsPlayback />
+      <SettingsVideoPreferences />
       {settings.defaultService === 0 && <SettingsLanguage />}
       <SettingsService />
       <section className="flex flex-col gap-3">
