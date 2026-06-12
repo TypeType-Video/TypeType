@@ -14,6 +14,14 @@ const MODES: { value: SponsorBlockMode; label: string; description: string }[] =
   { value: "disabled", label: "Off", description: "Ignore all SponsorBlock data." },
 ];
 
+function globalCategoryActions(action: SponsorBlockCategoryAction) {
+  const actions: Record<string, SponsorBlockCategoryAction> = {};
+  for (const category of SPONSORBLOCK_CATEGORIES) {
+    actions[category.id] = action;
+  }
+  return actions;
+}
+
 function GlobalMode() {
   const { settings, update } = useSettings();
   return (
@@ -31,7 +39,12 @@ function GlobalMode() {
             <button
               key={option.value}
               type="button"
-              onClick={() => update.mutate({ sponsorBlockMode: option.value })}
+              onClick={() =>
+                update.mutate({
+                  sponsorBlockMode: option.value,
+                  sponsorBlockCategoryActions: globalCategoryActions(option.value),
+                })
+              }
               className={`rounded-lg border px-3 py-2 text-left transition-colors ${
                 selected
                   ? "border-fg bg-surface-strong text-fg"
