@@ -1,0 +1,35 @@
+import type { ReactNode } from "react";
+import type { MediaSrc } from "../lib/vidstack";
+import type { SponsorBlockSegmentItem, SubtitleItem } from "../types/api";
+
+export type VideoPlayerProps = {
+  src: MediaSrc;
+  title?: string;
+  poster?: string;
+  streamType?: "on-demand" | "live";
+  startTime?: number;
+  subtitles?: SubtitleItem[];
+  sponsorBlockSegments?: SponsorBlockSegmentItem[];
+  autoSkipSponsorBlockSegments?: SponsorBlockSegmentItem[];
+  manualSkipSponsorBlockSegments?: SponsorBlockSegmentItem[];
+  autoSkipSponsorBlock?: boolean;
+  muteSponsorBlockInsteadOfSkip?: boolean;
+  showCurrentSponsorBlockSegment?: boolean;
+  thumbnailVtt?: string;
+  chaptersVtt?: string;
+  initialVolume?: number;
+  initialMuted?: boolean;
+  settingsReady?: boolean;
+  autoplay?: boolean;
+  originalAudioLocale?: string | null;
+  overlay?: ReactNode;
+  onVolumeChange?: (volume: number, muted: boolean) => void;
+  onTimeUpdate?: (positionMs: number) => void;
+  onPause?: () => void;
+  onSeeked?: () => void;
+  onError?: () => void;
+  onSeekReady?: (seek: (seconds: number) => void) => void;
+  onEnded?: () => void;
+  className?: string;
+  mediaClassName?: string;
+};

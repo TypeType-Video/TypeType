@@ -8,6 +8,7 @@ import { useSettings } from "../hooks/use-settings";
 import { useVolumeSync } from "../hooks/use-volume-sync";
 import { useWatchVttAssets } from "../hooks/use-watch-layout-assets";
 import { useWatchPlayerEvents } from "../hooks/use-watch-player-events";
+import { useWatchSponsorBlock } from "../hooks/use-watch-sponsorblock";
 import {
   getOriginalAudioLocale,
   getOriginalAudioTrackId,
@@ -17,13 +18,12 @@ import { detectProvider } from "../lib/provider";
 import { useDanmakuStore } from "../stores/danmaku-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
 import type { VideoStream } from "../types/stream";
-import { DanmakuOverlay } from "./danmaku-overlay";
-import { PlayerDefaults } from "./player-defaults";
 import { PlayerError } from "./player-error";
-import { PlayerFocuser } from "./player-internals";
 import { Toast } from "./toast";
 import { VideoPlayer } from "./video-player";
+import { getWatchLayoutClasses } from "./watch-layout-classes";
 import { WatchMeta } from "./watch-meta";
+import { WatchPlayerOverlay } from "./watch-player-overlay";
 import { WatchSecondaryContent } from "./watch-secondary-content";
 
 type Props = {
@@ -43,7 +43,14 @@ export function WatchLayout({ stream, startTime }: Props) {
   );
   const { on: bulletCommentsOn } = useDanmakuStore();
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
-  const { data: bulletComments } = useBulletComments(stream.id, isNicoNico);
+  const hideComments = settings.hideComments;
+  const {
+    segments: sponsorBlockSegments,
+    autoSkipSegments,
+    manualSkipSegments,
+  } = useWatchSponsorBlock(stream, settings);
+  const relatedStreams = settings.hideRelatedVideos ? [] : (stream.related ?? []);
+  const { data: bulletComments } = useBulletComments(stream.id, isNicoNico && !hideComments);
   const originalTrackId = getOriginalAudioTrackId(stream);
   const preferredAudioTrackId = getPreferredDefaultAudioTrackId(stream);
   const originalLocale = getOriginalAudioLocale(stream);
@@ -51,8 +58,18 @@ export function WatchLayout({ stream, startTime }: Props) {
   const seekRef = useRef<((seconds: number) => void) | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const handleVolumeChange = useVolumeSync(update.mutate);
-  const { thumbnailVtt, chaptersVtt } = useWatchVttAssets(stream);
-  const playerKey = `${stream.id}:${retryKey}:${settings.enableHighQualityPlayback ? "hq" : "std"}`;
+  const { thumbnailVtt, chaptersVtt } = useWatchVttAssets(
+    stream,
+    sponsorBlockSegments,
+    settings.sponsorBlockShowChapters,
+  );
+  const playerKey = [
+    stream.id,
+    retryKey,
+    settings.enableHighQualityPlayback ? "hq" : "std",
+    thumbnailVtt ? "thumbs" : "no-thumbs",
+    chaptersVtt ? "chapters" : "no-chapters",
+  ].join(":");
 
   useEffect(() => {
     if (!toast) return;
@@ -80,36 +97,23 @@ export function WatchLayout({ stream, startTime }: Props) {
   );
 
   const overlay = (
-    <>
-      {isNicoNico && bulletCommentsOn && bulletComments && (
-        <DanmakuOverlay comments={bulletComments} positionRef={playerEvents.positionRef} />
-      )}
-      <PlayerFocuser />
-      <PlayerDefaults
-        defaultQuality={qualityFailed ? undefined : settings.defaultQuality}
-        defaultAudioLanguage={settings.defaultAudioLanguage || undefined}
-        preferOriginalLanguage={settings.preferOriginalLanguage}
-        requireOriginalLanguage
-        onOriginalLanguageUnavailable={() => {
-          setToast("Original audio unavailable");
-        }}
-        originalAudioTrackId={originalTrackId}
-        preferredDefaultAudioTrackId={preferredAudioTrackId}
-        originalAudioLocale={originalLocale}
-        subtitlesEnabled={settings.subtitlesEnabled}
-        defaultSubtitleLanguage={settings.defaultSubtitleLanguage || undefined}
-      />
-    </>
+    <WatchPlayerOverlay
+      isNicoNico={isNicoNico}
+      hideComments={hideComments}
+      bulletCommentsOn={bulletCommentsOn}
+      bulletComments={bulletComments}
+      positionRef={playerEvents.positionRef}
+      settings={settings}
+      qualityFailed={qualityFailed}
+      onOriginalLanguageUnavailable={() => setToast("Original audio unavailable")}
+      originalAudioTrackId={originalTrackId}
+      preferredDefaultAudioTrackId={preferredAudioTrackId}
+      originalAudioLocale={originalLocale}
+    />
   );
 
-  const anim = "[animation:page-fade-in_0.2s_ease-out]";
-  const containerClass = `flex flex-col gap-6 ${cinemaMode ? "" : "lg:flex-row lg:items-start"} ${anim}`;
-  const playerWrapClass = cinemaMode
-    ? "overflow-hidden bg-black"
-    : "min-w-0 flex-[2] max-w-[133.333vh] flex flex-col gap-4";
-  const playerBoxClass = cinemaMode
-    ? "mx-auto aspect-video w-[min(100%,calc((100svh-4.5rem)*16/9))]"
-    : "overflow-hidden rounded-lg";
+  const { containerClass, playerWrapClass, playerBoxClass, playerClassName, mediaClassName } =
+    getWatchLayoutClasses(cinemaMode);
 
   return (
     <div className={containerClass}>
@@ -125,7 +129,12 @@ export function WatchLayout({ stream, startTime }: Props) {
                 streamType={isLive ? "live" : "on-demand"}
                 startTime={retryStartTime > 0 ? retryStartTime : startTime}
                 subtitles={stream.subtitles}
-                sponsorBlockSegments={stream.sponsorBlockSegments}
+                sponsorBlockSegments={sponsorBlockSegments}
+                autoSkipSponsorBlock={Boolean(autoSkipSegments)}
+                autoSkipSponsorBlockSegments={autoSkipSegments}
+                manualSkipSponsorBlockSegments={manualSkipSegments}
+                muteSponsorBlockInsteadOfSkip={settings.sponsorBlockMuteInsteadOfSkip}
+                showCurrentSponsorBlockSegment={settings.sponsorBlockShowCurrentSegment}
                 thumbnailVtt={thumbnailVtt}
                 chaptersVtt={chaptersVtt}
                 initialVolume={settings.volume}
@@ -140,13 +149,9 @@ export function WatchLayout({ stream, startTime }: Props) {
                 onSeeked={playerEvents.handleSeeked}
                 onError={handlePlayerError}
                 onEnded={playerEvents.handleEnded}
-                onSeekReady={(s) => {
-                  seekRef.current = s;
-                }}
-                className={
-                  cinemaMode ? "w-full h-full dark [--video-aspect-ratio:16/9]" : undefined
-                }
-                mediaClassName={cinemaMode ? "object-cover" : undefined}
+                onSeekReady={(s) => (seekRef.current = s)}
+                className={playerClassName}
+                mediaClassName={mediaClassName}
               />
               {playerFailed && <PlayerError onRetry={reset} />}
             </>
@@ -154,12 +159,19 @@ export function WatchLayout({ stream, startTime }: Props) {
             <div className="aspect-video w-full bg-black" />
           )}
         </div>
-        {!cinemaMode && <WatchMeta stream={stream} onSeekTimestamp={(s) => seekRef.current?.(s)} />}
+        {!cinemaMode && (
+          <WatchMeta
+            stream={stream}
+            showComments={!hideComments}
+            onSeekTimestamp={(s) => seekRef.current?.(s)}
+          />
+        )}
       </div>
       <WatchSecondaryContent
         cinemaMode={cinemaMode}
         stream={stream}
-        relatedStreams={stream.related ?? []}
+        relatedStreams={relatedStreams}
+        showComments={!hideComments}
         onSeekTimestamp={(seconds) => seekRef.current?.(seconds)}
       />
       <Toast message={toast} />
