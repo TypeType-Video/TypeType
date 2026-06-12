@@ -33,7 +33,7 @@ export function useHomeRecommendations(): Result {
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => (last.hasMore ? (last.nextCursor ?? undefined) : undefined),
-    enabled: authReady && isAuthed,
+    enabled: authReady && isAuthed && !settings.hideHomeRecommendations,
     staleTime: 90 * 1000,
   });
 

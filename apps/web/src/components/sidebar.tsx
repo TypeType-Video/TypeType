@@ -67,6 +67,11 @@ export function Sidebar() {
   }
 
   const adminSearch = { section: "issues" as const };
+  const navItems = NAV_ITEMS.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.to === "/shorts" && settings.hideShorts) return false;
+    return true;
+  });
 
   const baseClasses = isMobile
     ? `fixed top-14 left-0 bottom-0 z-50 w-72 max-w-[85vw] bg-app flex flex-col py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-transform duration-200 ${
@@ -96,7 +101,7 @@ export function Sidebar() {
       )}
       <aside className={baseClasses}>
         <div className={`flex flex-col gap-1 ${sectionPadding}`}>
-          {NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.label}
               to={item.to}

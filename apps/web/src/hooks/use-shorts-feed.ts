@@ -43,7 +43,7 @@ export function useShortsFeed(): ShortsFeed {
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => (last.hasMore ? (last.nextCursor ?? undefined) : undefined),
-    enabled: authReady && isAuthed,
+    enabled: authReady && isAuthed && !settings.hideShorts,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -56,7 +56,12 @@ export function useShortsFeed(): ShortsFeed {
       fetchSubscriptionShorts(pageParam as number, 30, settings.defaultService, true),
     initialPageParam: 0,
     getNextPageParam: (last) => parseNextPage(last.nextpage),
-    enabled: authReady && isAuthed && recommendations.isSuccess && !hasRecommendationShorts,
+    enabled:
+      authReady &&
+      isAuthed &&
+      !settings.hideShorts &&
+      recommendations.isSuccess &&
+      !hasRecommendationShorts,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -66,7 +71,7 @@ export function useShortsFeed(): ShortsFeed {
       fetchSearch(SHORTS_QUERY, settings.defaultService, pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextpage ?? undefined,
-    enabled: authReady && !isAuthed,
+    enabled: authReady && !isAuthed && !settings.hideShorts,
     staleTime: 90 * 1000,
   });
 
@@ -90,8 +95,13 @@ export function useShortsFeed(): ShortsFeed {
   const useRecommendations = authReady && isAuthed && hasRecommendationShorts;
   return {
     shorts,
-    isLoading:
-      shorts.length > 0 ? false : isAuthed ? recommendations.isLoading : discovery.isLoading,
+    isLoading: settings.hideShorts
+      ? false
+      : shorts.length > 0
+        ? false
+        : isAuthed
+          ? recommendations.isLoading
+          : discovery.isLoading,
     isFetchingNextPage: isAuthed
       ? useRecommendations
         ? recommendations.isFetchingNextPage

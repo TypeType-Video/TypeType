@@ -115,6 +115,7 @@ export function ShortsPlayerShell({ targetUrl }: Props) {
       originalAudioLocale={originalAudioLocale}
       defaultSubtitleLanguage={settings.defaultSubtitleLanguage || undefined}
       subtitlesEnabled={settings.subtitlesEnabled}
+      showComments={!settings.hideComments}
       onOpenComments={() => setCommentsOpen(true)}
       onCloseComments={() => setCommentsOpen(false)}
       onRetry={() => streamQuery.refetch()}

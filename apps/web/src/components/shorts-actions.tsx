@@ -12,9 +12,16 @@ type Props = {
   onOpenComments: () => void;
   className?: string;
   compact?: boolean;
+  showComments?: boolean;
 };
 
-export function ShortsActions({ stream, onOpenComments, className, compact }: Props) {
+export function ShortsActions({
+  stream,
+  onOpenComments,
+  className,
+  compact,
+  showComments = true,
+}: Props) {
   const { isAuthed } = useAuth();
   const { copied, share } = useShareUrl();
   const {
@@ -92,12 +99,14 @@ export function ShortsActions({ stream, onOpenComments, className, compact }: Pr
         compact={compact}
         onClick={() => void toggleWatchLater()}
       />
-      <ShortsActionButton
-        icon={MessageCircle}
-        label="Comments"
-        compact={compact}
-        onClick={onOpenComments}
-      />
+      {showComments && (
+        <ShortsActionButton
+          icon={MessageCircle}
+          label="Comments"
+          compact={compact}
+          onClick={onOpenComments}
+        />
+      )}
       <ShortsActionButton
         icon={Share2}
         label="Share"

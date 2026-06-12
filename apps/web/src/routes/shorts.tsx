@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ShortsPlayerShell } from "../components/shorts-player-shell";
+import { useSettings } from "../hooks/use-settings";
+import { goto } from "../lib/route-redirect";
 
 const SHORTS_BETA_BANNER_KEY = "shorts-beta-banner-dismissed";
 
@@ -44,6 +46,24 @@ function ShortsBetaBanner() {
 
 function ShortsPage() {
   const { v } = Route.useSearch();
+  const { settings } = useSettings();
+  if (settings.hideShorts) {
+    return (
+      <div className="flex min-h-[45vh] items-center justify-center px-4">
+        <div className="flex max-w-sm flex-col items-center gap-3 rounded-xl border border-border bg-surface px-5 py-6 text-center">
+          <h1 className="text-base font-semibold text-fg">Shorts are hidden</h1>
+          <p className="text-sm text-fg-soft">You can re-enable Shorts from video preferences.</p>
+          <button
+            type="button"
+            onClick={() => goto("/settings")}
+            className="mt-1 h-9 rounded-lg bg-fg px-4 text-sm font-medium text-bg transition-opacity hover:opacity-90"
+          >
+            Open settings
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       <ShortsBetaBanner />

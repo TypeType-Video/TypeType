@@ -32,6 +32,7 @@ type Props = {
   originalAudioLocale?: string | null;
   defaultSubtitleLanguage?: string;
   subtitlesEnabled?: boolean;
+  showComments: boolean;
   onOpenComments: () => void;
   onCloseComments: () => void;
   onRetry: () => void;
@@ -67,6 +68,7 @@ export function ShortsPlayerStage({
   originalAudioLocale,
   defaultSubtitleLanguage,
   subtitlesEnabled,
+  showComments,
   onOpenComments,
   onCloseComments,
   onRetry,
@@ -148,22 +150,29 @@ export function ShortsPlayerStage({
             <ShortsActions
               stream={active}
               onOpenComments={onOpenComments}
+              showComments={showComments}
               className="absolute bottom-24 right-1.5 z-30 md:hidden"
               compact
             />
           </div>
           <div className="hidden flex-col items-center gap-3 md:flex">
-            <ShortsActions stream={active} onOpenComments={onOpenComments} />
+            <ShortsActions
+              stream={active}
+              onOpenComments={onOpenComments}
+              showComments={showComments}
+            />
             <ShortsNavigation onPrev={onPrev} onNext={onNext} hasPrev={hasPrev} hasNext={hasNext} />
           </div>
         </div>
       </div>
-      <ShortsCommentsSheetSlot
-        videoUrl={active.id}
-        anchorEl={playerRef.current}
-        open={commentsOpen}
-        onClose={onCloseComments}
-      />
+      {showComments && (
+        <ShortsCommentsSheetSlot
+          videoUrl={active.id}
+          anchorEl={playerRef.current}
+          open={commentsOpen}
+          onClose={onCloseComments}
+        />
+      )}
     </section>
   );
 }
