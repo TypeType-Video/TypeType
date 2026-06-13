@@ -20,7 +20,7 @@ function EmptyState() {
 
 function PlaylistsPage() {
   const { query, create, remove } = usePlaylists();
-  const favorites = useFavoriteStreams();
+  const favorites = useFavoriteStreams({ limit: 1 });
   const watchLater = useWatchLaterStreams();
   const playlists = query.data ?? [];
   const [selectionMode, setSelectionMode] = useState(false);

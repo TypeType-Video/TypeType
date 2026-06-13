@@ -9,15 +9,23 @@ function isVideoStream(value: VideoStream | undefined): value is VideoStream {
   return value !== undefined;
 }
 
-export function useFavoriteStreams() {
+type UseFavoriteStreamsOptions = {
+  limit?: number;
+};
+
+export function useFavoriteStreams(options: UseFavoriteStreamsOptions = {}) {
   const { authReady, isAuthed } = useAuth();
   const favorites = useQuery({
     queryKey: ["favorites"],
     queryFn: fetchFavorites,
     enabled: authReady && isAuthed,
   });
+  const items =
+    options.limit === undefined
+      ? (favorites.data ?? [])
+      : (favorites.data ?? []).slice(0, options.limit);
   const streams = useQueries({
-    queries: (favorites.data ?? []).map((item) => ({
+    queries: items.map((item) => ({
       queryKey: ["favorite-stream", item.videoUrl],
       queryFn: () =>
         fetchStream(item.videoUrl).then((res) => mapStreamResponse(res, item.videoUrl)),
@@ -27,6 +35,7 @@ export function useFavoriteStreams() {
 
   return {
     count: favorites.data?.length ?? 0,
+    requestedCount: items.length,
     videos: streams.map((query) => query.data).filter(isVideoStream),
     isLoading: favorites.isLoading || streams.some((query) => query.isLoading),
   };
