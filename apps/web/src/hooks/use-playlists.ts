@@ -18,7 +18,7 @@ type RenamePayload = { id: string; name: string; description?: string };
 
 type AddVideoPayload = {
   playlistId: string;
-  video: Omit<PlaylistVideoItem, "id" | "position">;
+  video: Pick<PlaylistVideoItem, "url" | "title" | "thumbnail" | "duration">;
 };
 
 type RemoveVideoPayload = {
@@ -66,7 +66,20 @@ export function usePlaylists() {
       qc.setQueryData<PlaylistItem[]>(KEY, (old) =>
         (old ?? []).map((p) =>
           p.id === playlistId
-            ? { ...p, videos: [...p.videos, { id: "", position: p.videos.length, ...video }] }
+            ? {
+                ...p,
+                videos: [
+                  ...p.videos,
+                  {
+                    id: "",
+                    position: p.videos.length,
+                    watchPosition: 0,
+                    watched: false,
+                    progressUpdatedAt: 0,
+                    ...video,
+                  },
+                ],
+              }
             : p,
         ),
       );

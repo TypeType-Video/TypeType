@@ -4,12 +4,12 @@ import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
 import { useShareUrl } from "../hooks/use-share-url";
 import { detectProvider } from "../lib/provider";
 import { goto } from "../lib/route-redirect";
-import { toPublicWatchUrl } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { DanmakuControls } from "./danmaku-controls";
 import { DownloadSheet } from "./download-sheet";
 import { PlaylistAddDropdown } from "./playlist-add-dropdown";
 import { ReportBugModal } from "./report-bug-modal";
+import { ShareDropdown } from "./share-dropdown";
 import { Toast } from "./toast";
 import { WatchActionButton } from "./watch-action-button";
 import { BugIcon, DownloadIcon, ListPlusIcon, ShareIcon, StarIcon } from "./watch-icons";
@@ -17,14 +17,17 @@ import { WatchMoreActions } from "./watch-more-actions";
 
 type Props = {
   stream: VideoStream;
+  currentPositionRef?: { current: number };
 };
-export function WatchActions({ stream }: Props) {
+export function WatchActions({ stream, currentPositionRef }: Props) {
   const { copied, share } = useShareUrl();
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [toastLabel, setToastLabel] = useState<string | null>(null);
   const saveAnchorRef = useRef<HTMLButtonElement>(null);
+  const shareAnchorRef = useRef<HTMLButtonElement>(null);
   const { isAuthed } = useAuth();
   const {
     add: addFavorite,
@@ -81,10 +84,15 @@ export function WatchActions({ stream }: Props) {
         <DownloadIcon />
         Download
       </WatchActionButton>
-      <WatchActionButton onClick={() => share(toPublicWatchUrl(stream.id, window.location.origin))}>
+      <button
+        ref={shareAnchorRef}
+        type="button"
+        onClick={() => setShareOpen((open) => !open)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors text-fg-muted hover:text-fg hover:bg-surface-strong"
+      >
         <ShareIcon />
         Share
-      </WatchActionButton>
+      </button>
       <Toast message={copied ? "Link copied to clipboard" : toastLabel} />
       {showSave && (
         <button
@@ -121,6 +129,15 @@ export function WatchActions({ stream }: Props) {
           anchorEl={saveAnchorRef.current}
           onClose={() => setPlaylistOpen(false)}
           onSaved={handleSaved}
+        />
+      )}
+      {shareOpen && (
+        <ShareDropdown
+          sourceUrl={stream.id}
+          anchorEl={shareAnchorRef.current}
+          currentPositionMs={currentPositionRef?.current ?? 0}
+          onClose={() => setShareOpen(false)}
+          onShare={(url) => void share(url)}
         />
       )}
       {downloadOpen && (

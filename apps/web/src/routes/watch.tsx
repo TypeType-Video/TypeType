@@ -33,7 +33,7 @@ function PlayerOnlyLoader() {
 }
 
 function WatchPage() {
-  const { v } = Route.useSearch();
+  const { v, t } = Route.useSearch();
   const navigate = useNavigate({ from: "/watch" });
   const sourceUrl = toWatchSourceUrl(v);
   const publicParam = toPublicWatchParam(sourceUrl);
@@ -107,7 +107,13 @@ function WatchPage() {
   const serverPositionMs = (stream.startPosition ?? 0) * 1000;
   const resumeMs = savedPosition > 0 ? savedPosition : serverPositionMs;
   const durationMs = stream.duration * 1000;
-  const startTime = resumeMs >= 5000 && resumeMs < durationMs * 0.95 ? resumeMs : 0;
+  const sharedTimeMs = t && t > 0 ? t * 1000 : 0;
+  const startTime =
+    sharedTimeMs > 0 && sharedTimeMs < durationMs
+      ? sharedTimeMs
+      : resumeMs >= 5000 && resumeMs < durationMs * 0.95
+        ? resumeMs
+        : 0;
 
   return (
     <Suspense fallback={<PlayerOnlyLoader />}>
@@ -117,8 +123,15 @@ function WatchPage() {
 }
 
 export const Route = createFileRoute("/watch")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    v: typeof search.v === "string" ? search.v.trim() : "",
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const rawTime =
+      typeof search.t === "string" || typeof search.t === "number" ? Number(search.t) : 0;
+    const v = typeof search.v === "string" ? search.v.trim() : "";
+    if (!Number.isFinite(rawTime) || rawTime <= 0) return { v };
+    return {
+      v,
+      t: Math.floor(rawTime),
+    };
+  },
   component: WatchPage,
 });

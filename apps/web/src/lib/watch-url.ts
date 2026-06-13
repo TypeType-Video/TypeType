@@ -2,6 +2,7 @@ const YOUTUBE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 
 type WatchRouteSearch = {
   v: string;
+  t?: number;
 };
 
 function hostMatches(host: string, domain: string): boolean {
@@ -44,8 +45,11 @@ export function watchRouteSearch(sourceUrl: string): WatchRouteSearch {
   return { v: toPublicWatchParam(sourceUrl) };
 }
 
-export function toPublicWatchUrl(sourceUrl: string, origin: string): string {
+export function toPublicWatchUrl(sourceUrl: string, origin: string, startSeconds?: number): string {
   const url = new URL("/watch", origin);
   url.searchParams.set("v", toPublicWatchParam(sourceUrl));
+  if (typeof startSeconds === "number" && Number.isFinite(startSeconds) && startSeconds > 0) {
+    url.searchParams.set("t", String(Math.floor(startSeconds)));
+  }
   return url.toString();
 }
