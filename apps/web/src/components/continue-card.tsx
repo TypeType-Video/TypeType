@@ -5,11 +5,9 @@ import { formatDuration } from "../lib/format";
 import { resolveHistoryChannelMeta } from "../lib/history-enrichment";
 import { proxyImage } from "../lib/proxy";
 import { watchRouteSearch } from "../lib/watch-url";
-import type { VideoStream } from "../types/stream";
 import type { HistoryItem } from "../types/user";
 import { ChannelRouteLink } from "./channel-route-link";
 import { HistoryChannelAvatar } from "./history-channel-avatar";
-import { VideoCardFeedbackMenu } from "./video-card-feedback-menu";
 import { VideoProgressBar } from "./video-progress-bar";
 import { VerifiedBadgeIcon } from "./watch-icons";
 
@@ -20,20 +18,6 @@ type ContinueCardProps = {
 export function ContinueCard({ item }: ContinueCardProps) {
   const prefetch = useWatchPrefetch(item.url);
   const [uploaderVerified, setUploaderVerified] = useState(item.uploaderVerified ?? false);
-  const thumbnail = proxyImage(item.thumbnail);
-  const menuStream: VideoStream = {
-    id: item.url,
-    title: item.title,
-    thumbnail,
-    rawThumbnail: item.thumbnail,
-    rawChannelAvatar: item.channelAvatar ?? "",
-    channelName: item.channelName,
-    channelUrl: item.channelUrl || undefined,
-    channelAvatar: proxyImage(item.channelAvatar ?? ""),
-    uploaderVerified,
-    views: 0,
-    duration: item.duration,
-  };
 
   useEffect(() => {
     let active = true;
@@ -62,7 +46,7 @@ export function ContinueCard({ item }: ContinueCardProps) {
       >
         <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-strong">
           <img
-            src={thumbnail}
+            src={proxyImage(item.thumbnail)}
             alt={item.title}
             className="h-full w-full object-cover"
             loading="lazy"
@@ -78,30 +62,27 @@ export function ContinueCard({ item }: ContinueCardProps) {
         </span>
       </Link>
       <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          {item.channelUrl ? (
-            <ChannelRouteLink url={item.channelUrl} className="flex-shrink-0">
-              <HistoryChannelAvatar item={item} className="h-5 w-5" />
-            </ChannelRouteLink>
-          ) : (
+        {item.channelUrl ? (
+          <ChannelRouteLink url={item.channelUrl} className="flex-shrink-0">
             <HistoryChannelAvatar item={item} className="h-5 w-5" />
-          )}
-          {item.channelUrl ? (
-            <ChannelRouteLink
-              url={item.channelUrl}
-              className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft transition-colors hover:text-fg"
-            >
-              <span className="min-w-0 truncate">{item.channelName}</span>
-              {uploaderVerified && <VerifiedBadgeIcon />}
-            </ChannelRouteLink>
-          ) : (
-            <span className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft">
-              <span className="min-w-0 truncate">{item.channelName}</span>
-              {uploaderVerified && <VerifiedBadgeIcon />}
-            </span>
-          )}
-        </div>
-        <VideoCardFeedbackMenu stream={menuStream} />
+          </ChannelRouteLink>
+        ) : (
+          <HistoryChannelAvatar item={item} className="h-5 w-5" />
+        )}
+        {item.channelUrl ? (
+          <ChannelRouteLink
+            url={item.channelUrl}
+            className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft transition-colors hover:text-fg"
+          >
+            <span className="min-w-0 truncate">{item.channelName}</span>
+            {uploaderVerified && <VerifiedBadgeIcon />}
+          </ChannelRouteLink>
+        ) : (
+          <span className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft">
+            <span className="min-w-0 truncate">{item.channelName}</span>
+            {uploaderVerified && <VerifiedBadgeIcon />}
+          </span>
+        )}
       </div>
     </div>
   );

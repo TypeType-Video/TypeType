@@ -112,12 +112,13 @@ export function WatchLayout({ stream, startTime }: Props) {
     />
   );
 
-  const layoutClasses = getWatchLayoutClasses(cinemaMode);
+  const { containerClass, playerWrapClass, playerBoxClass, playerClassName, mediaClassName } =
+    getWatchLayoutClasses(cinemaMode);
 
   return (
-    <div className={layoutClasses.containerClass}>
-      <div className={layoutClasses.playerWrapClass}>
-        <div className={layoutClasses.playerBoxClass}>
+    <div className={containerClass}>
+      <div className={playerWrapClass}>
+        <div className={playerBoxClass}>
           {settingsReady ? (
             <>
               <VideoPlayer
@@ -149,8 +150,8 @@ export function WatchLayout({ stream, startTime }: Props) {
                 onError={handlePlayerError}
                 onEnded={playerEvents.handleEnded}
                 onSeekReady={(s) => (seekRef.current = s)}
-                className={layoutClasses.playerClassName}
-                mediaClassName={layoutClasses.mediaClassName}
+                className={playerClassName}
+                mediaClassName={mediaClassName}
               />
               {playerFailed && <PlayerError onRetry={reset} />}
             </>
@@ -162,7 +163,6 @@ export function WatchLayout({ stream, startTime }: Props) {
           <WatchMeta
             stream={stream}
             showComments={!hideComments}
-            currentPositionRef={playerEvents.positionRef}
             onSeekTimestamp={(s) => seekRef.current?.(s)}
           />
         )}

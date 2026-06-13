@@ -35,10 +35,6 @@ export function setDashPlayer(next: dashjs.MediaPlayerClass | null): void {
   emit();
 }
 
-export function isCurrentDashPlayer(candidate: dashjs.MediaPlayerClass): boolean {
-  return player === candidate;
-}
-
 export function setDashVideoTrack(next: dashjs.MediaInfo | null): void {
   selectedVideoTrack = next;
   emit();

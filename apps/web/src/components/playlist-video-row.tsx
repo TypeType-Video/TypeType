@@ -1,10 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
-import { isVideoWatched } from "../lib/watch-progress";
 import { watchRouteSearch } from "../lib/watch-url";
 import type { PlaylistVideoItem } from "../types/user";
-import { VideoProgressBar } from "./video-progress-bar";
-import { WatchedBadge } from "./watched-badge";
 
 function XIcon() {
   return (
@@ -32,7 +29,6 @@ type Props = { video: PlaylistVideoItem; onRemove: () => void };
 export function PlaylistVideoRow({ video, onRemove }: Props) {
   const prefetch = useWatchPrefetch(video.url);
   const thumbnail = video.thumbnail.trim().length > 0 ? video.thumbnail : null;
-  const watched = video.watched || isVideoWatched(video.watchPosition, video.duration);
 
   return (
     <div className="flex flex-col gap-2 group relative">
@@ -53,12 +49,6 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
               decoding="async"
             />
           )}
-          {watched && (
-            <span className="absolute top-2 left-2">
-              <WatchedBadge />
-            </span>
-          )}
-          <VideoProgressBar progress={video.watchPosition} duration={video.duration} />
           <button
             type="button"
             onClick={(e) => {
