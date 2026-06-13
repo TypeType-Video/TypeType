@@ -6,6 +6,7 @@ const MARGIN = 8;
 type Props = {
   anchorEl: HTMLElement | null;
   onClose: () => void;
+  onSaveToPlaylist?: () => void;
   onToggleVideoBlock?: () => void;
   onToggleChannelBlock?: () => void;
   videoBlocked?: boolean;
@@ -15,6 +16,7 @@ type Props = {
 export function VideoBlockActionsDropdown({
   anchorEl,
   onClose,
+  onSaveToPlaylist,
   onToggleVideoBlock,
   onToggleChannelBlock,
   videoBlocked,
@@ -66,6 +68,15 @@ export function VideoBlockActionsDropdown({
       style={panelStyle}
       className="fixed z-50 w-56 overflow-hidden rounded-lg border border-border-strong bg-surface shadow-2xl"
     >
+      {onSaveToPlaylist && (
+        <button
+          type="button"
+          onClick={onSaveToPlaylist}
+          className="w-full px-3 py-2 text-left text-sm text-fg transition-colors hover:bg-surface-strong"
+        >
+          Save to playlist
+        </button>
+      )}
       {onToggleVideoBlock && (
         <button
           type="button"

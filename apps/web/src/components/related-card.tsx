@@ -5,6 +5,7 @@ import { watchRouteSearch } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
+import { VideoCardFeedbackMenu } from "./video-card-feedback-menu";
 import { VideoStatusBadge } from "./video-status-badge";
 import { VerifiedBadgeIcon } from "./watch-icons";
 
@@ -87,6 +88,7 @@ export function RelatedCard({ stream }: Props) {
         )}
         <p className="text-xs text-fg-soft">{formatViews(stream.views)}</p>
       </div>
+      <VideoCardFeedbackMenu stream={stream} />
     </div>
   );
 }
