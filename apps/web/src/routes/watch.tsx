@@ -126,9 +126,11 @@ export const Route = createFileRoute("/watch")({
   validateSearch: (search: Record<string, unknown>) => {
     const rawTime =
       typeof search.t === "string" || typeof search.t === "number" ? Number(search.t) : 0;
+    const v = typeof search.v === "string" ? search.v.trim() : "";
+    if (!Number.isFinite(rawTime) || rawTime <= 0) return { v };
     return {
-      v: typeof search.v === "string" ? search.v.trim() : "",
-      t: Number.isFinite(rawTime) && rawTime > 0 ? Math.floor(rawTime) : undefined,
+      v,
+      t: Math.floor(rawTime),
     };
   },
   component: WatchPage,
