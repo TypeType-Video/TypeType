@@ -1,7 +1,12 @@
 import type * as dashjs from "dashjs";
 import { useRef } from "react";
 import { useDashPlayerSnapshot } from "../lib/dash-player-store";
-import { dashTrackGroups, maxTrackHeight, selectDashTrack } from "../lib/dash-video";
+import {
+  dashTrackGroups,
+  dashVideoTrack,
+  maxTrackHeight,
+  selectDashTrack,
+} from "../lib/dash-video";
 import { activeFamily, type CodecFamily, codecFamily, groupByFamily } from "../lib/quality-utils";
 import type { MenuInstance } from "../lib/vidstack";
 import {
@@ -34,9 +39,8 @@ export function FormatSelector() {
 
   if (player && dashGroups && dashGroups.size > 1) {
     const dashPlayer = player;
-    const current = codecFamily(
-      selectedVideoTrack?.codec ?? player.getCurrentTrackFor("video")?.codec ?? null,
-    );
+    const currentTrack = selectedVideoTrack ?? dashVideoTrack(player);
+    const current = codecFamily(currentTrack?.codec ?? null);
     const selected = current ?? FORMAT_ORDER.find((family) => dashGroups.has(family));
     const availableOptions = FORMAT_ORDER.flatMap((family) => {
       const track = dashGroups.get(family);

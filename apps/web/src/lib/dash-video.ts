@@ -1,5 +1,5 @@
 import type * as dashjs from "dashjs";
-import { notifyDashPlayer, setDashVideoTrack } from "./dash-player-store";
+import { isCurrentDashPlayer, notifyDashPlayer, setDashVideoTrack } from "./dash-player-store";
 import { type CodecFamily, codecFamily } from "./quality-utils";
 
 export type DashQualityOption = {
@@ -18,7 +18,16 @@ export function dashTrackGroups(
   player: dashjs.MediaPlayerClass,
 ): Map<CodecFamily, dashjs.MediaInfo> {
   const groups = new Map<CodecFamily, dashjs.MediaInfo>();
-  for (const track of player.getTracksFor("video")) {
+  if (!isCurrentDashPlayer(player)) return groups;
+
+  let tracks: ReturnType<dashjs.MediaPlayerClass["getTracksFor"]>;
+  try {
+    tracks = player.getTracksFor("video");
+  } catch {
+    return groups;
+  }
+
+  for (const track of tracks) {
     const family = codecFamily(track.codec);
     if (!family) continue;
     const current = groups.get(family);
@@ -50,23 +59,59 @@ export function dashQualityOptions(
     }));
 }
 
+export function dashVideoTrack(player: dashjs.MediaPlayerClass): dashjs.MediaInfo | null {
+  if (!isCurrentDashPlayer(player)) return null;
+  try {
+    return player.getCurrentTrackFor("video");
+  } catch {
+    return null;
+  }
+}
+
 function activeRepresentationHeight(
   player: dashjs.MediaPlayerClass,
   track: dashjs.MediaInfo,
 ): number | null {
-  const currentTrack = player.getCurrentTrackFor("video");
+  const currentTrack = dashVideoTrack(player);
   const currentFamily = codecFamily(currentTrack?.codec ?? null);
   const trackFamily = codecFamily(track.codec);
   if (currentFamily !== trackFamily) return null;
-  return player.getCurrentRepresentationForType("video")?.height ?? null;
+  try {
+    return player.getCurrentRepresentationForType("video")?.height ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function applyDashHeight(player: dashjs.MediaPlayerClass, height: number): void {
-  const representation = player
-    .getRepresentationsByType("video")
-    .find((candidate) => candidate.height === height);
+  if (!isCurrentDashPlayer(player)) return;
+
+  let representations: ReturnType<dashjs.MediaPlayerClass["getRepresentationsByType"]>;
+  try {
+    representations = player.getRepresentationsByType("video");
+  } catch {
+    return;
+  }
+
+  const representation = representations.find((candidate) => candidate.height === height);
   if (!representation) return;
-  player.setRepresentationForTypeByIndex("video", representation.index, true);
+  try {
+    player.setRepresentationForTypeByIndex("video", representation.index, true);
+  } catch {
+    return;
+  }
+}
+
+function applyDashTrack(player: dashjs.MediaPlayerClass, track: dashjs.MediaInfo): boolean {
+  if (!isCurrentDashPlayer(player)) return false;
+  try {
+    player.setCurrentTrack(track, true);
+    return true;
+  } catch {
+    setDashVideoTrack(null);
+    notifyDashPlayer();
+    return false;
+  }
 }
 
 export function selectDashTrack(
@@ -74,11 +119,11 @@ export function selectDashTrack(
   track: dashjs.MediaInfo,
   height = maxTrackHeight(track),
 ): void {
+  if (!applyDashTrack(player, track)) return;
   setDashVideoTrack(track);
-  player.setCurrentTrack(track, true);
   notifyDashPlayer();
   const apply = () => {
-    player.setCurrentTrack(track, true);
+    if (!applyDashTrack(player, track)) return;
     applyDashHeight(player, height);
     notifyDashPlayer();
   };

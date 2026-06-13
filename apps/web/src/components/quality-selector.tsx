@@ -1,7 +1,12 @@
 import type * as dashjs from "dashjs";
 import { useRef } from "react";
 import { useDashPlayerSnapshot } from "../lib/dash-player-store";
-import { dashQualityOptions, selectDashTrack, selectedDashHeight } from "../lib/dash-video";
+import {
+  dashQualityOptions,
+  dashVideoTrack,
+  selectDashTrack,
+  selectedDashHeight,
+} from "../lib/dash-video";
 import type { DefaultLayoutIcon, MenuInstance } from "../lib/vidstack";
 import {
   ClipIcon,
@@ -36,7 +41,7 @@ function activeDashTrack(
   player: dashjs.MediaPlayerClass,
   selectedVideoTrack: dashjs.MediaInfo | null,
 ): dashjs.MediaInfo | null {
-  return selectedVideoTrack ?? player.getCurrentTrackFor("video");
+  return selectedVideoTrack ?? dashVideoTrack(player);
 }
 
 export function QualitySelector() {
