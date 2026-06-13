@@ -1,8 +1,14 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { streamQueryOptions } from "../hooks/use-stream";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
+import { formatDuration, formatViews } from "../lib/format";
 import { isVideoWatched } from "../lib/watch-progress";
 import { watchRouteSearch } from "../lib/watch-url";
+import type { VideoStream } from "../types/stream";
 import type { PlaylistVideoItem } from "../types/user";
+import { ChannelRouteLink } from "./channel-route-link";
+import { VideoCardFeedbackMenu } from "./video-card-feedback-menu";
 import { VideoProgressBar } from "./video-progress-bar";
 import { WatchedBadge } from "./watched-badge";
 
@@ -33,6 +39,31 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
   const prefetch = useWatchPrefetch(video.url);
   const thumbnail = video.thumbnail.trim().length > 0 ? video.thumbnail : null;
   const watched = video.watched || isVideoWatched(video.watchPosition, video.duration);
+  const rawChannelName = video.channelName?.trim() ?? "";
+  const rawChannelUrl = video.channelUrl?.trim() ?? "";
+  const rawChannelAvatar = video.channelAvatar?.trim() ?? "";
+  const rawViews = video.viewCount ?? 0;
+  const needsMetadata = rawChannelName.length === 0 || rawChannelUrl.length === 0 || rawViews <= 0;
+  const { data: stream } = useQuery({
+    ...streamQueryOptions(video.url),
+    enabled: video.url.startsWith("http") && needsMetadata,
+  });
+  const channelName = rawChannelName || stream?.channelName.trim() || "";
+  const channelUrl = rawChannelUrl || stream?.channelUrl?.trim() || "";
+  const channelAvatar = rawChannelAvatar || stream?.channelAvatar || "";
+  const views = rawViews > 0 ? rawViews : (stream?.views ?? 0);
+  const menuStream: VideoStream = {
+    id: video.url,
+    title: video.title,
+    thumbnail: video.thumbnail,
+    rawThumbnail: video.thumbnail,
+    rawChannelAvatar: rawChannelAvatar,
+    channelName,
+    channelUrl: channelUrl || undefined,
+    channelAvatar,
+    views,
+    duration: video.duration,
+  };
 
   return (
     <div className="flex flex-col gap-2 group relative">
@@ -56,6 +87,11 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
           {watched && (
             <span className="absolute top-2 left-2">
               <WatchedBadge />
+            </span>
+          )}
+          {video.duration > 0 && (
+            <span className="absolute bottom-1.5 right-1.5 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
+              {formatDuration(video.duration)}
             </span>
           )}
           <VideoProgressBar progress={video.watchPosition} duration={video.duration} />
@@ -82,6 +118,23 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
           {video.title}
         </p>
       </Link>
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          {channelName.length > 0 &&
+            (channelUrl.length > 0 ? (
+              <ChannelRouteLink
+                url={channelUrl}
+                className="w-fit max-w-full truncate text-xs text-fg-muted transition-colors hover:text-fg"
+              >
+                {channelName}
+              </ChannelRouteLink>
+            ) : (
+              <p className="truncate text-xs text-fg-muted">{channelName}</p>
+            ))}
+          {views > 0 && <p className="text-xs text-fg-soft">{formatViews(views)}</p>}
+        </div>
+        <VideoCardFeedbackMenu stream={menuStream} />
+      </div>
     </div>
   );
 }
