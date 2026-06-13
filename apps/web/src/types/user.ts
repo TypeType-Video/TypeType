@@ -31,6 +31,9 @@ export type PlaylistVideoItem = {
   thumbnail: string;
   duration: number;
   position: number;
+  watchPosition: number;
+  watched: boolean;
+  progressUpdatedAt: number;
 };
 
 export type PlaylistItem = {

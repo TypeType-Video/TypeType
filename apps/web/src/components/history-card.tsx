@@ -2,11 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
+import { isVideoWatched } from "../lib/watch-progress";
 import { watchRouteSearch } from "../lib/watch-url";
 import type { HistoryItem } from "../types/user";
 import { ChannelRouteLink } from "./channel-route-link";
 import { HistoryChannelAvatar } from "./history-channel-avatar";
 import { VideoProgressBar } from "./video-progress-bar";
+import { WatchedBadge } from "./watched-badge";
 
 function XIcon() {
   return (
@@ -44,6 +46,7 @@ function formatWatchedAt(timestamp: number): string {
 export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
   const delay = Math.min(index * 45, 270);
   const prefetch = useWatchPrefetch(item.url);
+  const watched = isVideoWatched(item.progress, item.duration);
 
   return (
     <div
@@ -68,6 +71,11 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
           {item.duration > 0 && (
             <span className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-xs px-1 rounded">
               {formatDuration(item.duration)}
+            </span>
+          )}
+          {watched && (
+            <span className="absolute top-2 left-2">
+              <WatchedBadge />
             </span>
           )}
           <VideoProgressBar progress={item.progress} duration={item.duration} alwaysVisible />

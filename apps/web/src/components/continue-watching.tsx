@@ -1,16 +1,13 @@
 import { useHistory } from "../hooks/use-history";
+import { isVideoInProgress } from "../lib/watch-progress";
 import { ContinueCard } from "./continue-card";
 
 const MAX_ITEMS = 12;
 
-function isInProgress(progress: number, duration: number): boolean {
-  return progress > 0 && duration > 0 && progress < duration * 0.9;
-}
-
 export function ContinueWatching() {
   const { items } = useHistory();
   const displayed = items
-    .filter((h) => isInProgress(h.progress, h.duration))
+    .filter((h) => isVideoInProgress(h.progress, h.duration))
     .sort((a, b) => b.watchedAt - a.watchedAt)
     .slice(0, MAX_ITEMS);
 
