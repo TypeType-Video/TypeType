@@ -21,6 +21,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PodcastsRouteImport } from './routes/podcasts'
 import { Route as PlaylistsRouteImport } from './routes/playlists'
+import { Route as PlaylistRouteImport } from './routes/playlist'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as HistoryRouteImport } from './routes/history'
@@ -94,6 +95,11 @@ const PlaylistsRoute = PlaylistsRouteImport.update({
   path: '/playlists',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlaylistRoute = PlaylistRouteImport.update({
+  id: '/playlist',
+  path: '/playlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
+  '/playlist': typeof PlaylistRoute
   '/playlists': typeof PlaylistsRoute
   '/podcasts': typeof PodcastsRoute
   '/privacy': typeof PrivacyRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/favorites': typeof FavoritesRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
+  '/playlist': typeof PlaylistRoute
   '/playlists': typeof PlaylistsRoute
   '/podcasts': typeof PodcastsRoute
   '/privacy': typeof PrivacyRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
+  '/playlist': typeof PlaylistRoute
   '/playlists': typeof PlaylistsRoute
   '/podcasts': typeof PodcastsRoute
   '/privacy': typeof PrivacyRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/import'
     | '/login'
+    | '/playlist'
     | '/playlists'
     | '/podcasts'
     | '/privacy'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/history'
     | '/login'
+    | '/playlist'
     | '/playlists'
     | '/podcasts'
     | '/privacy'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/import'
     | '/login'
+    | '/playlist'
     | '/playlists'
     | '/podcasts'
     | '/privacy'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   ImportRoute: typeof ImportRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PlaylistRoute: typeof PlaylistRoute
   PlaylistsRoute: typeof PlaylistsRoute
   PodcastsRoute: typeof PodcastsRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -421,6 +434,13 @@ declare module '@tanstack/react-router' {
       path: '/playlists'
       fullPath: '/playlists'
       preLoaderRoute: typeof PlaylistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playlist': {
+      id: '/playlist'
+      path: '/playlist'
+      fullPath: '/playlist'
+      preLoaderRoute: typeof PlaylistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -533,6 +553,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   ImportRoute: ImportRouteWithChildren,
   LoginRoute: LoginRoute,
+  PlaylistRoute: PlaylistRoute,
   PlaylistsRoute: PlaylistsRoute,
   PodcastsRoute: PodcastsRoute,
   PrivacyRoute: PrivacyRoute,
