@@ -63,3 +63,15 @@ export function formatPublishedDate(
 
   return "";
 }
+
+export function formatExactDate(publishedAt: number | undefined, locale?: string): string {
+  if (!publishedAt || publishedAt <= 0) return "";
+  const parsed = new Date(publishedAt);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const effective = locale && locale.trim().length > 0 ? locale : undefined;
+  return parsed.toLocaleDateString(effective, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
