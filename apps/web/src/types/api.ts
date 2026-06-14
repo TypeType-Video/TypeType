@@ -1,3 +1,4 @@
+import type { PublicPlaylistInfo } from "./playlist";
 import type {
   AudioStreamItem,
   PreviewFrameItem,
@@ -83,6 +84,7 @@ export type StreamResponse = {
 
 export type SearchPageResponse = {
   items: VideoItem[];
+  playlists: PublicPlaylistInfo[];
   nextpage: string | null;
   searchSuggestion: string | null;
   isCorrectedSearch: boolean;

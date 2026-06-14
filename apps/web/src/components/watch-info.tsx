@@ -7,6 +7,7 @@ import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
 import { Toast } from "./toast";
 import { VerifiedBadgeIcon } from "./watch-icons";
+import { WatchLikeDislike } from "./watch-like-dislike";
 
 type Props = {
   stream: VideoStream;
@@ -99,21 +100,24 @@ export function WatchInfo({ stream }: Props) {
             </div>
           )}
         </div>
-        {stream.channelUrl && (
-          <button
-            type="button"
-            onClick={handleSubscribe}
-            disabled={add.isPending || remove.isPending}
-            aria-pressed={subscribed}
-            className={`flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:ring-border disabled:opacity-50 disabled:cursor-not-allowed ${
-              subscribed
-                ? "ring-1 ring-border-strong bg-surface-strong text-fg hover:bg-surface-soft"
-                : "bg-fg text-app hover:bg-white"
-            }`}
-          >
-            {subscribed ? "Subscribed" : "Subscribe"}
-          </button>
-        )}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <WatchLikeDislike stream={stream} />
+          {stream.channelUrl && (
+            <button
+              type="button"
+              onClick={handleSubscribe}
+              disabled={add.isPending || remove.isPending}
+              aria-pressed={subscribed}
+              className={`flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:ring-border disabled:opacity-50 disabled:cursor-not-allowed ${
+                subscribed
+                  ? "ring-1 ring-border-strong bg-surface-strong text-fg hover:bg-surface-soft"
+                  : "bg-fg text-app hover:bg-white"
+              }`}
+            >
+              {subscribed ? "Subscribed" : "Subscribe"}
+            </button>
+          )}
+        </div>
       </div>
       <div className="h-px bg-surface-strong" />
       <Toast message={toastMsg} />

@@ -1,16 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChannelPageContent } from "../components/channel-page-content";
 import type { ChannelSort } from "../lib/api";
-import { channelPathSearch, toChannelSourceUrl } from "../lib/channel-route-url";
+import {
+  channelPathSearch,
+  channelTabOrDefault,
+  toChannelSourceUrl,
+} from "../lib/channel-route-url";
 import { channelSortOrDefault } from "../lib/channel-sort";
 
-type ChannelPathRouteSearch = { sort?: ChannelSort; q?: string; tab?: "live" };
+type ChannelPathRouteSearch = { sort?: ChannelSort; q?: string; tab?: "live" | "playlists" };
 
 function validateChannelPathSearch(search: Record<string, unknown>): ChannelPathRouteSearch {
   const sort = channelSortOrDefault(search.sort);
   const query = typeof search.q === "string" ? search.q.trim() : "";
-  const live = search.tab === "live";
-  return channelPathSearch(sort, query, live);
+  const tab = channelTabOrDefault(search.tab);
+  return channelPathSearch(sort, query, tab);
 }
 
 function ChannelPathPage() {
@@ -18,7 +22,7 @@ function ChannelPathPage() {
   const { sort: searchSort, q } = Route.useSearch();
   const sort = searchSort ?? "latest";
   const searchQuery = q ?? "";
-  const live = Route.useSearch().tab === "live";
+  const tab = channelTabOrDefault(Route.useSearch().tab);
   const sourceUrl = toChannelSourceUrl(channelId);
   const navigate = useNavigate({ from: "/channel/$channelId" });
 
@@ -27,9 +31,9 @@ function ChannelPathPage() {
       sourceUrl={sourceUrl}
       sort={sort}
       searchQuery={searchQuery}
-      live={live}
-      onNavigate={(nextSort, nextQuery, nextLive) =>
-        navigate({ search: channelPathSearch(nextSort, nextQuery, nextLive), replace: true })
+      tab={tab}
+      onNavigate={(nextSort, nextQuery, nextTab) =>
+        navigate({ search: channelPathSearch(nextSort, nextQuery, nextTab), replace: true })
       }
     />
   );

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { ScrollSentinel } from "../components/scroll-sentinel";
-import { VideoGrid } from "../components/video-grid";
+import { type SearchResultItem, SearchResultsGrid } from "../components/search-results-grid";
 import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useSearch } from "../hooks/use-search";
@@ -19,7 +19,21 @@ function SearchPage() {
   const firstPage = data?.pages[0];
   const suggestion = firstPage?.searchSuggestion ?? null;
   const isCorrected = firstPage?.isCorrectedSearch ?? false;
-  const streams = filter(data?.pages.flatMap((p) => p.streams) ?? []);
+
+  const seen = new Set<string>();
+  const items: SearchResultItem[] = [];
+  for (const page of data?.pages ?? []) {
+    for (const playlist of page.playlists) {
+      if (seen.has(playlist.url)) continue;
+      seen.add(playlist.url);
+      items.push({ kind: "playlist", playlist });
+    }
+    for (const stream of filter(page.streams)) {
+      if (seen.has(stream.id)) continue;
+      seen.add(stream.id);
+      items.push({ kind: "video", stream });
+    }
+  }
 
   function handleSuggestion() {
     if (!suggestion) return;
@@ -55,10 +69,10 @@ function SearchPage() {
           ?
         </p>
       )}
-      {streams.length === 0 ? (
+      {items.length === 0 ? (
         <p className="text-fg-muted text-sm">No results for &ldquo;{q}&rdquo;</p>
       ) : (
-        <VideoGrid streams={streams} />
+        <SearchResultsGrid items={items} />
       )}
       {isFetchingNextPage && <VideoGridSkeleton idPrefix="search-next" />}
       <ScrollSentinel onIntersect={loadMore} enabled={!!hasNextPage && !isFetchingNextPage} />

@@ -8,6 +8,7 @@ const KEY = ["settings"];
 
 const DEFAULTS: SettingsItem = {
   defaultService: 0,
+  defaultLandingPage: "home",
   defaultQuality: "1080p",
   autoplay: true,
   volume: 1,

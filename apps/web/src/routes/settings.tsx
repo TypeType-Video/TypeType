@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useSettings } from "../hooks/use-settings";
 import { goto } from "../lib/route-redirect";
 import { SettingsBlocked } from "../settings/settings-blocked";
+import { SettingsLandingPage } from "../settings/settings-landing-page";
 import { SettingsLanguage } from "../settings/settings-language";
 import { SettingsPlayback } from "../settings/settings-playback";
 import { SettingsPrivacy } from "../settings/settings-privacy";
@@ -16,6 +17,7 @@ function SettingsPage() {
       <h1 className="text-lg font-semibold text-fg">Settings</h1>
       <SettingsPlayback />
       <SettingsVideoPreferences />
+      <SettingsLandingPage />
       {settings.defaultService === 0 && <SettingsLanguage />}
       <SettingsService />
       <section className="flex flex-col gap-3">

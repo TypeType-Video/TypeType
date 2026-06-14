@@ -1,5 +1,6 @@
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { MobileTabBar } from "../components/mobile-tab-bar";
 import { Navbar } from "../components/navbar";
 import { Sidebar } from "../components/sidebar";
 import { useAuth } from "../hooks/use-auth";
@@ -101,9 +102,13 @@ function RootLayout() {
   }
 
   const topPadding = { paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))" };
+  const showTabBar = isMobile && !shortsPage && !watchCinemaPage;
+  const mainBottomPad = showTabBar
+    ? "pb-[calc(env(safe-area-inset-bottom)+4.5rem)]"
+    : "pb-5 sm:pb-6";
   const mainClasses = watchCinemaPage
     ? `transition-all duration-200 ${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-48"}`
-    : `px-3 sm:px-4 pb-5 sm:pb-6 transition-all duration-200 ${
+    : `px-3 sm:px-4 ${mainBottomPad} transition-all duration-200 ${
         isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-48"
       }`;
 
@@ -114,6 +119,7 @@ function RootLayout() {
       <main className={mainClasses} style={topPadding}>
         <Outlet />
       </main>
+      {showTabBar && <MobileTabBar />}
     </div>
   );
 }

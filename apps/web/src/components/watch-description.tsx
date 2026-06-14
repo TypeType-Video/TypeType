@@ -1,13 +1,18 @@
 import { useState } from "react";
+import { useClientLocale } from "../hooks/use-client-locale";
+import { formatExactDate } from "../lib/format";
 import { RichText } from "./rich-text";
 
 type Props = {
   description: string;
+  uploadedAt?: number;
   onSeekTimestamp?: (seconds: number) => void;
 };
 
-export function WatchDescription({ description, onSeekTimestamp }: Props) {
+export function WatchDescription({ description, uploadedAt, onSeekTimestamp }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const locale = useClientLocale();
+  const exactDate = formatExactDate(uploadedAt, locale);
 
   if (!expanded) {
     return (
@@ -28,6 +33,7 @@ export function WatchDescription({ description, onSeekTimestamp }: Props) {
 
   return (
     <div className="bg-surface rounded-xl px-4 py-3">
+      {exactDate && <p className="mb-2 text-xs font-medium text-fg-muted">{exactDate}</p>}
       <p className="text-sm text-fg leading-relaxed whitespace-pre-wrap">
         <RichText text={description} onSeekTimestamp={onSeekTimestamp} />
       </p>

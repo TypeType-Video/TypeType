@@ -16,7 +16,11 @@ export function WatchMeta({ stream, showComments = true, onSeekTimestamp }: Prop
       <WatchInfo stream={stream} />
       <WatchActions stream={stream} />
       {stream.description && (
-        <WatchDescription description={stream.description} onSeekTimestamp={onSeekTimestamp} />
+        <WatchDescription
+          description={stream.description}
+          uploadedAt={stream.publishedAt}
+          onSeekTimestamp={onSeekTimestamp}
+        />
       )}
       {showComments && (
         <WatchComments key={stream.id} videoUrl={stream.id} onSeekTimestamp={onSeekTimestamp} />

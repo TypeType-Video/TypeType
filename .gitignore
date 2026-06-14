@@ -1,4 +1,5 @@
 AGENTS.md
+CLAUDE.md
 Vision.md
 response.md
 attente.md
@@ -7,6 +8,7 @@ question.md
 node_modules/
 dist/
 build/
+tmp/
 .DS_Store
 *.tsbuildinfo
 .env
