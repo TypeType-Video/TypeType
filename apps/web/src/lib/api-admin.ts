@@ -18,7 +18,9 @@ function isAdminSettings(value: unknown): value is AdminSettings {
     typeof record.allowRegistration === "boolean" &&
     typeof record.allowGuest === "boolean" &&
     typeof record.forceEmailVerification === "boolean" &&
-    typeof record.activeSessionsEnabled === "boolean"
+    typeof record.activeSessionsEnabled === "boolean" &&
+    typeof record.localLoginEnabled === "boolean" &&
+    typeof record.oidcAutoRedirect === "boolean"
   );
 }
 

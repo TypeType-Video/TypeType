@@ -3,6 +3,8 @@ export type AdminSettings = {
   allowGuest: boolean;
   forceEmailVerification: boolean;
   activeSessionsEnabled: boolean;
+  localLoginEnabled: boolean;
+  oidcAutoRedirect: boolean;
 };
 
 type AdminSessionNowPlaying = {

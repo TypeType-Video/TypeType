@@ -11,32 +11,56 @@ const ROW =
 
 export function AdminSettingsPanel({ settings, pending, onToggle }: Props) {
   return (
-    <section className="rounded-xl border border-border bg-surface/70 p-4">
-      <div className="mb-3">
-        <h2 className="text-sm font-semibold text-fg">Instance access</h2>
-        <p className="text-xs text-fg-soft">Control who can register or browse as guest.</p>
-      </div>
-      <div className="space-y-2">
-        <SettingToggle
-          label="Allow registrations"
-          value={settings.allowRegistration}
-          pending={pending}
-          onClick={() => onToggle("allowRegistration")}
-        />
-        <SettingToggle
-          label="Allow guest mode"
-          value={settings.allowGuest}
-          pending={pending}
-          onClick={() => onToggle("allowGuest")}
-        />
-        <SettingToggle
-          label="Track active sessions"
-          value={settings.activeSessionsEnabled}
-          pending={pending}
-          onClick={() => onToggle("activeSessionsEnabled")}
-        />
-      </div>
-    </section>
+    <div className="space-y-4">
+      <section className="rounded-xl border border-border bg-surface/70 p-4">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-fg">Instance access</h2>
+          <p className="text-xs text-fg-soft">Control who can register or browse as guest.</p>
+        </div>
+        <div className="space-y-2">
+          <SettingToggle
+            label="Allow registrations"
+            value={settings.allowRegistration}
+            pending={pending}
+            onClick={() => onToggle("allowRegistration")}
+          />
+          <SettingToggle
+            label="Allow guest mode"
+            value={settings.allowGuest}
+            pending={pending}
+            onClick={() => onToggle("allowGuest")}
+          />
+          <SettingToggle
+            label="Track active sessions"
+            value={settings.activeSessionsEnabled}
+            pending={pending}
+            onClick={() => onToggle("activeSessionsEnabled")}
+          />
+        </div>
+      </section>
+      <section className="rounded-xl border border-border bg-surface/70 p-4">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-fg">Authentication</h2>
+          <p className="text-xs text-fg-soft">
+            OIDC behavior. Disable local login only when an OIDC provider is configured.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <SettingToggle
+            label="Allow local login (email and password)"
+            value={settings.localLoginEnabled}
+            pending={pending}
+            onClick={() => onToggle("localLoginEnabled")}
+          />
+          <SettingToggle
+            label="Auto-redirect to OIDC provider"
+            value={settings.oidcAutoRedirect}
+            pending={pending}
+            onClick={() => onToggle("oidcAutoRedirect")}
+          />
+        </div>
+      </section>
+    </div>
   );
 }
 
