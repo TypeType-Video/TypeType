@@ -3,10 +3,12 @@ import { useChannel } from "../hooks/use-channel";
 import { useDocumentTitle } from "../hooks/use-document-title";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import { ApiError, type ChannelSort } from "../lib/api";
+import type { ChannelTab } from "../lib/channel-route-url";
 import { formatViews } from "../lib/format";
 import { detectProvider } from "../lib/provider";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelFilterBar } from "./channel-filter-bar";
+import { ChannelPlaylistsSection } from "./channel-playlists-section";
 import { ChannelPodcastsSection } from "./channel-podcasts-section";
 import { PageSpinner } from "./page-spinner";
 import { ScrollSentinel } from "./scroll-sentinel";
@@ -18,11 +20,12 @@ type Props = {
   sourceUrl: string;
   sort: ChannelSort;
   searchQuery: string;
-  live: boolean;
-  onNavigate: (sort: ChannelSort, query: string, live: boolean) => void;
+  tab: ChannelTab;
+  onNavigate: (sort: ChannelSort, query: string, tab: ChannelTab) => void;
 };
 
-export function ChannelPageContent({ sourceUrl, sort, searchQuery, live, onNavigate }: Props) {
+export function ChannelPageContent({ sourceUrl, sort, searchQuery, tab, onNavigate }: Props) {
+  const live = tab === "live";
   const {
     meta,
     videos,
@@ -55,15 +58,15 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, live, onNavig
   }
 
   function selectSort(nextSort: ChannelSort) {
-    onNavigate(nextSort, searchQuery, live);
+    onNavigate(nextSort, searchQuery, tab);
   }
 
   function searchChannel(nextQuery: string) {
-    onNavigate(sort, searchAvailable && !live ? nextQuery : "", live);
+    onNavigate(sort, searchAvailable && tab === "videos" ? nextQuery : "", tab);
   }
 
-  function selectLive(nextLive: boolean) {
-    onNavigate(sort, "", searchAvailable && nextLive);
+  function selectTab(nextTab: ChannelTab) {
+    onNavigate(sort, "", nextTab);
   }
 
   if (isInitialLoading) return <PageSpinner />;
@@ -118,36 +121,44 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, live, onNavig
           </div>
         </div>
       )}
-      <ChannelPodcastsSection channelUrl={sourceUrl} channelAvatar={meta?.avatarUrl} />
+      {tab === "videos" && (
+        <ChannelPodcastsSection channelUrl={sourceUrl} channelAvatar={meta?.avatarUrl} />
+      )}
       <ChannelFilterBar
         sort={sort}
         query={searchQuery}
-        live={live}
+        tab={tab}
         searchAvailable={searchAvailable}
         onSearch={searchChannel}
-        onLiveChange={selectLive}
+        onTabChange={selectTab}
         onSortChange={selectSort}
       />
-      {isReplacingVideos ? (
-        <VideoGridSkeleton idPrefix="channel-replace" />
+      {tab === "playlists" ? (
+        <ChannelPlaylistsSection channelUrl={sourceUrl} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
-          {visibleVideos.map((v, index) => (
-            <div
-              key={v.id}
-              className="animate-card-pop-in"
-              style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
-            >
-              <VideoCard stream={v} />
+        <>
+          {isReplacingVideos ? (
+            <VideoGridSkeleton idPrefix="channel-replace" />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+              {visibleVideos.map((v, index) => (
+                <div
+                  key={v.id}
+                  className="animate-card-pop-in"
+                  style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
+                >
+                  <VideoCard stream={v} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+          {isFetchingNextPage && <VideoGridSkeleton idPrefix="channel-next" />}
+          <ScrollSentinel
+            onIntersect={fetchNextPage}
+            enabled={hasNextPage && !isFetchingNextPage && !isReplacingVideos}
+          />
+        </>
       )}
-      {isFetchingNextPage && <VideoGridSkeleton idPrefix="channel-next" />}
-      <ScrollSentinel
-        onIntersect={fetchNextPage}
-        enabled={hasNextPage && !isFetchingNextPage && !isReplacingVideos}
-      />
     </div>
   );
 }

@@ -3,10 +3,16 @@ import type { ChannelSort } from "./api";
 const YOUTUBE_CHANNEL_ID_PATTERN = /^UC[A-Za-z0-9_-]{22}$/;
 const YOUTUBE_HANDLE_PATTERN = /^@[A-Za-z0-9._-]{2,48}$/;
 
+export type ChannelTab = "videos" | "live" | "playlists";
+
+export function channelTabOrDefault(value: unknown): ChannelTab {
+  return value === "live" || value === "playlists" ? value : "videos";
+}
+
 export type ChannelPathSearch = {
   sort?: ChannelSort;
   q?: string;
-  tab?: "live";
+  tab?: "live" | "playlists";
 };
 
 export type ChannelLegacySearch = ChannelPathSearch & {
@@ -54,13 +60,13 @@ export function toChannelPathParam(sourceUrl: string): string | null {
 export function channelPathSearch(
   sort: ChannelSort,
   query: string,
-  live = false,
+  tab: ChannelTab = "videos",
 ): ChannelPathSearch {
   const trimmedQuery = query.trim();
   const search: ChannelPathSearch = {};
   if (sort !== "latest") search.sort = sort;
   if (trimmedQuery.length > 0) search.q = trimmedQuery;
-  if (live) search.tab = "live";
+  if (tab !== "videos") search.tab = tab;
   return search;
 }
 
@@ -68,7 +74,7 @@ export function channelLegacySearch(
   sourceUrl: string,
   sort: ChannelSort,
   query: string,
-  live = false,
+  tab: ChannelTab = "videos",
 ): ChannelLegacySearch {
-  return { url: toPublicChannelParam(sourceUrl), ...channelPathSearch(sort, query, live) };
+  return { url: toPublicChannelParam(sourceUrl), ...channelPathSearch(sort, query, tab) };
 }

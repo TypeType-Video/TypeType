@@ -1,30 +1,32 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import type { ChannelSort } from "../lib/api";
+import type { ChannelTab } from "../lib/channel-route-url";
 import { CHANNEL_SORT_OPTIONS, channelSortOrDefault } from "../lib/channel-sort";
 
-const CHANNEL_TABS = [
-  { live: false, label: "Videos" },
-  { live: true, label: "Live" },
+const CHANNEL_TABS: { tab: ChannelTab; label: string }[] = [
+  { tab: "videos", label: "Videos" },
+  { tab: "live", label: "Live" },
+  { tab: "playlists", label: "Playlists" },
 ];
 
 type Props = {
   sort: ChannelSort;
   query: string;
-  live: boolean;
+  tab: ChannelTab;
   searchAvailable: boolean;
   onSearch: (query: string) => void;
-  onLiveChange: (live: boolean) => void;
+  onTabChange: (tab: ChannelTab) => void;
   onSortChange: (sort: ChannelSort) => void;
 };
 
 export function ChannelFilterBar({
   sort,
   query,
-  live,
+  tab,
   searchAvailable,
   onSearch,
-  onLiveChange,
+  onTabChange,
   onSortChange,
 }: Props) {
   const [input, setInput] = useState(query);
@@ -50,23 +52,23 @@ export function ChannelFilterBar({
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         {searchAvailable && (
           <div className="flex w-fit items-center gap-2 text-sm">
-            {CHANNEL_TABS.map((tab) => (
+            {CHANNEL_TABS.map((item) => (
               <button
-                key={tab.label}
+                key={item.tab}
                 type="button"
-                onClick={() => onLiveChange(tab.live)}
+                onClick={() => onTabChange(item.tab)}
                 className={`border-border-strong border-b py-1 font-medium transition-colors ${
-                  live === tab.live
+                  tab === item.tab
                     ? "border-fg text-fg"
                     : "border-transparent text-fg-soft hover:text-fg"
                 }`}
               >
-                {tab.label}
+                {item.label}
               </button>
             ))}
           </div>
         )}
-        {searchAvailable && (
+        {searchAvailable && tab === "videos" && (
           <div className="min-w-0 flex-1 md:max-w-lg">
             <form onSubmit={submitSearch} className="flex min-w-0 items-end gap-3">
               <span className="hidden pb-2 text-xs uppercase tracking-wide text-fg-soft sm:inline">
@@ -98,7 +100,7 @@ export function ChannelFilterBar({
             </form>
           </div>
         )}
-        {!isSearching && (
+        {!isSearching && tab === "videos" && (
           <div className="flex w-fit items-center gap-2 text-sm">
             {CHANNEL_SORT_OPTIONS.map((option) => {
               const selected = option.value === sort;
