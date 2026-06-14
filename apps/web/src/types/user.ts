@@ -69,6 +69,7 @@ export type ProgressItem = {
 
 export type SettingsItem = {
   defaultService: ServiceId;
+  defaultLandingPage: string;
   defaultQuality: string;
   autoplay: boolean;
   volume: number;
