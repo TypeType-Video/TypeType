@@ -2,6 +2,7 @@ import { useAuthStore } from "../stores/auth-store";
 import type { AuthMe } from "../types/auth";
 import { ApiError } from "./api";
 import { fetchMe, loginAuth, logoutAuth, refreshAuth, registerAuth } from "./api-auth";
+import { completeOidc } from "./api-oidc";
 
 type Credentials = {
   identifier: string;
@@ -68,6 +69,16 @@ export async function loginSession(payload: Credentials): Promise<void> {
 export async function registerSession(payload: RegisterPayload): Promise<void> {
   const response = await registerAuth(payload);
   await hydrateSession(response.accessToken);
+}
+
+export async function oidcCallbackSession(payload: {
+  code: string;
+  state: string;
+  redirectUri: string;
+}): Promise<string> {
+  const result = await completeOidc(payload);
+  await hydrateSession(result.accessToken);
+  return result.returnTo;
 }
 
 export async function logoutSession(): Promise<void> {

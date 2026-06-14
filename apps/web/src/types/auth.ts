@@ -16,6 +16,13 @@ export type AuthResponse = {
   accessToken: string;
 };
 
+export type OidcStatus = {
+  enabled: boolean;
+  providerName: string | null;
+  localLoginEnabled: boolean;
+  autoRedirect: boolean;
+};
+
 export type AuthUser = {
   id: string;
   email: string;
