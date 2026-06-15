@@ -104,7 +104,7 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export function fetchStream(url: string): Promise<StreamResponse> {
-  return request(`${BASE}/streams?url=${encodeURIComponent(url)}`);
+  return request(`${BASE}/streams?url=${encodeURIComponent(url)}`, { cache: "no-store" });
 }
 
 export function fetchSearch(
