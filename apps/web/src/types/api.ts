@@ -82,12 +82,34 @@ export type StreamResponse = {
   relatedStreams: VideoItem[];
 };
 
+export type ChannelResultItem = {
+  id: string;
+  name: string;
+  url: string;
+  thumbnailUrl: string;
+  description: string;
+  subscriberCount: number;
+  streamCount: number;
+  isVerified: boolean;
+};
+
 export type SearchPageResponse = {
   items: VideoItem[];
+  channels: ChannelResultItem[];
   playlists: PublicPlaylistInfo[];
   nextpage: string | null;
   searchSuggestion: string | null;
   isCorrectedSearch: boolean;
+};
+
+type SearchFilterOption = {
+  value: string;
+  label: string;
+};
+
+export type SearchFiltersResponse = {
+  contentFilters: SearchFilterOption[];
+  sortFilters: SearchFilterOption[];
 };
 
 export type HomeRecommendationsResponse = {

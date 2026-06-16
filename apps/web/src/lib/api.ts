@@ -4,6 +4,7 @@ import type {
   CommentsPageResponse,
   PodcastEpisodesResponse,
   PodcastPageResponse,
+  SearchFiltersResponse,
   SearchPageResponse,
   StreamResponse,
 } from "../types/api";
@@ -107,13 +108,21 @@ export function fetchStream(url: string): Promise<StreamResponse> {
   return request(`${BASE}/streams?url=${encodeURIComponent(url)}`, { cache: "no-store" });
 }
 
+export function fetchSearchFilters(service: number): Promise<SearchFiltersResponse> {
+  return request(`${BASE}/search/filters?service=${service}`);
+}
+
 export function fetchSearch(
   q: string,
   service: number,
   nextpage?: string,
+  contentFilter?: string,
+  sortFilter?: string,
 ): Promise<SearchPageResponse> {
   const params = new URLSearchParams({ q, service: String(service) });
   if (nextpage) params.set("nextpage", nextpage);
+  if (contentFilter) params.set("contentFilter", contentFilter);
+  if (sortFilter) params.set("sortFilter", sortFilter);
   return request(`${BASE}/search?${params}`);
 }
 
