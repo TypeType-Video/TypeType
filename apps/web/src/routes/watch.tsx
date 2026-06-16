@@ -33,7 +33,7 @@ function PlayerOnlyLoader() {
 }
 
 function WatchPage() {
-  const { v } = Route.useSearch();
+  const { v, list, shuffle } = Route.useSearch();
   const navigate = useNavigate({ from: "/watch" });
   const sourceUrl = toWatchSourceUrl(v);
   const publicParam = toPublicWatchParam(sourceUrl);
@@ -49,7 +49,7 @@ function WatchPage() {
 
   useEffect(() => {
     if (v.trim() && publicParam !== v.trim()) {
-      navigate({ search: { v: publicParam }, replace: true });
+      navigate({ search: (prev) => ({ ...prev, v: publicParam }), replace: true });
     }
   }, [navigate, publicParam, v]);
 
@@ -111,7 +111,7 @@ function WatchPage() {
 
   return (
     <Suspense fallback={<PlayerOnlyLoader />}>
-      <WatchLayout stream={stream} startTime={startTime} />
+      <WatchLayout stream={stream} startTime={startTime} list={list} shuffle={shuffle} />
     </Suspense>
   );
 }
@@ -119,6 +119,8 @@ function WatchPage() {
 export const Route = createFileRoute("/watch")({
   validateSearch: (search: Record<string, unknown>) => ({
     v: typeof search.v === "string" ? search.v.trim() : "",
+    ...(typeof search.list === "string" && search.list ? { list: search.list } : {}),
+    ...(search.shuffle ? { shuffle: true } : {}),
   }),
   component: WatchPage,
 });

@@ -1,8 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBulletComments } from "../hooks/use-bullet-comments";
+import { useMobile } from "../hooks/use-mobile";
 import { usePlayerError } from "../hooks/use-player-error";
 import { usePlayerErrorResume } from "../hooks/use-player-error-resume";
+import { usePlaylist, usePlaylists } from "../hooks/use-playlists";
 import { useSaveProgress } from "../hooks/use-progress";
 import { useSettings } from "../hooks/use-settings";
 import { useVolumeSync } from "../hooks/use-volume-sync";
@@ -15,6 +17,7 @@ import {
   getPreferredDefaultAudioTrackId,
 } from "../lib/audio-track";
 import { detectProvider } from "../lib/provider";
+import { toPublicWatchParam } from "../lib/watch-url";
 import { useDanmakuStore } from "../stores/danmaku-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
 import type { VideoStream } from "../types/stream";
@@ -24,15 +27,19 @@ import { VideoPlayer } from "./video-player";
 import { getWatchLayoutClasses } from "./watch-layout-classes";
 import { WatchMeta } from "./watch-meta";
 import { WatchPlayerOverlay } from "./watch-player-overlay";
+import { WatchPlaylistPanel } from "./watch-playlist-panel";
 import { WatchSecondaryContent } from "./watch-secondary-content";
 
 type Props = {
   stream: VideoStream;
   startTime: number;
+  list?: string;
+  shuffle?: boolean;
 };
 
-export function WatchLayout({ stream, startTime }: Props) {
+export function WatchLayout({ stream, startTime, list, shuffle }: Props) {
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const save = useSaveProgress(stream.id);
   const { settings, update, settingsReady } = useSettings();
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
@@ -50,6 +57,14 @@ export function WatchLayout({ stream, startTime }: Props) {
     manualSkipSegments,
   } = useWatchSponsorBlock(stream, settings);
   const relatedStreams = settings.hideRelatedVideos ? [] : (stream.related ?? []);
+  const playlist = usePlaylist(list ?? "");
+  const { reorder: playlistReorder } = usePlaylists();
+  const playlistVideos = playlist.data?.videos ?? [];
+  const currentParam = toPublicWatchParam(stream.id);
+  const inPlaylist = Boolean(list) && playlistVideos.length > 0;
+  const currentIdx = inPlaylist
+    ? playlistVideos.findIndex((video) => toPublicWatchParam(video.url) === currentParam)
+    : -1;
   const { data: bulletComments } = useBulletComments(stream.id, isNicoNico && !hideComments);
   const originalTrackId = getOriginalAudioTrackId(stream);
   const preferredAudioTrackId = getPreferredDefaultAudioTrackId(stream);
@@ -79,10 +94,37 @@ export function WatchLayout({ stream, startTime }: Props) {
 
   const handleEnded = useCallback(() => {
     if (!settingsReady || !settings.autoplay) return;
+    if (inPlaylist && currentIdx >= 0) {
+      const others = playlistVideos.filter((_, index) => index !== currentIdx);
+      const nextVideo = shuffle
+        ? others[Math.floor(Math.random() * others.length)]
+        : playlistVideos[currentIdx + 1];
+      if (nextVideo) {
+        navigate({
+          to: "/watch",
+          search: {
+            v: toPublicWatchParam(nextVideo.url),
+            list,
+            ...(shuffle ? { shuffle: true } : {}),
+          },
+        });
+        return;
+      }
+    }
     const next = stream.related?.[0];
     if (!next) return;
     navigate({ to: "/watch", search: { v: next.id } });
-  }, [settingsReady, settings.autoplay, stream.related, navigate]);
+  }, [
+    settingsReady,
+    settings.autoplay,
+    inPlaylist,
+    currentIdx,
+    playlistVideos,
+    shuffle,
+    list,
+    stream.related,
+    navigate,
+  ]);
   const playerEvents = useWatchPlayerEvents({
     stream,
     isLive,
@@ -114,6 +156,24 @@ export function WatchLayout({ stream, startTime }: Props) {
 
   const { containerClass, playerWrapClass, playerBoxClass, playerClassName, mediaClassName } =
     getWatchLayoutClasses(cinemaMode);
+
+  const playlistPanel =
+    inPlaylist && playlist.data && list ? (
+      <WatchPlaylistPanel
+        playlist={playlist.data}
+        listId={list}
+        currentParam={currentParam}
+        shuffle={Boolean(shuffle)}
+        onToggleShuffle={() =>
+          navigate({
+            to: "/watch",
+            search: { v: currentParam, list, ...(shuffle ? {} : { shuffle: true }) },
+            resetScroll: false,
+          })
+        }
+        onReorder={(order) => playlistReorder.mutate({ id: list, order })}
+      />
+    ) : null;
 
   return (
     <div className={containerClass}>
@@ -161,6 +221,7 @@ export function WatchLayout({ stream, startTime }: Props) {
             <div className="aspect-video w-full bg-black" />
           )}
         </div>
+        {isMobile && playlistPanel ? <div className="mt-4">{playlistPanel}</div> : null}
         {!cinemaMode && (
           <WatchMeta
             stream={stream}
@@ -174,6 +235,7 @@ export function WatchLayout({ stream, startTime }: Props) {
         stream={stream}
         relatedStreams={relatedStreams}
         showComments={!hideComments}
+        playlistPanel={isMobile ? null : playlistPanel}
         onSeekTimestamp={(seconds) => seekRef.current?.(seconds)}
       />
       <Toast message={toast} />
