@@ -13,6 +13,7 @@ import { FormatSelector } from "./format-selector";
 import { MediaSessionSync } from "./media-session-sync";
 import { PlayerHotkeys } from "./player-hotkeys";
 import { PlayerSeeker, SeekBridge, SponsorBlockSkipper } from "./player-internals";
+import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
 import { QualitySelector } from "./quality-selector";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
@@ -75,6 +76,7 @@ export function VideoPlayer({
       logLevel="warn"
       crossOrigin
       playsInline
+      hideControlsOnMouseLeave
       {...(ios ? { "webkit-playsinline": "true" } : {})}
       autoPlay={autoplay}
       storage={null}
@@ -143,6 +145,7 @@ export function VideoPlayer({
         isLive={streamType === "live"}
       />
       <PlayerHotkeys canSeek={streamType !== "live"} />
+      <PlayerPlayPauseIndicator />
       {autoSkipSponsorBlock && autoSkipSponsorBlockSegments && (
         <SponsorBlockSkipper
           segments={autoSkipSponsorBlockSegments}

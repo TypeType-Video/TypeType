@@ -107,7 +107,7 @@ function RootLayout() {
     ? "pb-[calc(env(safe-area-inset-bottom)+4.5rem)]"
     : "pb-5 sm:pb-6";
   const mainClasses = watchCinemaPage
-    ? `transition-all duration-200 ${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-48"}`
+    ? "transition-all duration-200 ml-0"
     : `px-3 sm:px-4 ${mainBottomPad} transition-all duration-200 ${
         isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-48"
       }`;
@@ -115,7 +115,7 @@ function RootLayout() {
   return (
     <div className="min-h-screen bg-app text-fg">
       <Navbar />
-      <Sidebar />
+      {!watchCinemaPage && <Sidebar />}
       <main className={mainClasses} style={topPadding}>
         <Outlet />
       </main>

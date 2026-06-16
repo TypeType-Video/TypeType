@@ -66,7 +66,7 @@ export function WatchInfo({ stream }: Props) {
           {formatViews(stream.views)}
         </span>
       </div>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-center gap-3 min-w-0">
           {stream.channelUrl ? (
             <ChannelRouteLink
@@ -100,7 +100,7 @@ export function WatchInfo({ stream }: Props) {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 flex-shrink-0 sm:justify-start">
           <WatchLikeDislike stream={stream} />
           {stream.channelUrl && (
             <button

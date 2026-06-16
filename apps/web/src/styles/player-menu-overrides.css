@@ -17,3 +17,17 @@
 .vds-captions {
   --media-cue-backdrop: none;
 }
+
+@media (pointer: coarse) {
+  .vds-video-layout[data-lg] .vds-volume-slider {
+    margin-left: var(--gap, 10px);
+    opacity: 1;
+    visibility: visible;
+    max-width: var(--video-volume-slider-max-width, 72px);
+  }
+}
+
+:where(div):has(> [data-media-player][data-fullscreen]) {
+  border-radius: 0;
+  overflow: visible;
+}
