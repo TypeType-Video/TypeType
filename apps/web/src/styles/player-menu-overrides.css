@@ -13,3 +13,7 @@
     max-height: min(32svh, 16rem);
   }
 }
+
+.vds-captions {
+  --media-cue-backdrop: none;
+}

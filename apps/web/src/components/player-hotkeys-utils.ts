@@ -27,3 +27,20 @@ export function isFastForwardPointer(event: PointerEvent): boolean {
   if (event.pointerType === "mouse") return event.button === 0;
   return event.pointerType === "touch" || event.pointerType === "pen";
 }
+
+const DRAG_THRESHOLD = 12;
+
+export function exceededDragThreshold(dx: number, dy: number): boolean {
+  return Math.abs(dx) >= DRAG_THRESHOLD && Math.abs(dx) > Math.abs(dy);
+}
+
+export function computeScrubTarget(
+  startTime: number,
+  dx: number,
+  width: number,
+  range: number,
+  duration: number,
+): number {
+  if (width <= 0) return clampTime(startTime, duration);
+  return clampTime(startTime + (dx / width) * range, duration);
+}
