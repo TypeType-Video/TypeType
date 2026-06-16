@@ -107,7 +107,7 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
       >
-        <p className="text-sm font-medium text-fg line-clamp-2 leading-snug group-hover:text-white transition-colors">
+        <p className="text-sm font-medium text-fg line-clamp-2 leading-snug group-hover:text-fg-strong transition-colors">
           {video.title}
         </p>
       </Link>

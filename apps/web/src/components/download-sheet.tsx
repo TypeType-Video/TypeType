@@ -125,7 +125,7 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
                 type="button"
                 onClick={startDownload}
                 disabled={!selected}
-                className="mt-4 w-full rounded-lg bg-fg px-3 py-2 text-sm font-medium text-app transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-surface-soft disabled:text-fg-muted"
+                className="mt-4 w-full rounded-lg bg-fg px-3 py-2 text-sm font-medium text-app transition-colors hover:bg-fg-strong disabled:cursor-not-allowed disabled:bg-surface-soft disabled:text-fg-muted"
               >
                 Start download
               </button>
@@ -140,7 +140,7 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
                 type="button"
                 onClick={() => void completion.completeNow()}
                 disabled={completion.isCompleting}
-                className="w-full rounded-lg bg-fg px-3 py-2 text-sm font-medium text-app transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-surface-soft disabled:text-fg-muted"
+                className="w-full rounded-lg bg-fg px-3 py-2 text-sm font-medium text-app transition-colors hover:bg-fg-strong disabled:cursor-not-allowed disabled:bg-surface-soft disabled:text-fg-muted"
               >
                 {completion.isCompleting ? "Opening..." : "Open iOS share sheet"}
               </button>

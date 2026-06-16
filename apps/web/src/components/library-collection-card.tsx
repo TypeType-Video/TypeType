@@ -51,7 +51,7 @@ export function LibraryCollectionCard({ kind, title, count, thumbnail }: Props) 
         </span>
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-fg transition-colors group-hover:text-white">
+        <p className="truncate text-sm font-medium text-fg transition-colors group-hover:text-fg-strong">
           {title}
         </p>
         <p className="text-xs text-fg-soft">{label}</p>

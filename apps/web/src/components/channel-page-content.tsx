@@ -78,7 +78,7 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, tab, onNaviga
         <button
           type="button"
           onClick={() => refetch()}
-          className="h-9 w-fit rounded-md bg-fg px-3 text-xs font-medium text-app hover:bg-white"
+          className="h-9 w-fit rounded-md bg-fg px-3 text-xs font-medium text-app hover:bg-fg-strong"
         >
           Retry
         </button>
@@ -113,7 +113,7 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, tab, onNaviga
               className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
                 subscribed
                   ? "ring-1 ring-border-strong bg-surface-strong text-fg hover:bg-surface-soft"
-                  : "bg-fg text-app hover:bg-white"
+                  : "bg-fg text-app hover:bg-fg-strong"
               }`}
             >
               {subscribed ? "Subscribed" : "Subscribe"}

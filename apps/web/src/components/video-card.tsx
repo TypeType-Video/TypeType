@@ -140,7 +140,7 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
           <Link
             to="/watch"
             search={watchRouteSearch(stream.id)}
-            className="text-sm font-medium text-fg line-clamp-2 leading-snug hover:text-white"
+            className="text-sm font-medium text-fg line-clamp-2 leading-snug hover:text-fg-strong"
             onMouseDown={onOpen}
             onTouchStart={onOpen}
             onClick={onOpen}

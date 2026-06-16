@@ -111,7 +111,7 @@ export function WatchInfo({ stream }: Props) {
               className={`flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:ring-border disabled:opacity-50 disabled:cursor-not-allowed ${
                 subscribed
                   ? "ring-1 ring-border-strong bg-surface-strong text-fg hover:bg-surface-soft"
-                  : "bg-fg text-app hover:bg-white"
+                  : "bg-fg text-app hover:bg-fg-strong"
               }`}
             >
               {subscribed ? "Subscribed" : "Subscribe"}

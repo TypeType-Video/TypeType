@@ -139,7 +139,7 @@ export function PlaylistCard({
           className="min-w-0"
           onClick={(e) => selectionMode && e.preventDefault()}
         >
-          <p className="text-sm font-medium text-fg truncate group-hover:text-white transition-colors">
+          <p className="text-sm font-medium text-fg truncate group-hover:text-fg-strong transition-colors">
             {playlist.name}
           </p>
           <p className="text-xs text-fg-soft">{label}</p>

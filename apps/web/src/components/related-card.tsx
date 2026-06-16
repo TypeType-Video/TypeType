@@ -52,7 +52,7 @@ export function RelatedCard({ stream }: Props) {
         <Link
           to="/watch"
           search={watchRouteSearch(stream.id)}
-          className="text-xs font-medium text-fg line-clamp-2 leading-snug hover:text-white"
+          className="text-xs font-medium text-fg line-clamp-2 leading-snug hover:text-fg-strong"
           onMouseEnter={prefetch.onMouseEnter}
           onMouseLeave={prefetch.onMouseLeave}
         >

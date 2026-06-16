@@ -36,7 +36,7 @@ export function PodcastCard({ podcast, channelAvatar }: Props) {
         )}
       </div>
       <div className="min-w-0 px-1">
-        <p className="line-clamp-2 text-sm font-medium leading-snug text-fg group-hover:text-white">
+        <p className="line-clamp-2 text-sm font-medium leading-snug text-fg group-hover:text-fg-strong">
           {podcast.title}
         </p>
         <p className="mt-1 truncate text-xs text-fg-muted">{podcast.uploaderName}</p>

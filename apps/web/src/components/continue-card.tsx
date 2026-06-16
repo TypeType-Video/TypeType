@@ -73,7 +73,7 @@ export function ContinueCard({ item }: ContinueCardProps) {
           </span>
           <VideoProgressBar progress={item.progress} duration={item.duration} />
         </div>
-        <span className="line-clamp-2 text-fg text-xs leading-snug group-hover:text-white">
+        <span className="line-clamp-2 text-fg text-xs leading-snug group-hover:text-fg-strong">
           {item.title}
         </span>
       </Link>
