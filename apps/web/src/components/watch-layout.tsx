@@ -143,6 +143,8 @@ export function WatchLayout({ stream, startTime }: Props) {
                 autoplay={settingsReady}
                 originalAudioLocale={originalLocale}
                 overlay={overlay}
+                captionStyles={settings.captionStyles}
+                onCaptionStylesChange={(captionStyles) => update.mutate({ captionStyles })}
                 onVolumeChange={handleVolumeChange}
                 onTimeUpdate={playerEvents.handleTimeUpdate}
                 onPause={playerEvents.handlePause}

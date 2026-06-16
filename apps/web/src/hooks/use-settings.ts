@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSettings, updateSettings } from "../lib/api-user";
+import { EMPTY_CAPTION_STYLES } from "../lib/caption-styles";
 import { DEFAULT_SPONSORBLOCK_CATEGORY_ACTIONS } from "../lib/sponsorblock-settings";
 import type { SettingsItem } from "../types/user";
 import { useAuth } from "./use-auth";
@@ -31,6 +32,7 @@ const DEFAULTS: SettingsItem = {
   hideRelatedVideos: false,
   hideComments: false,
   hideShorts: false,
+  captionStyles: EMPTY_CAPTION_STYLES,
 };
 
 export function useSettings() {
