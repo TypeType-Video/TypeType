@@ -40,7 +40,7 @@ function PodcastsPage() {
         <button
           type="button"
           onClick={() => query.refetch()}
-          className="h-9 w-fit rounded-md bg-fg px-3 text-xs font-medium text-app hover:bg-white"
+          className="h-9 w-fit rounded-md bg-fg px-3 text-xs font-medium text-app hover:bg-fg-strong"
         >
           Retry
         </button>

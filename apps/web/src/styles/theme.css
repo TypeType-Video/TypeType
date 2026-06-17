@@ -7,6 +7,7 @@
   --color-surface-soft: var(--color-zinc-700);
   --color-overlay: var(--color-zinc-950);
   --color-fg: var(--color-zinc-100);
+  --color-fg-strong: var(--color-zinc-50);
   --color-fg-soft: var(--color-zinc-500);
   --color-fg-muted: var(--color-zinc-400);
   --color-border: var(--color-zinc-800);

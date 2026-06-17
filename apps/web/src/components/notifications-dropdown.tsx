@@ -71,7 +71,7 @@ export function NotificationsDropdown() {
               type="button"
               onClick={() => markAllRead.mutate()}
               disabled={unreadCount === 0 || markAllRead.isPending}
-              className="text-xs text-fg-muted hover:text-white disabled:cursor-not-allowed disabled:text-fg-soft"
+              className="text-xs text-fg-muted hover:text-fg-strong disabled:cursor-not-allowed disabled:text-fg-soft"
             >
               Mark all read
             </button>

@@ -67,7 +67,7 @@ export function PlaylistCreateModal({ onConfirm, onCancel }: Props) {
             <button
               type="submit"
               disabled={!name.trim()}
-              className="px-3.5 py-1.5 text-sm text-app bg-fg hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
+              className="px-3.5 py-1.5 text-sm text-app bg-fg hover:bg-fg-strong disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               Create
             </button>

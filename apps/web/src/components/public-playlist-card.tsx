@@ -27,7 +27,7 @@ export function PublicPlaylistCard({ playlist }: Props) {
         </div>
       </div>
       <div className="min-w-0 px-1">
-        <p className="line-clamp-2 text-sm font-medium leading-snug text-fg group-hover:text-white">
+        <p className="line-clamp-2 text-sm font-medium leading-snug text-fg group-hover:text-fg-strong">
           {playlist.title}
         </p>
         <p className="mt-1 truncate text-xs text-fg-muted">{playlist.uploaderName}</p>

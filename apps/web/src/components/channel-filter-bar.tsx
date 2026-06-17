@@ -93,7 +93,7 @@ export function ChannelFilterBar({
               <button
                 type="submit"
                 disabled={trimmedInput === query}
-                className="h-9 text-xs font-semibold uppercase tracking-wide text-fg transition-colors hover:text-white disabled:cursor-not-allowed disabled:text-fg-soft"
+                className="h-9 text-xs font-semibold uppercase tracking-wide text-fg transition-colors hover:text-fg-strong disabled:cursor-not-allowed disabled:text-fg-soft"
               >
                 Search
               </button>
