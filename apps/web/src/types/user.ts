@@ -67,6 +67,18 @@ export type ProgressItem = {
   updatedAt: number;
 };
 
+export type CaptionStyles = {
+  fontFamily: string;
+  fontSize: string;
+  textColor: string;
+  textOpacity: string;
+  textShadow: string;
+  textBg: string;
+  textBgOpacity: string;
+  displayBg: string;
+  displayBgOpacity: string;
+};
+
 export type SettingsItem = {
   defaultService: ServiceId;
   defaultLandingPage: string;
@@ -92,6 +104,7 @@ export type SettingsItem = {
   hideRelatedVideos: boolean;
   hideComments: boolean;
   hideShorts: boolean;
+  captionStyles: CaptionStyles;
 };
 
 export type SearchHistoryItem = {

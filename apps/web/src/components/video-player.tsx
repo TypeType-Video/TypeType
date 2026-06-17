@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { isIosDevice } from "../lib/ios-device";
 import {
   DefaultVideoLayout,
@@ -8,6 +7,7 @@ import {
   Track,
 } from "../lib/vidstack";
 import { AudioTrackSelector } from "./audio-track-selector";
+import { CaptionStyleRestorer } from "./caption-style-restorer";
 import { CinemaModeControl } from "./cinema-mode-control";
 import { FormatSelector } from "./format-selector";
 import { MediaSessionSync } from "./media-session-sync";
@@ -17,11 +17,6 @@ import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
 import { QualitySelector } from "./quality-selector";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
-import {
-  type FontSize,
-  fontSizeToMultiplier,
-  SubtitleSizeSelector,
-} from "./subtitle-size-selector";
 import { buildSafeSubtitleTracks } from "./subtitle-track-utils";
 import { ChaptersTrack, onProviderChange } from "./video-player-core";
 import type { VideoPlayerProps } from "./video-player-types";
@@ -48,6 +43,8 @@ export function VideoPlayer({
   autoplay = false,
   originalAudioLocale,
   overlay,
+  captionStyles,
+  onCaptionStylesChange,
   onVolumeChange,
   onTimeUpdate,
   onPause,
@@ -59,14 +56,7 @@ export function VideoPlayer({
   mediaClassName,
 }: VideoPlayerProps) {
   const ios = isIosDevice();
-  const [subtitleSize, setSubtitleSize] = useState<FontSize>("normal");
   const subtitleTracks = buildSafeSubtitleTracks(subtitles);
-  const hasSubtitles = subtitleTracks.length > 0;
-  const subtitleStyle: Record<`--${string}`, string | number> = {
-    "--media-user-font-size": fontSizeToMultiplier(subtitleSize),
-    "--media-user-font-family":
-      "system-ui, -apple-system, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', 'Noto Sans Arabic', 'Hiragino Sans', 'Yu Gothic', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif",
-  };
   return (
     <MediaPlayer
       className={className ? `w-full h-full dark ${className}` : "w-full h-full dark"}
@@ -82,7 +72,6 @@ export function VideoPlayer({
       storage={null}
       title={title}
       poster={poster}
-      style={hasSubtitles ? subtitleStyle : undefined}
       onProviderChange={onProviderChange}
       onTimeUpdate={({ currentTime }) => onTimeUpdate?.(currentTime * 1000)}
       onPause={() => onPause?.()}
@@ -125,9 +114,6 @@ export function VideoPlayer({
             </>
           ),
           beforeFullscreenButton: <CinemaModeControl />,
-          captionsMenuItemsEnd: hasSubtitles ? (
-            <SubtitleSizeSelector value={subtitleSize} onChange={setSubtitleSize} />
-          ) : undefined,
         }}
       />
       <PlayerSeeker startTime={startTime} />
@@ -138,6 +124,13 @@ export function VideoPlayer({
         autoplay={autoplay}
         onVolumeChange={onVolumeChange}
       />
+      {captionStyles && onCaptionStylesChange && (
+        <CaptionStyleRestorer
+          captionStyles={captionStyles}
+          settingsReady={settingsReady}
+          onChange={onCaptionStylesChange}
+        />
+      )}
       <MediaSessionSync
         title={title}
         artwork={poster}

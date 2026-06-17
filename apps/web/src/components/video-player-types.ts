@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { MediaSrc } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem, SubtitleItem } from "../types/api";
+import type { CaptionStyles } from "../types/user";
 
 export type VideoPlayerProps = {
   src: MediaSrc;
@@ -23,6 +24,8 @@ export type VideoPlayerProps = {
   autoplay?: boolean;
   originalAudioLocale?: string | null;
   overlay?: ReactNode;
+  captionStyles?: CaptionStyles;
+  onCaptionStylesChange?: (styles: CaptionStyles) => void;
   onVolumeChange?: (volume: number, muted: boolean) => void;
   onTimeUpdate?: (positionMs: number) => void;
   onPause?: () => void;

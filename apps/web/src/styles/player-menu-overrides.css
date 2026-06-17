@@ -16,6 +16,7 @@
 
 .vds-captions {
   --media-cue-backdrop: none;
+  --media-cue-bg: rgb(0 0 0 / var(--media-user-text-bg-opacity, 0.7));
 }
 
 @media (pointer: coarse) {
