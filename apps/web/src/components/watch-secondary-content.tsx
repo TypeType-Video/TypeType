@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { VideoStream } from "../types/stream";
 import { RelatedVideos } from "./related-videos";
 import { WatchMeta } from "./watch-meta";
@@ -7,6 +8,7 @@ type Props = {
   stream: VideoStream;
   relatedStreams: VideoStream[];
   showComments: boolean;
+  playlistPanel?: ReactNode;
   onSeekTimestamp: (seconds: number) => void;
 };
 
@@ -15,11 +17,13 @@ export function WatchSecondaryContent({
   stream,
   relatedStreams,
   showComments,
+  playlistPanel,
   onSeekTimestamp,
 }: Props) {
   if (!cinemaMode) {
     return (
       <div className="w-full lg:flex-1 lg:min-w-64 flex flex-col gap-6">
+        {playlistPanel}
         <RelatedVideos streams={relatedStreams} />
       </div>
     );
@@ -30,7 +34,8 @@ export function WatchSecondaryContent({
       <div className="min-w-0 flex-[2] max-w-[1200px] flex flex-col gap-4">
         <WatchMeta stream={stream} showComments={showComments} onSeekTimestamp={onSeekTimestamp} />
       </div>
-      <div className="w-full lg:flex-1 lg:min-w-64">
+      <div className="w-full lg:flex-1 lg:min-w-64 flex flex-col gap-6">
+        {playlistPanel}
         <RelatedVideos streams={relatedStreams} />
       </div>
     </div>

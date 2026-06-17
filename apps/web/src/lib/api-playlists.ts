@@ -65,3 +65,15 @@ export async function removeVideoFromPlaylist(playlistId: string, videoUrl: stri
     throw new ApiError((body as { error: string }).error, res.status);
   }
 }
+
+export async function reorderPlaylist(playlistId: string, order: string[]): Promise<void> {
+  const res = await authed(`${BASE}/playlists/${encodeURIComponent(playlistId)}/reorder`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ order }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "reorder failed" }));
+    throw new ApiError((body as { error: string }).error, res.status);
+  }
+}

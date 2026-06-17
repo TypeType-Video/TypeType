@@ -33,7 +33,7 @@ function PlayerOnlyLoader() {
 }
 
 function WatchPage() {
-  const { v } = Route.useSearch();
+  const { v, list, shuffle } = Route.useSearch();
   const navigate = useNavigate({ from: "/watch" });
   const sourceUrl = toWatchSourceUrl(v);
   const publicParam = toPublicWatchParam(sourceUrl);
@@ -49,7 +49,7 @@ function WatchPage() {
 
   useEffect(() => {
     if (v.trim() && publicParam !== v.trim()) {
-      navigate({ search: { v: publicParam }, replace: true });
+      navigate({ search: (prev) => ({ ...prev, v: publicParam }), replace: true });
     }
   }, [navigate, publicParam, v]);
 
@@ -72,8 +72,8 @@ function WatchPage() {
     });
   }, [authReady, isAuthed, progressFetch.data?.position, progressFetch.isPending, stream]);
 
-  if (isLoading) return <PlayerOnlyLoader />;
-  if (authReady && isAuthed && progressFetch.isPending) return <PlayerOnlyLoader />;
+  if (isLoading && !stream) return <PlayerOnlyLoader />;
+  if (authReady && isAuthed && progressFetch.isPending && !stream) return <PlayerOnlyLoader />;
 
   if (isError || !stream) {
     const genericExtractorError =
@@ -108,10 +108,18 @@ function WatchPage() {
   const resumeMs = savedPosition > 0 ? savedPosition : serverPositionMs;
   const durationMs = stream.duration * 1000;
   const startTime = resumeMs >= 5000 && resumeMs < durationMs * 0.95 ? resumeMs : 0;
+  const navigating = toPublicWatchParam(stream.id) !== publicParam;
 
   return (
     <Suspense fallback={<PlayerOnlyLoader />}>
-      <WatchLayout stream={stream} startTime={startTime} />
+      <WatchLayout
+        stream={stream}
+        startTime={startTime}
+        currentParam={publicParam}
+        navigating={navigating}
+        list={list}
+        shuffle={shuffle}
+      />
     </Suspense>
   );
 }
@@ -119,6 +127,8 @@ function WatchPage() {
 export const Route = createFileRoute("/watch")({
   validateSearch: (search: Record<string, unknown>) => ({
     v: typeof search.v === "string" ? search.v.trim() : "",
+    ...(typeof search.list === "string" && search.list ? { list: search.list } : {}),
+    ...(typeof search.shuffle === "string" && search.shuffle ? { shuffle: search.shuffle } : {}),
   }),
   component: WatchPage,
 });

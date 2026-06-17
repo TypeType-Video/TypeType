@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { GripVertical } from "lucide-react";
+import type { DragEvent } from "react";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration, formatViews } from "../lib/format";
 import { isVideoWatched } from "../lib/watch-progress";
@@ -31,9 +33,15 @@ function XIcon() {
   );
 }
 
-type Props = { video: PlaylistVideoItem; onRemove: () => void };
+type Props = {
+  video: PlaylistVideoItem;
+  onRemove: () => void;
+  reorderable?: boolean;
+  listId?: string;
+  onDragStart?: (event: DragEvent) => void;
+};
 
-export function PlaylistVideoRow({ video, onRemove }: Props) {
+export function PlaylistVideoRow({ video, onRemove, reorderable, listId, onDragStart }: Props) {
   const prefetch = useWatchPrefetch(video.url);
   const thumbnail = video.thumbnail.trim().length > 0 ? video.thumbnail : null;
   const watched = video.watched || isVideoWatched(video.watchPosition, video.duration);
@@ -57,12 +65,15 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
     views,
     duration: video.duration,
   };
+  const watchSearch = listId
+    ? { ...watchRouteSearch(video.url), list: listId }
+    : watchRouteSearch(video.url);
 
   return (
     <div className="flex flex-col gap-2 group relative">
       <Link
         to="/watch"
-        search={watchRouteSearch(video.url)}
+        search={watchSearch}
         className="block"
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
@@ -99,11 +110,23 @@ export function PlaylistVideoRow({ video, onRemove }: Props) {
           >
             <XIcon />
           </button>
+          {reorderable && (
+            <button
+              type="button"
+              draggable
+              onDragStart={onDragStart}
+              onClick={(e) => e.preventDefault()}
+              aria-label="Drag to reorder"
+              className="absolute top-1.5 left-1.5 cursor-grab bg-black/70 p-1 text-white opacity-0 transition-opacity hover:bg-black/90 active:cursor-grabbing group-hover:opacity-100"
+            >
+              <GripVertical className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
         </div>
       </Link>
       <Link
         to="/watch"
-        search={watchRouteSearch(video.url)}
+        search={watchSearch}
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
       >

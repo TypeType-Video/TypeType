@@ -1,7 +1,9 @@
+export type WatchLayoutClasses = ReturnType<typeof getWatchLayoutClasses>;
+
 export function getWatchLayoutClasses(cinemaMode: boolean) {
   const anim = "[animation:page-fade-in_0.2s_ease-out]";
   return {
-    containerClass: `flex flex-col gap-6 ${cinemaMode ? "" : "lg:flex-row lg:items-start"} ${anim}`,
+    containerClass: `flex flex-col gap-6 ${cinemaMode ? "" : "pt-2 sm:pt-3 lg:flex-row lg:items-start"} ${anim}`,
     playerWrapClass: cinemaMode
       ? "overflow-hidden bg-black"
       : "min-w-0 flex-[2] max-w-[133.333vh] flex flex-col gap-4",

@@ -35,6 +35,8 @@ export type PlaylistVideoItem = {
   viewCount?: number;
   duration: number;
   position: number;
+  addedAt?: number;
+  publishedAt?: number;
   watchPosition: number;
   watched: boolean;
   progressUpdatedAt: number;

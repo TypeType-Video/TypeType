@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
 import { ApiError, fetchStream } from "../lib/api";
 import { mapStreamResponse } from "../lib/mappers";
 import {
@@ -42,5 +42,5 @@ export function isMemberOnlyApiError(error: unknown): boolean {
 }
 
 export function useStream(url: string) {
-  return useQuery(streamQueryOptions(url));
+  return useQuery({ ...streamQueryOptions(url), placeholderData: keepPreviousData });
 }

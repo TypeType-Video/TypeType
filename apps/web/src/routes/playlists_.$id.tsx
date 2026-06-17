@@ -1,60 +1,26 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { useState } from "react";
 import { ConfirmModal } from "../components/confirm-modal";
+import { PlaylistActions } from "../components/playlist-actions";
+import { PlaylistGrid } from "../components/playlist-grid";
 import { PlaylistRenameModal } from "../components/playlist-rename-modal";
-import { PlaylistVideoRow } from "../components/playlist-video-row";
+import { PlaylistSortMenu } from "../components/playlist-sort-menu";
 import { usePlaylist, usePlaylists } from "../hooks/use-playlists";
+import { randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
+import { type PlaylistSortMode, sortPlaylistVideos } from "../lib/playlist-sort";
+import { toPublicWatchParam } from "../lib/watch-url";
 import type { PlaylistVideoItem } from "../types/user";
-
-function BackIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={16}
-      height={16}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      role="img"
-      aria-label="Back"
-    >
-      <path d="M19 12H5" />
-      <polyline points="12 19 5 12 12 5" />
-    </svg>
-  );
-}
-
-function PencilIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={13}
-      height={13}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      role="img"
-      aria-label="Rename"
-    >
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  );
-}
 
 function PlaylistDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { remove, removeVideo, rename } = usePlaylists();
+  const { remove, removeVideo, rename, reorder } = usePlaylists();
   const { data: playlist, isPending } = usePlaylist(id);
   const [renaming, setRenaming] = useState(false);
   const [pendingRemove, setPendingRemove] = useState<PlaylistVideoItem | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [sortMode, setSortMode] = useState<PlaylistSortMode>("manual");
 
   if (isPending) {
     return (
@@ -63,14 +29,13 @@ function PlaylistDetailPage() {
       </div>
     );
   }
-
   if (!playlist) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 gap-2 text-center">
+      <div className="flex flex-col items-center justify-center gap-2 py-32 text-center">
         <p className="text-fg-muted text-sm">Playlist not found.</p>
         <Link
           to="/playlists"
-          className="text-xs text-fg-soft hover:text-fg-muted transition-colors"
+          className="text-fg-soft text-xs transition-colors hover:text-fg-muted"
         >
           Back to playlists
         </Link>
@@ -78,68 +43,88 @@ function PlaylistDetailPage() {
     );
   }
 
+  const count = playlist.videos.length;
+  const sortedVideos = sortPlaylistVideos(playlist.videos, sortMode);
+  const reorderable = sortMode === "manual";
+
   function handleDelete() {
     remove.mutate(id);
     navigate({ to: "/playlists" });
   }
-
-  const count = playlist.videos.length;
+  function playFrom(video: PlaylistVideoItem | undefined, shuffle?: string) {
+    if (!video) return;
+    navigate({
+      to: "/watch",
+      search: { v: toPublicWatchParam(video.url), list: id, ...(shuffle ? { shuffle } : {}) },
+    });
+  }
+  function handleShuffle() {
+    const seed = randomShuffleSeed();
+    playFrom(shuffleByKey(sortedVideos, seed)[0], seed);
+  }
 
   return (
-    <div className="flex flex-col gap-6 [animation:page-fade-in_0.2s_ease-out]">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="flex flex-col gap-6 pt-2 sm:pt-4 [animation:page-fade-in_0.2s_ease-out]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
             to="/playlists"
-            className="text-fg-soft hover:text-fg transition-colors"
+            className="text-fg-soft transition-colors hover:text-fg"
             aria-label="Back to playlists"
           >
-            <BackIcon />
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           </Link>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-lg font-semibold text-fg">{playlist.name}</h1>
+              <h1 className="font-semibold text-fg text-lg">{playlist.name}</h1>
               <button
                 type="button"
                 onClick={() => setRenaming(true)}
-                className="text-fg-soft hover:text-fg-muted transition-colors"
+                className="text-fg-soft transition-colors hover:text-fg-muted"
                 aria-label="Rename playlist"
               >
-                <PencilIcon />
+                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </div>
-            <p className="text-xs text-fg-soft">
+            <p className="text-fg-soft text-xs">
               {count} video{count !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="text-xs px-3 py-1.5 rounded-lg text-danger hover:bg-danger/10 transition-colors"
-        >
-          Delete playlist
-        </button>
+        <div className="flex items-center gap-2">
+          {count > 0 && (
+            <>
+              <PlaylistActions
+                onPlayAll={() => playFrom(sortedVideos[0])}
+                onShuffle={handleShuffle}
+              />
+              <PlaylistSortMenu value={sortMode} onChange={setSortMode} />
+            </>
+          )}
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="rounded-lg px-3 py-1.5 text-danger text-xs transition-colors hover:bg-danger/10"
+          >
+            Delete playlist
+          </button>
+        </div>
       </div>
       {count === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 gap-2 text-center">
+        <div className="flex flex-col items-center justify-center gap-2 py-32 text-center">
           <p className="text-fg-muted text-sm">No videos in this playlist yet.</p>
           <p className="text-fg-soft text-xs">
             Save videos from the watch page using the Save button.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {playlist.videos.map((video: PlaylistVideoItem, index: number) => (
-            <div
-              key={video.id}
-              className="animate-card-pop-in"
-              style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
-            >
-              <PlaylistVideoRow video={video} onRemove={() => setPendingRemove(video)} />
-            </div>
-          ))}
-        </div>
+        <PlaylistGrid
+          videos={sortedVideos}
+          reorderable={reorderable}
+          listId={id}
+          onRemove={setPendingRemove}
+          onReorder={(order) => reorder.mutate({ id, order })}
+        />
       )}
       {pendingRemove && (
         <ConfirmModal
@@ -151,6 +136,18 @@ function PlaylistDetailPage() {
             setPendingRemove(null);
           }}
           onCancel={() => setPendingRemove(null)}
+        />
+      )}
+      {confirmingDelete && (
+        <ConfirmModal
+          title="Delete playlist"
+          description={`Delete "${playlist.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={() => {
+            setConfirmingDelete(false);
+            handleDelete();
+          }}
+          onCancel={() => setConfirmingDelete(false)}
         />
       )}
       {renaming && (
