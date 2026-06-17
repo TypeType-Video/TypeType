@@ -1,15 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { ScrollSentinel } from "../components/scroll-sentinel";
+import { SearchFilterBar } from "../components/search-filter-bar";
 import { type SearchResultItem, SearchResultsGrid } from "../components/search-results-grid";
 import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useSearch } from "../hooks/use-search";
+import { useSearchFilters } from "../hooks/use-search-filters";
 
 function SearchPage() {
-  const { q, service } = Route.useSearch();
+  const { q, service, contentFilter, sortFilter } = Route.useSearch();
   const navigate = useNavigate();
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useSearch(q, service);
+  const filters = useSearchFilters(service);
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useSearch(
+    q,
+    service,
+    contentFilter,
+    sortFilter,
+  );
   const { filter } = useBlockedFilter();
 
   const loadMore = useCallback(() => {
@@ -23,6 +31,11 @@ function SearchPage() {
   const seen = new Set<string>();
   const items: SearchResultItem[] = [];
   for (const page of data?.pages ?? []) {
+    for (const channel of page.channels) {
+      if (seen.has(channel.url)) continue;
+      seen.add(channel.url);
+      items.push({ kind: "channel", channel });
+    }
     for (const playlist of page.playlists) {
       if (seen.has(playlist.url)) continue;
       seen.add(playlist.url);
@@ -40,10 +53,35 @@ function SearchPage() {
     navigate({ to: "/search", search: { q: suggestion, service } });
   }
 
-  if (isLoading) return <VideoGridSkeleton idPrefix="search" />;
+  function setContentFilter(value: string | undefined) {
+    navigate({ to: "/search", search: { q, service, contentFilter: value, sortFilter } });
+  }
+
+  function setSortFilter(value: string | undefined) {
+    navigate({ to: "/search", search: { q, service, contentFilter, sortFilter: value } });
+  }
+
+  const filterBar = filters.data ? (
+    <SearchFilterBar
+      filters={filters.data}
+      contentFilter={contentFilter}
+      sortFilter={sortFilter}
+      onContentChange={setContentFilter}
+      onSortChange={setSortFilter}
+    />
+  ) : null;
+
+  if (isLoading)
+    return (
+      <div className="pt-3 sm:pt-4">
+        {filterBar}
+        <VideoGridSkeleton idPrefix="search" />
+      </div>
+    );
 
   return (
-    <div>
+    <div className="pt-3 sm:pt-4">
+      {filterBar}
       {isCorrected && suggestion && (
         <p className="text-sm text-fg-muted mb-4">
           Showing results for <span className="text-fg font-medium">{suggestion}</span>.{" "}
@@ -84,6 +122,8 @@ export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>) => ({
     q: typeof search.q === "string" ? search.q : "",
     service: typeof search.service === "number" ? search.service : 0,
+    ...(typeof search.contentFilter === "string" ? { contentFilter: search.contentFilter } : {}),
+    ...(typeof search.sortFilter === "string" ? { sortFilter: search.sortFilter } : {}),
   }),
   component: SearchPage,
 });
