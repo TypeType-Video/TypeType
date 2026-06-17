@@ -5,7 +5,7 @@ import { useClientLocale } from "../hooks/use-client-locale";
 import { isMemberOnlyApiError, streamQueryOptions } from "../hooks/use-stream";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration, formatPublishedDate, formatViews } from "../lib/format";
-import { watchRouteSearch } from "../lib/watch-url";
+import { watchListSearch } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
@@ -14,9 +14,14 @@ import { VideoPreview } from "./video-preview";
 import { VideoStatusBadge } from "./video-status-badge";
 import { VerifiedBadgeIcon } from "./watch-icons";
 
-type Props = { stream: VideoStream; onOpen?: () => void; onImpression?: () => void };
+type Props = {
+  stream: VideoStream;
+  onOpen?: () => void;
+  onImpression?: () => void;
+  listId?: string;
+};
 
-export function VideoCard({ stream, onOpen, onImpression }: Props) {
+export function VideoCard({ stream, onOpen, onImpression, listId }: Props) {
   const locale = useClientLocale();
   const queryClient = useQueryClient();
   const rootRef = useRef<HTMLElement | null>(null);
@@ -26,6 +31,7 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
   const [memberOnly, setMemberOnly] = useState(false);
   const prefetch = useWatchPrefetch(stream.id);
   const publishedText = formatPublishedDate(stream.publishedAt, undefined, locale);
+  const watchSearch = watchListSearch(stream.id, listId);
 
   useEffect(() => {
     if (!onImpression || typeof IntersectionObserver === "undefined") return;
@@ -92,7 +98,7 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
     >
       <Link
         to="/watch"
-        search={watchRouteSearch(stream.id)}
+        search={watchSearch}
         className="block"
         onMouseDown={onOpen}
         onTouchStart={onOpen}
@@ -139,7 +145,7 @@ export function VideoCard({ stream, onOpen, onImpression }: Props) {
         <div className="flex flex-col gap-0.5 min-w-0">
           <Link
             to="/watch"
-            search={watchRouteSearch(stream.id)}
+            search={watchSearch}
             className="text-sm font-medium text-fg line-clamp-2 leading-snug hover:text-fg-strong"
             onMouseDown={onOpen}
             onTouchStart={onOpen}

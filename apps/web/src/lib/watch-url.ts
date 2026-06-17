@@ -44,6 +44,16 @@ export function watchRouteSearch(sourceUrl: string): WatchRouteSearch {
   return { v: toPublicWatchParam(sourceUrl) };
 }
 
+export function watchListSearch(
+  sourceUrl: string,
+  listId?: string,
+): WatchRouteSearch & {
+  list?: string;
+} {
+  const base = watchRouteSearch(sourceUrl);
+  return listId ? { ...base, list: listId } : base;
+}
+
 export function toPublicWatchUrl(sourceUrl: string, origin: string): string {
   const url = new URL("/watch", origin);
   url.searchParams.set("v", toPublicWatchParam(sourceUrl));
