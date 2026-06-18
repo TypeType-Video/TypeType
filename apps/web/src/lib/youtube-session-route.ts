@@ -36,7 +36,7 @@ export function toYoutubeSessionWebSocketUrl(wsUrl: string): string {
   const url =
     wsUrl.startsWith("http://") || wsUrl.startsWith("https://")
       ? new URL(wsUrl)
-      : new URL(wsUrl, apiUrl.origin);
+      : new URL(`${apiUrl.pathname.replace(/\/$/, "")}/${wsUrl.replace(/^\//, "")}`, apiUrl.origin);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   return url.toString();
 }

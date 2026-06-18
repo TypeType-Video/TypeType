@@ -100,6 +100,7 @@ function YoutubeSessionPage() {
             authReady={authReady}
             isAuthed={isAuthed}
             enabled={remoteLoginEnabled}
+            loaded={instance.isSuccess}
             pending={session.startBrowser.isPending}
             connected={connected}
             returnTo={returnTo}

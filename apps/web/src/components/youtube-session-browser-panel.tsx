@@ -7,6 +7,7 @@ type Props = {
   authReady: boolean;
   isAuthed: boolean;
   enabled: boolean;
+  loaded: boolean;
   pending: boolean;
   connected: boolean;
   returnTo?: string;
@@ -23,6 +24,7 @@ export function YoutubeSessionBrowserPanel({
   authReady,
   isAuthed,
   enabled,
+  loaded,
   pending,
   connected,
   returnTo,
@@ -66,9 +68,11 @@ export function YoutubeSessionBrowserPanel({
         className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 border border-white bg-white px-5 font-medium text-black text-sm transition-colors hover:bg-fg disabled:opacity-50 sm:w-auto"
       >
         <YoutubeIcon className="h-4 w-4 text-[#ff0000]" />
-        <span>{pending ? "Opening..." : "Connect with YouTube"}</span>
+        <span>
+          {!loaded ? "Checking availability..." : pending ? "Opening..." : "Connect with YouTube"}
+        </span>
       </button>
-      {!enabled && (
+      {loaded && !enabled && (
         <p className="mt-3 text-danger-strong text-xs">
           Remote YouTube login is disabled on this instance.
         </p>
