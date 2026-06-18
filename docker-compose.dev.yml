@@ -68,7 +68,7 @@ services:
     restart: unless-stopped
 
   typetype-token:
-    image: ghcr.io/priveetee/typetype-token:latest
+    image: ghcr.io/priveetee/typetype-token-beta:latest
     ports:
       - "${HOST_PORT_TOKEN_BETA:-18081}:8081"
     init: true
