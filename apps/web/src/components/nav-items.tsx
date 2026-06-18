@@ -78,12 +78,13 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    label: "Privacy",
-    to: "/privacy",
+    label: "Login",
+    to: "/login",
     icon: (
       <>
-        <rect x="3" y="11" width="18" height="10" rx="2" />
-        <path d="M7 11V8a5 5 0 0 1 10 0v3" />
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+        <polyline points="10 17 15 12 10 7" />
+        <line x1="15" y1="12" x2="3" y2="12" />
       </>
     ),
   },
@@ -95,6 +96,16 @@ export const NAV_ITEMS: NavItem[] = [
       <>
         <path d="M12 2l7 3v6c0 5-3.5 9-7 11-3.5-2-7-6-7-11V5l7-3z" />
         <path d="M9 12l2 2 4-4" />
+      </>
+    ),
+  },
+  {
+    label: "Privacy",
+    to: "/privacy",
+    icon: (
+      <>
+        <rect x="3" y="11" width="18" height="10" rx="2" />
+        <path d="M7 11V8a5 5 0 0 1 10 0v3" />
       </>
     ),
   },
