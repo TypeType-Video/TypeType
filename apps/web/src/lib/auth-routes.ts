@@ -23,7 +23,7 @@ const PROTECTED_PREFIXES = [
   "/subscriptions",
   "/youtube-session",
 ];
-const AUTH_PAGES = ["/register", "/reset-password", "/auth/oidc/callback"];
+const AUTH_PAGES = ["/login", "/register", "/reset-password", "/auth/oidc/callback"];
 
 export function requiresAuth(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
