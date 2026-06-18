@@ -17,6 +17,13 @@ DEFAULT_GITHUB_REPO="Priveetee/TypeType-Server"
 DEFAULT_GITHUB_ISSUE_TEMPLATE="bug_report_backend.md"
 DEFAULT_DOWNLOADER_S3_ACCESS_KEY=""
 DEFAULT_DOWNLOADER_S3_SECRET_KEY=""
+DEFAULT_YOUTUBE_REMOTE_LOGIN_ENABLED="false"
+DEFAULT_YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN="http://typetype-server:8080"
+DEFAULT_YOUTUBE_REMOTE_LOGIN_TTL_MS="480000"
+DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS="2"
+DEFAULT_YOUTUBE_REMOTE_LOGIN_FRAME_FPS="10"
+DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES="524288"
+PLACEHOLDER_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN="SET_ME_SHARED_SECRET"
 
 generate_hex() {
   local bytes="$1"
@@ -38,6 +45,10 @@ generate_downloader_access_key() {
 }
 
 generate_downloader_secret_key() {
+  generate_hex 32
+}
+
+generate_youtube_remote_login_token() {
   generate_hex 32
 }
 
@@ -74,6 +85,36 @@ set_env_var() {
     sed -i "s|^${key}=.*$|${key}=${value}|" "${env_file}"
   else
     printf '%s=%s\n' "${key}" "${value}" >> "${env_file}"
+  fi
+}
+
+ensure_env_default() {
+  local env_file="$1"
+  local key="$2"
+  local value="$3"
+  local current
+
+  current="$(get_env_var "${env_file}" "${key}")"
+  if [[ -z "${current}" ]]; then
+    set_env_var "${env_file}" "${key}" "${value}"
+  fi
+}
+
+ensure_youtube_remote_login_env() {
+  local env_file="$1"
+  local current_token
+
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_ENABLED" "${DEFAULT_YOUTUBE_REMOTE_LOGIN_ENABLED}"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN" "${DEFAULT_YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN}"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_TTL_MS" "${DEFAULT_YOUTUBE_REMOTE_LOGIN_TTL_MS}"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS" "${DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS}"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_FRAME_FPS" "${DEFAULT_YOUTUBE_REMOTE_LOGIN_FRAME_FPS}"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES" "${DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES}"
+
+  current_token="$(get_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN")"
+  if [[ -z "${current_token}" || "${current_token}" == "${PLACEHOLDER_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN}" ]]; then
+    set_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN" "$(generate_youtube_remote_login_token)"
+    echo "[setup] Generated internal YouTube remote login token in ${env_file}"
   fi
 }
 
@@ -216,6 +257,8 @@ EOF
 fi
 
 cd "${ROOT_DIR}"
+
+ensure_youtube_remote_login_env "${ENV_FILE}"
 
 HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_SERVER" "${DEFAULT_HOST_PORT_SERVER}" "API")"
 HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_TOKEN" "${DEFAULT_HOST_PORT_TOKEN}" "token")"
