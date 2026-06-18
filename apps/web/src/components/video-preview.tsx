@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { API_BASE } from "../lib/env";
 import { proxyDashManifest } from "../lib/proxy";
+import { resolveHlsManifestUrl } from "../lib/stream-src";
 import type { VideoStream } from "../types/stream";
 
 type Props = {
@@ -72,9 +72,7 @@ function resolvePreviewSrc(stream: VideoStream): PreviewSrc {
   }
   if (stream.hlsUrl) {
     return {
-      url: proxyDashManifest(
-        `${API_BASE}/streams/hls-manifest?url=${encodeURIComponent(stream.id)}`,
-      ),
+      url: resolveHlsManifestUrl(stream),
       type: "application/x-mpegurl",
     };
   }

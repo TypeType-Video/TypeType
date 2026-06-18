@@ -1,4 +1,5 @@
 import type { CrashLogEntry } from "../types/bug-report";
+import { debugConsole, sanitizeDebugEvent } from "./debug-console";
 import { sanitizeDebugText } from "./debug-sanitize";
 
 const STORAGE_KEY = "typed-client-debug-log";
@@ -74,9 +75,10 @@ export function recordClientEvent(
   details?: DebugDetails,
   stack?: string | null,
 ): void {
+  debugConsole(event, details);
   const detailText = formatDetails(details);
-  const message =
-    detailText.length > 0 ? `${sanitizeDebugText(event)} ${detailText}` : sanitizeDebugText(event);
+  const eventName = sanitizeDebugEvent(event);
+  const message = detailText.length > 0 ? `${eventName} ${detailText}` : eventName;
   pushEntry({ message, stack: stack ? sanitizeDebugText(stack) : null, timestamp: Date.now() });
 }
 

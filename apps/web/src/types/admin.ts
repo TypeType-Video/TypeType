@@ -1,10 +1,16 @@
 export type AdminSettings = {
+  name: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  bannerUrl: string | null;
+  minAndroidClientVersion: string | null;
   allowRegistration: boolean;
   allowGuest: boolean;
   forceEmailVerification: boolean;
   activeSessionsEnabled: boolean;
   localLoginEnabled: boolean;
   oidcAutoRedirect: boolean;
+  youtubeRemoteLoginEnabled: boolean;
 };
 
 type AdminSessionNowPlaying = {

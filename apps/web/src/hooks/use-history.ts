@@ -1,12 +1,47 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateProgress } from "../lib/api-collections";
 import { addHistory, clearHistory, fetchHistory, removeHistory } from "../lib/api-user";
-import type { HistoryItem } from "../types/user";
+import type { HistoryItem, ProgressItem } from "../types/user";
 import { useAuth } from "./use-auth";
 import { useDebouncedValue } from "./use-debounced-value";
 
 const PAGE_SIZE = 40;
+const CLEAR_PAGE_SIZE = 100;
+const RESET_PROGRESS_CONCURRENCY = 4;
 
 const historyKey = (q: string) => ["history", q];
+
+type RemoveHistoryPayload = {
+  id: string;
+  url: string;
+};
+
+async function fetchAllHistoryUrls(): Promise<string[]> {
+  const urls: string[] = [];
+  let offset = 0;
+  let total = Number.MAX_SAFE_INTEGER;
+
+  while (offset < total) {
+    const page = await fetchHistory({ limit: CLEAR_PAGE_SIZE, offset });
+    urls.push(...page.items.map((item) => item.url));
+    total = page.total;
+    if (page.items.length === 0) break;
+    offset += page.items.length;
+  }
+
+  return [...new Set(urls)];
+}
+
+async function resetProgressForUrls(urls: string[]): Promise<void> {
+  for (let index = 0; index < urls.length; index += RESET_PROGRESS_CONCURRENCY) {
+    const batch = urls.slice(index, index + RESET_PROGRESS_CONCURRENCY);
+    await Promise.all(batch.map((url) => updateProgress(url, 0)));
+  }
+}
+
+function clearedProgress(url: string): ProgressItem {
+  return { videoUrl: url, position: 0, updatedAt: Date.now() };
+}
 
 export function useHistory(searchQuery = "") {
   const qc = useQueryClient();
@@ -44,19 +79,35 @@ export function useHistory(searchQuery = "") {
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) => (isAuthed ? removeHistory(id) : Promise.resolve()),
-    onSuccess: () =>
-      qc
+    mutationFn: async ({ id, url }: RemoveHistoryPayload) => {
+      if (!isAuthed) return;
+      await updateProgress(url, 0);
+      await removeHistory(id);
+    },
+    onSuccess: (_, payload) => {
+      qc.setQueryData(["progress", payload.url], clearedProgress(payload.url));
+      return qc
         .invalidateQueries({ queryKey: ["history"] })
-        .then(() => qc.invalidateQueries({ queryKey: ["history-all"] })),
+        .then(() => qc.invalidateQueries({ queryKey: ["history-all"] }))
+        .then(() => qc.invalidateQueries({ queryKey: ["progress", payload.url] }));
+    },
   });
 
   const clear = useMutation({
-    mutationFn: () => (isAuthed ? clearHistory() : Promise.resolve()),
-    onSuccess: () =>
-      qc
+    mutationFn: async () => {
+      if (!isAuthed) return [];
+      const urls = await fetchAllHistoryUrls();
+      await resetProgressForUrls(urls);
+      await clearHistory();
+      return urls;
+    },
+    onSuccess: (urls) => {
+      for (const url of urls) qc.setQueryData(["progress", url], clearedProgress(url));
+      return qc
         .invalidateQueries({ queryKey: ["history"] })
-        .then(() => qc.invalidateQueries({ queryKey: ["history-all"] })),
+        .then(() => qc.invalidateQueries({ queryKey: ["history-all"] }))
+        .then(() => qc.invalidateQueries({ queryKey: ["progress"] }));
+    },
   });
 
   const total = query.data?.pages[0]?.total ?? 0;

@@ -13,7 +13,9 @@ import {
   useStream,
 } from "../hooks/use-stream";
 import { ApiError } from "../lib/api";
+import { isYoutubeSessionReconnectError } from "../lib/api-youtube-session";
 import { toPublicWatchParam, toWatchSourceUrl } from "../lib/watch-url";
+import { youtubeSessionReturnToForWatch } from "../lib/youtube-session-route";
 
 const WatchLayout = lazy(() =>
   import("../components/watch-layout").then((module) => ({ default: module.WatchLayout })),
@@ -73,7 +75,8 @@ function WatchPage() {
   }, [authReady, isAuthed, progressFetch.data?.position, progressFetch.isPending, stream]);
 
   if (isLoading && !stream) return <PlayerOnlyLoader />;
-  if (authReady && isAuthed && progressFetch.isPending && !stream) return <PlayerOnlyLoader />;
+  if (!authReady) return <PlayerOnlyLoader />;
+  if (isAuthed && progressFetch.isPending) return <PlayerOnlyLoader />;
 
   if (isError || !stream) {
     const genericExtractorError =
@@ -82,19 +85,30 @@ function WatchPage() {
       error.message ===
         "Error occurs when fetching the page. Try increase the loading timeout in Settings.";
     const isMemberOnlyError = isMemberOnlyApiError(error) || genericExtractorError;
+    const needsYoutubeSession = isYoutubeSessionReconnectError(error);
+    const youtubeSessionReturnTo = needsYoutubeSession
+      ? youtubeSessionReturnToForWatch(publicParam, list, shuffle)
+      : undefined;
     const message = isMemberOnlyError
       ? MEMBER_ONLY_MESSAGE
-      : error instanceof ApiError && (error.status === 400 || error.status === 422)
-        ? error.message
-        : isStreamUnavailableError(error)
-          ? "This video is currently unavailable"
-          : "Failed to load stream.";
+      : needsYoutubeSession
+        ? "Connect YouTube to load this browser-only video."
+        : error instanceof ApiError && (error.status === 400 || error.status === 422)
+          ? error.message
+          : isStreamUnavailableError(error)
+            ? "This video is currently unavailable"
+            : "Failed to load stream.";
     return (
       <StreamError
         message={message}
-        onRetry={() => {
-          void refetch();
-        }}
+        onRetry={
+          needsYoutubeSession
+            ? undefined
+            : () => {
+                void refetch();
+              }
+        }
+        youtubeSessionReturnTo={youtubeSessionReturnTo}
       />
     );
   }

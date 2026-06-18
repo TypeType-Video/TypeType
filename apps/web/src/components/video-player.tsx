@@ -8,8 +8,8 @@ import {
 } from "../lib/vidstack";
 import { AudioTrackSelector } from "./audio-track-selector";
 import { CaptionStyleRestorer } from "./caption-style-restorer";
-import { CinemaModeControl } from "./cinema-mode-control";
 import { FormatSelector } from "./format-selector";
+import { MediaProgressEvents } from "./media-progress-events";
 import { MediaSessionSync } from "./media-session-sync";
 import { PlayerHotkeys } from "./player-hotkeys";
 import { PlayerSeeker, SeekBridge, SponsorBlockSkipper } from "./player-internals";
@@ -18,7 +18,9 @@ import { QualitySelector } from "./quality-selector";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
 import { buildSafeSubtitleTracks } from "./subtitle-track-utils";
-import { ChaptersTrack, onProviderChange } from "./video-player-core";
+import { ChaptersTrack } from "./video-player-core";
+import { useVideoPlayerEvents } from "./video-player-events";
+import { VideoPlayerLayoutControls } from "./video-player-layout-controls";
 import type { VideoPlayerProps } from "./video-player-types";
 import { VolumeRestorer } from "./volume-restorer";
 
@@ -57,6 +59,13 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const ios = isIosDevice();
   const subtitleTracks = buildSafeSubtitleTracks(subtitles);
+  const mediaProps = mediaClassName ? { className: mediaClassName } : undefined;
+  const { handleProviderChange, handleError, handleEnded } = useVideoPlayerEvents({
+    src,
+    onError,
+    onEnded,
+  });
+
   return (
     <MediaPlayer
       className={className ? `w-full h-full dark ${className}` : "w-full h-full dark"}
@@ -72,20 +81,10 @@ export function VideoPlayer({
       storage={null}
       title={title}
       poster={poster}
-      onProviderChange={onProviderChange}
-      onTimeUpdate={({ currentTime }) => onTimeUpdate?.(currentTime * 1000)}
-      onPause={() => onPause?.()}
-      onSeeked={(currentTime) => {
-        onTimeUpdate?.(currentTime * 1000);
-        onSeeked?.();
-      }}
-      onError={() => onError?.()}
-      onEnded={() => onEnded?.()}
+      onProviderChange={handleProviderChange}
+      onError={handleError}
     >
-      <MediaProvider
-        className={mediaClassName ?? "h-full w-full"}
-        mediaProps={mediaClassName ? { className: mediaClassName } : undefined}
-      >
+      <MediaProvider className={mediaClassName ?? "h-full w-full"} mediaProps={mediaProps}>
         {subtitleTracks.map((s) => (
           <Track
             key={s.key}
@@ -99,6 +98,12 @@ export function VideoPlayer({
         ))}
         {chaptersVtt && <ChaptersTrack src={chaptersVtt} />}
       </MediaProvider>
+      <MediaProgressEvents
+        onTimeUpdate={onTimeUpdate}
+        onPause={onPause}
+        onSeeked={onSeeked}
+        onEnded={handleEnded}
+      />
       {overlay}
       <DefaultVideoLayout
         icons={defaultLayoutIcons}
@@ -113,7 +118,7 @@ export function VideoPlayer({
               <FormatSelector />
             </>
           ),
-          beforeFullscreenButton: <CinemaModeControl />,
+          beforeFullscreenButton: <VideoPlayerLayoutControls />,
         }}
       />
       <PlayerSeeker startTime={startTime} />

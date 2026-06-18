@@ -7,6 +7,7 @@ import {
 } from "./client-debug-log";
 
 function handleError(event: ErrorEvent): void {
+  recordClientEvent("debug.window_error", { message: event.message });
   recordCrashLog(event.message, event.error?.stack ?? null);
 }
 
@@ -14,6 +15,7 @@ function handleUnhandledRejection(event: PromiseRejectionEvent): void {
   const reason = event.reason;
   const message = reason instanceof Error ? reason.message : String(reason ?? "Unknown");
   const stack = reason instanceof Error ? (reason.stack ?? null) : null;
+  recordClientEvent("debug.unhandled_rejection", { message });
   recordCrashLog(`Unhandled Promise Rejection: ${message}`, stack);
 }
 

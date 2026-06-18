@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDebouncedValue } from "../hooks/use-debounced-value";
 import { useSearchHistory } from "../hooks/use-search-history";
 import { useSearchOverlayNavigation } from "../hooks/use-search-overlay-navigation";
-import { fetchSuggestions } from "../lib/api";
+import { fetchSuggestions } from "../lib/api-suggestions";
 import { buildSearchOverlayItems } from "../lib/search-overlay-items";
 import { SearchOverlayList } from "./search-overlay-list";
 

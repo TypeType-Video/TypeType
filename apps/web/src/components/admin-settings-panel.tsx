@@ -60,6 +60,20 @@ export function AdminSettingsPanel({ settings, pending, onToggle }: Props) {
           />
         </div>
       </section>
+      <section className="rounded-xl border border-border bg-surface/70 p-4">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-fg">YouTube</h2>
+          <p className="text-xs text-fg-soft">Allow remote browser sign-in for YouTube sessions.</p>
+        </div>
+        <div className="space-y-2">
+          <SettingToggle
+            label="Remote YouTube login"
+            value={settings.youtubeRemoteLoginEnabled}
+            pending={pending}
+            onClick={() => onToggle("youtubeRemoteLoginEnabled")}
+          />
+        </div>
+      </section>
     </div>
   );
 }

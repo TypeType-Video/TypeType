@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchBulletComments } from "../lib/api";
+import { fetchBulletComments } from "../lib/api-bullet-comments";
 
 export function useBulletComments(videoUrl: string, enabled: boolean) {
   return useQuery({

@@ -1,14 +1,11 @@
 import type {
-  BulletCommentsPageResponse,
   ChannelResponse,
   CommentsPageResponse,
   PodcastEpisodesResponse,
   PodcastPageResponse,
   SearchFiltersResponse,
   SearchPageResponse,
-  StreamResponse,
 } from "../types/api";
-import type { PublicPlaylistResponse } from "../types/playlist";
 import { recordApiError } from "./api-error-log";
 import { extractRequestId, recordClientEvent } from "./client-debug-log";
 import { sanitizeDebugText, sanitizeRequestPath } from "./debug-sanitize";
@@ -17,16 +14,19 @@ import { normalizeApiPayload } from "./text-normalize";
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  code: string | null;
+  constructor(message: string, status: number, code: string | null = null) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
 export type ChannelSort = "latest" | "popular" | "oldest";
 
 type ErrorLikeBody = {
+  code?: string;
   error?: string;
   message?: string;
 };
@@ -61,6 +61,12 @@ function toErrorMessage(status: number, statusText: string, body: unknown): stri
   return "Request failed";
 }
 
+function toErrorCode(body: unknown): string | null {
+  if (!body || typeof body !== "object") return null;
+  const candidate = body as ErrorLikeBody;
+  return typeof candidate.code === "string" && candidate.code.length > 0 ? candidate.code : null;
+}
+
 export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const method = init?.method ?? "GET";
   let res: Response;
@@ -85,10 +91,11 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   if (!res.ok) {
     const requestId = extractRequestId(res.headers);
     const errorMessage = toErrorMessage(res.status, res.statusText, body);
+    const errorCode = toErrorCode(body);
     recordApiError({
       endpoint: url,
       status: res.status,
-      code: "HTTP_ERROR",
+      code: errorCode ?? "HTTP_ERROR",
       message: errorMessage,
       requestId,
     });
@@ -99,13 +106,9 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
       requestId,
       message: sanitizeDebugText(errorMessage),
     });
-    throw new ApiError(errorMessage, res.status);
+    throw new ApiError(errorMessage, res.status, errorCode);
   }
   return body as T;
-}
-
-export function fetchStream(url: string): Promise<StreamResponse> {
-  return request(`${BASE}/streams?url=${encodeURIComponent(url)}`, { cache: "no-store" });
 }
 
 export function fetchSearchFilters(service: number): Promise<SearchFiltersResponse> {
@@ -165,22 +168,4 @@ export function fetchPodcastEpisodes(
   const params = new URLSearchParams({ url });
   if (nextpage) params.set("nextpage", nextpage);
   return request(`${BASE}/podcasts/episodes?${params}`);
-}
-
-export function fetchSuggestions(query: string, service: number): Promise<string[]> {
-  const params = new URLSearchParams({ query, service: String(service) });
-  return request(`${BASE}/suggestions?${params}`);
-}
-
-export function fetchBulletComments(url: string): Promise<BulletCommentsPageResponse> {
-  return request(`${BASE}/bullet-comments?url=${encodeURIComponent(url)}`);
-}
-
-export function fetchPublicPlaylist(
-  url: string,
-  nextpage?: string,
-): Promise<PublicPlaylistResponse> {
-  const params = new URLSearchParams({ url });
-  if (nextpage) params.set("nextpage", nextpage);
-  return request(`${BASE}/playlist?${params}`);
 }

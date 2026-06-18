@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { fetchPublicPlaylist } from "../lib/api";
+import { fetchPublicPlaylist } from "../lib/api-public-playlist";
 import { mapVideoItem } from "../lib/mappers";
 import type { PublicPlaylistInfo } from "../types/playlist";
 import type { VideoStream } from "../types/stream";

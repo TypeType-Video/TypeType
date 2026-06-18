@@ -1,6 +1,6 @@
 import type { StreamResponse } from "../types/api";
 import type { HistoryItem } from "../types/user";
-import { fetchStream } from "./api";
+import { fetchStream } from "./api-stream";
 
 const CACHE_MS = 30 * 60 * 1000;
 

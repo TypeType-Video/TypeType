@@ -30,9 +30,13 @@ export function AdminSettingsSection({ enabled, onToast }: Props) {
   }
 
   if (adminSettings.query.isError) {
+    const message =
+      adminSettings.query.error instanceof Error
+        ? adminSettings.query.error.message
+        : "Unable to load admin settings.";
     return (
       <section className="rounded-lg border border-danger bg-danger/30 p-3 text-sm text-danger-strong">
-        Unable to load admin settings.
+        Unable to load admin settings: {message}
       </section>
     );
   }

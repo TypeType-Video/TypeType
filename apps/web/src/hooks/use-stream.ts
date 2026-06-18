@@ -1,5 +1,6 @@
 import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
-import { ApiError, fetchStream } from "../lib/api";
+import { ApiError } from "../lib/api";
+import { fetchStream } from "../lib/api-stream";
 import { mapStreamResponse } from "../lib/mappers";
 import {
   isMemberOnlyApiError as isMemberOnlyApiResponse,

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchProgress, updateProgress } from "../lib/api-collections";
+import { useAuthStore } from "../stores/auth-store";
 import type { ProgressItem } from "../types/user";
 import { useAuth } from "./use-auth";
 
@@ -19,10 +20,12 @@ export function useSaveProgress(videoUrl: string) {
   const { authReady, isAuthed } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (position: number) =>
-      authReady && isAuthed ? updateProgress(videoUrl, position) : Promise.resolve(),
+    mutationFn: (position: number) => {
+      const token = useAuthStore.getState().token;
+      return token ? updateProgress(videoUrl, position) : Promise.resolve();
+    },
     onSuccess: (_, position) => {
-      if (!authReady || !isAuthed) return;
+      if (!authReady || !isAuthed || !useAuthStore.getState().token) return;
       const next: ProgressItem = {
         videoUrl,
         position: Math.round(position),

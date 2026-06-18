@@ -1,7 +1,7 @@
 import type { VideoStream } from "../types/stream";
 import { buildBilibiliDashManifest } from "./bilibili-manifest";
 import { buildDashManifest } from "./dash-manifest";
-import { API_BASE as BASE } from "./env";
+import { API_BASE as BASE, toApiUrl } from "./env";
 import { buildNicoHlsManifest } from "./nico-hls-manifest";
 import { isCompatibilityPlaybackMode } from "./playback-mode";
 import { detectProvider } from "./provider";
@@ -21,6 +21,20 @@ type ResolveManifestOptions = {
   highQualityFailed?: boolean;
   bilibiliVariant?: number;
 };
+
+export function isSignedHlsManifestUrl(value: string): boolean {
+  try {
+    const url = new URL(value, "https://typetype.invalid");
+    return url.pathname.endsWith("/streams/hls-manifest") && url.searchParams.has("token");
+  } catch {
+    return false;
+  }
+}
+
+export function resolveHlsManifestUrl(stream: VideoStream): string {
+  if (stream.hlsUrl && isSignedHlsManifestUrl(stream.hlsUrl)) return toApiUrl(stream.hlsUrl);
+  return proxyDashManifest(`${BASE}/streams/hls-manifest?url=${encodeURIComponent(stream.id)}`);
+}
 
 function fallbackSrc(
   stream: VideoStream,
@@ -69,7 +83,7 @@ export function resolveManifestSrc(
 
   if (stream.hlsUrl) {
     return {
-      src: proxyDashManifest(`${BASE}/streams/hls-manifest?url=${encodeURIComponent(stream.id)}`),
+      src: resolveHlsManifestUrl(stream),
       type: "application/x-mpegurl",
     };
   }

@@ -15,12 +15,19 @@ function isAdminSettings(value: unknown): value is AdminSettings {
   if (!value || typeof value !== "object") return false;
   const record = value as Partial<AdminSettings>;
   return (
+    typeof record.name === "string" &&
+    (record.tagline === null || typeof record.tagline === "string") &&
+    (record.logoUrl === null || typeof record.logoUrl === "string") &&
+    (record.bannerUrl === null || typeof record.bannerUrl === "string") &&
+    (record.minAndroidClientVersion === null ||
+      typeof record.minAndroidClientVersion === "string") &&
     typeof record.allowRegistration === "boolean" &&
     typeof record.allowGuest === "boolean" &&
     typeof record.forceEmailVerification === "boolean" &&
     typeof record.activeSessionsEnabled === "boolean" &&
     typeof record.localLoginEnabled === "boolean" &&
-    typeof record.oidcAutoRedirect === "boolean"
+    typeof record.oidcAutoRedirect === "boolean" &&
+    typeof record.youtubeRemoteLoginEnabled === "boolean"
   );
 }
 

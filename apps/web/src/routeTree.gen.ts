@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YoutubeSessionRouteImport } from './routes/youtube-session'
 import { Route as WatchLaterRouteImport } from './routes/watch-later'
 import { Route as WatchRouteImport } from './routes/watch'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions'
@@ -36,6 +37,11 @@ import { Route as ImportPipepipeRouteImport } from './routes/import/pipepipe'
 import { Route as ChannelChannelIdRouteImport } from './routes/channel_.$channelId'
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth.oidc.callback'
 
+const YoutubeSessionRoute = YoutubeSessionRouteImport.update({
+  id: '/youtube-session',
+  path: '/youtube-session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WatchLaterRoute = WatchLaterRouteImport.update({
   id: '/watch-later',
   path: '/watch-later',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/watch-later': typeof WatchLaterRoute
+  '/youtube-session': typeof YoutubeSessionRoute
   '/channel/$channelId': typeof ChannelChannelIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/watch-later': typeof WatchLaterRoute
+  '/youtube-session': typeof YoutubeSessionRoute
   '/channel/$channelId': typeof ChannelChannelIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/subscriptions': typeof SubscriptionsRoute
   '/watch': typeof WatchRoute
   '/watch-later': typeof WatchLaterRoute
+  '/youtube-session': typeof YoutubeSessionRoute
   '/channel_/$channelId': typeof ChannelChannelIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/watch'
     | '/watch-later'
+    | '/youtube-session'
     | '/channel/$channelId'
     | '/import/pipepipe'
     | '/import/youtube'
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/watch'
     | '/watch-later'
+    | '/youtube-session'
     | '/channel/$channelId'
     | '/import/pipepipe'
     | '/import/youtube'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/watch'
     | '/watch-later'
+    | '/youtube-session'
     | '/channel_/$channelId'
     | '/import/pipepipe'
     | '/import/youtube'
@@ -358,6 +370,7 @@ export interface RootRouteChildren {
   SubscriptionsRoute: typeof SubscriptionsRoute
   WatchRoute: typeof WatchRoute
   WatchLaterRoute: typeof WatchLaterRoute
+  YoutubeSessionRoute: typeof YoutubeSessionRoute
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute
   PlaylistsIdRoute: typeof PlaylistsIdRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
@@ -365,6 +378,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/youtube-session': {
+      id: '/youtube-session'
+      path: '/youtube-session'
+      fullPath: '/youtube-session'
+      preLoaderRoute: typeof YoutubeSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watch-later': {
       id: '/watch-later'
       path: '/watch-later'
@@ -586,6 +606,7 @@ const rootRouteChildren: RootRouteChildren = {
   SubscriptionsRoute: SubscriptionsRoute,
   WatchRoute: WatchRoute,
   WatchLaterRoute: WatchLaterRoute,
+  YoutubeSessionRoute: YoutubeSessionRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   PlaylistsIdRoute: PlaylistsIdRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,

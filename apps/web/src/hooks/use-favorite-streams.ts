@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { fetchStream } from "../lib/api";
 import { fetchFavorites } from "../lib/api-collections";
+import { fetchStream } from "../lib/api-stream";
 import { mapStreamResponse } from "../lib/mappers";
 import type { VideoStream } from "../types/stream";
 import { useAuth } from "./use-auth";

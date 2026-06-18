@@ -54,7 +54,7 @@ function HistoryPage() {
   const { isAuthed } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<FilterState | null>(null);
-  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+  const [pendingRemoveItem, setPendingRemoveItem] = useState<HistoryItem | null>(null);
   const { query, items, total, remove } = useHistory(searchQuery);
   const dateRange = rangeFromFilter(filter);
 
@@ -84,7 +84,7 @@ function HistoryPage() {
               key={item.id}
               item={item}
               index={index}
-              onRemove={() => setPendingRemoveId(item.id)}
+              onRemove={() => setPendingRemoveItem(item)}
             />
           ))}
         </div>
@@ -102,16 +102,16 @@ function HistoryPage() {
         onFilterChange={setFilter}
         resultCount={filteredTotal}
       />
-      {pendingRemoveId !== null && (
+      {pendingRemoveItem !== null && (
         <ConfirmModal
           title="Remove from history?"
           description="This video will be removed from your watch history."
           confirmLabel="Remove"
           onConfirm={() => {
-            remove.mutate(pendingRemoveId);
-            setPendingRemoveId(null);
+            remove.mutate({ id: pendingRemoveItem.id, url: pendingRemoveItem.url });
+            setPendingRemoveItem(null);
           }}
-          onCancel={() => setPendingRemoveId(null)}
+          onCancel={() => setPendingRemoveItem(null)}
         />
       )}
     </div>

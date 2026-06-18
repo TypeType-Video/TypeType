@@ -34,7 +34,9 @@ function RootLayout() {
   const theme = useThemeStore((s) => s.theme);
   const cinemaMode = useWatchLayoutStore((s) => s.cinemaMode);
   const { isAuthed, isAdmin, status } = useAuth();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const location = useRouterState({ select: (state) => state.location });
+  const pathname = location.pathname;
+  const pathWithSearch = `${pathname}${location.searchStr}`;
   const shortsPage = pathname === "/shorts";
   const watchCinemaPage = pathname === "/watch" && cinemaMode;
   useSessionActivityReporting();
@@ -60,12 +62,12 @@ function RootLayout() {
   useEffect(() => {
     if (status === "loading") return;
     if (!isAuthed && isAdminRoute(pathname)) {
-      const redirect = encodeURIComponent(pathname);
+      const redirect = encodeURIComponent(pathWithSearch);
       window.location.replace(`/login?redirect=${redirect}`);
       return;
     }
     if (!isAuthed && requiresAuth(pathname)) {
-      const redirect = encodeURIComponent(pathname);
+      const redirect = encodeURIComponent(pathWithSearch);
       window.location.replace(`/login?redirect=${redirect}`);
       return;
     }
@@ -73,7 +75,7 @@ function RootLayout() {
       window.location.replace("/");
       return;
     }
-  }, [isAuthed, isAdmin, status, pathname]);
+  }, [isAuthed, isAdmin, status, pathname, pathWithSearch]);
 
   if (status === "loading" && (requiresAuth(pathname) || isAdminRoute(pathname))) {
     return (

@@ -16,7 +16,12 @@ export {
   useMediaState,
   useVideoQualityOptions,
 } from "@vidstack/react";
-export { ClipIcon, LanguageIcon } from "@vidstack/react/icons";
+export {
+  ClipIcon,
+  LanguageIcon,
+  PictureInPictureExitIcon,
+  PictureInPictureIcon,
+} from "@vidstack/react/icons";
 export type { DefaultLayoutIcon } from "@vidstack/react/player/layouts/default";
 export {
   DefaultMenuButton,

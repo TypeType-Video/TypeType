@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
-import { isIosDevice } from "../lib/ios-device";
+import { recordClientEvent } from "../lib/client-debug-log";
 
 type MutateFn = (positionMs: number) => void;
+type SaveReason = "interval" | "pagehide" | "pause" | "seeked" | "threshold" | "visibility";
 
 type Args = {
   durationSec: number;
@@ -12,57 +13,66 @@ type Args = {
 export function useWatchProgressPersistence({ durationSec, isLive, mutate }: Args) {
   const positionRef = useRef(0);
   const lastSavedPositionRef = useRef(0);
+  const maxPositionSeenRef = useRef(0);
   const mutateRef = useRef(mutate);
   mutateRef.current = mutate;
-  const isIos = isIosDevice();
 
-  const saveRef = useRef<(seeked: boolean) => void>(() => {});
-  saveRef.current = (seeked: boolean) => {
+  const saveRef = useRef<(reason: SaveReason) => void>(() => {});
+  saveRef.current = (reason: SaveReason) => {
     const positionMs = Math.max(0, Math.round(positionRef.current));
     const durationMs = durationSec * 1000;
-    if (!Number.isFinite(positionMs) || positionMs <= 0) return;
+    if (!Number.isFinite(positionMs)) return;
+    if (reason === "seeked" && positionMs < 5000 && maxPositionSeenRef.current >= 5000) {
+      lastSavedPositionRef.current = 0;
+      recordClientEvent("progress.save", { positionMs: 0, reason });
+      mutateRef.current(0);
+      return;
+    }
+    if (positionMs <= 0) return;
     if (positionMs >= durationMs * 0.95) return;
     if (positionMs < 5000) return;
-    if (!seeked && positionMs < lastSavedPositionRef.current) return;
+    if (reason !== "seeked" && positionMs < lastSavedPositionRef.current) return;
     lastSavedPositionRef.current = positionMs;
+    recordClientEvent("progress.save", { positionMs, reason });
     mutateRef.current(positionMs);
   };
 
-  const handleTimeUpdate = useCallback((positionMs: number) => {
-    positionRef.current = positionMs;
-  }, []);
+  const handleTimeUpdate = useCallback(
+    (positionMs: number) => {
+      positionRef.current = positionMs;
+      maxPositionSeenRef.current = Math.max(maxPositionSeenRef.current, positionMs);
+      if (!isLive && positionMs >= 5000 && lastSavedPositionRef.current < 5000) {
+        saveRef.current("threshold");
+      }
+    },
+    [isLive],
+  );
 
   const handlePause = useCallback(() => {
-    saveRef.current(false);
+    saveRef.current("pause");
   }, []);
 
   const handleSeeked = useCallback(() => {
-    saveRef.current(true);
+    saveRef.current("seeked");
   }, []);
 
   useEffect(() => {
     if (isLive) return;
     const onVisibilityChange = () => {
-      if (document.visibilityState === "hidden") saveRef.current(false);
+      if (document.visibilityState === "hidden") saveRef.current("visibility");
     };
-    const interval = setInterval(() => saveRef.current(false), 10_000);
+    const onPageHide = () => {
+      saveRef.current("pagehide");
+    };
+    const interval = setInterval(() => saveRef.current("interval"), 10_000);
     document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", onPageHide);
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [isLive]);
-
-  useEffect(() => {
-    if (isLive || !isIos) return;
-    const onPageHide = () => {
-      saveRef.current(false);
-    };
-    window.addEventListener("pagehide", onPageHide);
-    return () => {
       window.removeEventListener("pagehide", onPageHide);
     };
-  }, [isLive, isIos]);
+  }, [isLive]);
 
   return {
     positionRef,
