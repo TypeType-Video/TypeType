@@ -316,10 +316,12 @@ fetch_file "nginx.conf" "${INSTALL_DIR}/nginx.conf"
 fetch_file "garage.toml" "${INSTALL_DIR}/garage.toml"
 fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
 fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
+fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 fetch_file "scripts/bootstrap-garage.sh" "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 fetch_file "scripts/setup-stack.sh" "${INSTALL_DIR}/scripts/setup-stack.sh"
 
 chmod +x "${INSTALL_DIR}/scripts/install-stack.sh"
+chmod +x "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 chmod +x "${INSTALL_DIR}/scripts/setup-stack.sh"
 
@@ -330,6 +332,7 @@ fi
 
 ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
+"${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
 HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_SERVER" "8080" "API")"
 HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_TOKEN" "8081" "token")"

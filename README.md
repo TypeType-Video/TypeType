@@ -23,7 +23,7 @@ Install and start the stack with one command:
 curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash
 ```
 
-The installer creates `~/typetype-stack`, generates local downloader credentials, selects available ports when defaults are busy, starts the services, and bootstraps Garage.
+The installer creates `~/typetype-stack`, generates local downloader and YouTube remote login secrets, selects available ports when defaults are busy, starts the services, and bootstraps Garage.
 
 After install:
 
@@ -207,6 +207,7 @@ The installer is recommended. If you want to run from a cloned repository instea
 git clone https://github.com/Priveetee/TypeType.git
 cd TypeType
 cp .env.example .env
+./scripts/bootstrap-env.sh
 ./scripts/setup-stack.sh
 ```
 
@@ -214,13 +215,14 @@ Manual Docker Compose flow:
 
 ```sh
 cp .env.example .env
+./scripts/bootstrap-env.sh
 docker compose pull
-docker compose up -d
 ./scripts/bootstrap-garage.sh
+docker compose up -d
 docker compose ps
 ```
 
-If you do the manual flow, edit `.env` before exposing the stack outside localhost. In particular, replace the downloader S3 access key and secret key values.
+If you do the manual flow, edit `.env` before exposing the stack outside localhost. In particular, keep the generated downloader S3 access key, downloader S3 secret key, YouTube remote login token, and YouTube session encryption key private.
 
 ## Updating
 
@@ -228,6 +230,7 @@ Update the whole stack:
 
 ```sh
 cd ~/typetype-stack
+./scripts/bootstrap-env.sh
 docker compose pull
 docker compose up -d --force-recreate
 docker compose ps
