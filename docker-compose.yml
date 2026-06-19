@@ -13,16 +13,29 @@ services:
     image: ghcr.io/priveetee/typetype-server:latest
     ports:
       - "${HOST_PORT_SERVER:-8080}:8080"
-    env_file: .env
     environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8082,http://127.0.0.1:8082,http://localhost:5173,http://127.0.0.1:5173}
+      DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/typetype}
+      DATABASE_USER: ${DATABASE_USER:-typetype}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-typetype}
+      DRAGONFLY_URL: ${DRAGONFLY_URL:-redis://dragonfly:6379}
+      GITHUB_REPO: ${GITHUB_REPO:-Priveetee/TypeType-Server}
+      GITHUB_ISSUE_TEMPLATE: ${GITHUB_ISSUE_TEMPLATE:-bug_report_backend.md}
       DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
       YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://typetype-token:8081
       YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://typetype-server:8080
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
+      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN_FILE: /run/typetype-secrets/youtube_remote_login_internal_token
+      YOUTUBE_SESSION_ENCRYPTION_KEY: ${YOUTUBE_SESSION_ENCRYPTION_KEY:-}
+      YOUTUBE_SESSION_ENCRYPTION_KEY_FILE: /run/typetype-secrets/youtube_session_encryption_key
       YOUTUBE_REMOTE_LOGIN_TTL_MS: ${YOUTUBE_REMOTE_LOGIN_TTL_MS:-480000}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}
+    volumes:
+      - typetype_secrets:/run/typetype-secrets:ro
     depends_on:
+      typetype-secrets:
+        condition: service_completed_successfully
       postgres-init:
         condition: service_completed_successfully
       dragonfly:
@@ -32,6 +45,29 @@ services:
       typetype-downloader:
         condition: service_started
     restart: unless-stopped
+
+  typetype-secrets:
+    image: busybox:1.37
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        generate_secret() {
+          dd if=/dev/urandom bs=48 count=1 2>/dev/null | base64 | tr '+/' '-_' | tr -d '=\n'
+        }
+        ensure_secret() {
+          file="$$1"
+          if [ ! -s "$$file" ]; then
+            generate_secret > "$$file"
+          fi
+          chmod 0444 "$$file"
+        }
+        mkdir -p /run/typetype-secrets
+        ensure_secret /run/typetype-secrets/youtube_remote_login_internal_token
+        ensure_secret /run/typetype-secrets/youtube_session_encryption_key
+    volumes:
+      - typetype_secrets:/run/typetype-secrets
+    restart: "no"
 
   typetype-downloader:
     image: ghcr.io/priveetee/typetype-downloader:latest
@@ -57,8 +93,8 @@ services:
       S3_PUBLIC_ENDPOINT: ${DOWNLOADER_S3_PUBLIC_ENDPOINT:-}
       S3_REGION: garage
       S3_BUCKET: typetype-downloads
-      S3_ACCESS_KEY: ${DOWNLOADER_S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${DOWNLOADER_S3_SECRET_KEY}
+      S3_ACCESS_KEY: ${DOWNLOADER_S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${DOWNLOADER_S3_SECRET_KEY:-}
       S3_ARTIFACT_TTL_SECONDS: "7200"
     depends_on:
       postgres-init:
@@ -79,12 +115,18 @@ services:
     ipc: host
     environment:
       NODE_ENV: production
-      YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-false}
+      YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-true}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
+      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN_FILE: /run/typetype-secrets/youtube_remote_login_internal_token
       YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN: ${YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN:-http://typetype-server:8080}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
       YOUTUBE_REMOTE_LOGIN_FRAME_FPS: ${YOUTUBE_REMOTE_LOGIN_FRAME_FPS:-10}
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}
+    volumes:
+      - typetype_secrets:/run/typetype-secrets:ro
+    depends_on:
+      typetype-secrets:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   postgres:
@@ -133,5 +175,6 @@ services:
 
 volumes:
   postgres_data:
+  typetype_secrets:
   garage_meta:
   garage_data:
