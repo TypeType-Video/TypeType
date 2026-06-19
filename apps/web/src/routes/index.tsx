@@ -49,7 +49,7 @@ function HomePage() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
-      <ContinueWatching />
+      {!settings.hideContinueWatching && <ContinueWatching />}
       {showRecommendations && (
         <section className="flex flex-col gap-3">
           <p className="text-xs font-medium uppercase tracking-wider text-fg-soft">{title}</p>

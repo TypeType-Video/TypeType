@@ -28,6 +28,7 @@ const DEFAULTS: SettingsItem = {
   sponsorBlockManualSkipOnFullVideo: true,
   sponsorBlockSkipNonMusicOnlyOnMusicVideos: false,
   sponsorBlockMuteInsteadOfSkip: false,
+  hideContinueWatching: false,
   hideHomeRecommendations: false,
   hideRelatedVideos: false,
   hideComments: false,
@@ -50,7 +51,8 @@ export function useSettings() {
 
   const update = useMutation({
     mutationFn: (patch: Partial<SettingsItem>) => {
-      const current = qc.getQueryData<SettingsItem>(KEY) ?? DEFAULTS;
+      const stored = qc.getQueryData<SettingsItem>(KEY);
+      const current = stored ? { ...DEFAULTS, ...stored } : DEFAULTS;
       const next = { ...current, ...patch };
       if (!isAuthed) return Promise.resolve(next);
       return updateSettings(next);
@@ -63,5 +65,7 @@ export function useSettings() {
     },
   });
 
-  return { query, update, settings: query.data ?? DEFAULTS, settingsReady };
+  const settings = query.data ? { ...DEFAULTS, ...query.data } : DEFAULTS;
+
+  return { query, update, settings, settingsReady };
 }

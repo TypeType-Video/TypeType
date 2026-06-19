@@ -5,7 +5,12 @@ const ROW = "flex items-center justify-between gap-4 px-4 py-4";
 
 type ToggleKey = Extract<
   keyof SettingsItem,
-  "autoplay" | "hideHomeRecommendations" | "hideRelatedVideos" | "hideComments" | "hideShorts"
+  | "autoplay"
+  | "hideContinueWatching"
+  | "hideHomeRecommendations"
+  | "hideRelatedVideos"
+  | "hideComments"
+  | "hideShorts"
 >;
 
 type ToggleOption = {
@@ -37,6 +42,12 @@ const WATCH_OPTIONS: ToggleOption[] = [
 ];
 
 const DISCOVERY_OPTIONS: ToggleOption[] = [
+  {
+    key: "hideContinueWatching",
+    label: "Continue watching",
+    description: "Hide in-progress videos from the home page.",
+    area: "Home",
+  },
   {
     key: "hideHomeRecommendations",
     label: "Home recommendations",
