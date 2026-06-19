@@ -4,28 +4,27 @@ import { ConfirmModal } from "../components/confirm-modal";
 import { LibraryCollectionCard } from "../components/library-collection-card";
 import { PlaylistCard } from "../components/playlist-card";
 import { PlaylistCreateModal } from "../components/playlist-create-modal";
+import { PlaylistsEmptyState } from "../components/playlists-empty-state";
+import { PlaylistsPageHeader } from "../components/playlists-page-header";
+import { SavedPlaylistsSection } from "../components/saved-playlists-section";
 import { Toast } from "../components/toast";
 import { useFavoriteStreams } from "../hooks/use-favorite-streams";
 import { usePlaylists } from "../hooks/use-playlists";
+import { useSavedPlaylists } from "../hooks/use-saved-playlists";
 import { useWatchLaterStreams } from "../hooks/use-watch-later-streams";
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-32 gap-2 text-center">
-      <p className="text-fg-muted text-sm">No playlists yet.</p>
-      <p className="text-fg-soft text-xs">Use the New playlist button to get started.</p>
-    </div>
-  );
-}
+import type { SavedPlaylistItem } from "../types/playlist";
 
 function PlaylistsPage() {
   const { query, create, remove } = usePlaylists();
+  const savedPlaylists = useSavedPlaylists();
   const favorites = useFavoriteStreams({ limit: 1 });
   const watchLater = useWatchLaterStreams();
   const playlists = query.data ?? [];
+  const saved = savedPlaylists.items;
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmIds, setConfirmIds] = useState<string[] | null>(null);
+  const [savedConfirm, setSavedConfirm] = useState<SavedPlaylistItem | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -58,62 +57,36 @@ function PlaylistsPage() {
     setToastMsg(count === 1 ? "Playlist deleted" : `${count} playlists deleted`);
   }
 
+  function handleSavedConfirm() {
+    if (!savedConfirm) return;
+    savedPlaylists.remove.mutate(savedConfirm.id);
+    setToastMsg(`Removed ${savedConfirm.title}`);
+    setSavedConfirm(null);
+  }
+
   const confirmTitle =
     confirmIds === null
       ? ""
       : confirmIds.length === 1
         ? `Delete "${playlists.find((p) => p.id === confirmIds[0])?.name ?? "this playlist"}"?`
         : `Delete ${confirmIds.length} playlists?`;
+  const hasLocalCollections = playlists.length > 0 || favorites.count > 0 || watchLater.count > 0;
 
   return (
     <div className="flex flex-col gap-6 [animation:page-fade-in_0.2s_ease-out]">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-lg font-semibold text-fg">Playlists</h1>
-        <div className="flex items-center gap-2">
-          {selectionMode ? (
-            <>
-              <span className="text-xs text-fg-soft">{selectedIds.size} selected</span>
-              <button
-                type="button"
-                onClick={exitSelection}
-                className="px-3 py-2 text-sm text-fg-muted bg-surface-strong hover:bg-surface-soft rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={selectedIds.size === 0}
-                onClick={() => setConfirmIds([...selectedIds])}
-                className="px-3 py-2 text-sm text-white bg-danger hover:bg-danger disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
-              >
-                Delete ({selectedIds.size})
-              </button>
-            </>
-          ) : (
-            <>
-              {playlists.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectionMode(true)}
-                  className="px-3 py-2 text-sm text-fg-muted hover:text-fg bg-surface-strong hover:bg-surface-soft rounded-lg transition-colors"
-                >
-                  Select
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setCreating(true)}
-                className="px-3 py-2 text-sm text-fg bg-surface-strong hover:bg-surface-soft rounded-lg transition-colors"
-              >
-                New playlist
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-      {playlists.length === 0 && favorites.count === 0 && watchLater.count === 0 ? (
-        <EmptyState />
-      ) : (
+      <PlaylistsPageHeader
+        selectionMode={selectionMode}
+        selectedCount={selectedIds.size}
+        canSelect={playlists.length > 0}
+        onSelect={() => setSelectionMode(true)}
+        onCancel={exitSelection}
+        onDelete={() => setConfirmIds([...selectedIds])}
+        onCreate={() => setCreating(true)}
+      />
+      <SavedPlaylistsSection playlists={saved} onDelete={setSavedConfirm} />
+      {!hasLocalCollections && saved.length === 0 ? (
+        <PlaylistsEmptyState />
+      ) : hasLocalCollections ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           <LibraryCollectionCard
             kind="favorites"
@@ -143,7 +116,7 @@ function PlaylistsPage() {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
       {creating && (
         <PlaylistCreateModal
           onConfirm={(name) => {
@@ -160,6 +133,14 @@ function PlaylistsPage() {
           description="This action cannot be undone."
           onConfirm={handleConfirm}
           onCancel={() => setConfirmIds(null)}
+        />
+      )}
+      {savedConfirm !== null && (
+        <ConfirmModal
+          title={`Remove "${savedConfirm.title}"?`}
+          description="This only removes the saved reference from your library."
+          onConfirm={handleSavedConfirm}
+          onCancel={() => setSavedConfirm(null)}
         />
       )}
       <Toast message={toastMsg} />
