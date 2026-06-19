@@ -1,5 +1,5 @@
 import { ChevronDown, Shuffle } from "lucide-react";
-import { type DragEvent, useEffect, useRef, useState } from "react";
+import { type DragEvent, type UIEvent, useEffect, useRef, useState } from "react";
 import { useFlipList } from "../hooks/use-flip-list";
 import { useMobile } from "../hooks/use-mobile";
 import { toPublicWatchParam } from "../lib/watch-url";
@@ -12,6 +12,8 @@ type Props = {
   listId: string;
   currentParam: string;
   shuffle: string | undefined;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
   onToggleShuffle: () => void;
   onReorder?: (videos: WatchPlaylistItem[]) => void;
 };
@@ -22,6 +24,8 @@ export function WatchPlaylistPanel({
   listId,
   currentParam,
   shuffle,
+  isLoadingMore = false,
+  onLoadMore,
   onToggleShuffle,
   onReorder,
 }: Props) {
@@ -67,6 +71,12 @@ export function WatchPlaylistPanel({
     next.splice(target, 0, moved);
     commit(next);
   }
+  function handleScroll(event: UIEvent<HTMLUListElement>) {
+    if (!onLoadMore || isLoadingMore) return;
+    const list = event.currentTarget;
+    const remaining = list.scrollHeight - list.scrollTop - list.clientHeight;
+    if (remaining < 480) onLoadMore();
+  }
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-surface">
@@ -105,7 +115,7 @@ export function WatchPlaylistPanel({
         </button>
       </div>
       {!collapsed && (
-        <ul className="max-h-[24rem] list-none overflow-y-auto py-1">
+        <ul className="max-h-[24rem] list-none overflow-y-auto py-1" onScroll={handleScroll}>
           {videos.map((video, index) => {
             const isCurrent = index === currentIndex;
 

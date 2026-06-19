@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect } from "react";
 import { WatchPlaylistPanel } from "../components/watch-playlist-panel";
 import { applyCustomOrder, randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
 import { isManagedPlaylistId } from "../lib/playlist-url";
@@ -8,6 +8,9 @@ import { usePlaylistOrderStore } from "../stores/playlist-order-store";
 import type { WatchPlaylistItem } from "../types/playlist";
 import { usePlaylist, usePlaylists } from "./use-playlists";
 import { usePublicPlaylist } from "./use-public-playlist";
+
+const MISSING_CURRENT_PREFETCH_LIMIT = 5;
+const PREFETCH_REMAINING_ITEMS = 10;
 
 type WatchPlaylist = {
   nextParam: string | null;
@@ -53,8 +56,27 @@ export function useWatchPlaylist(
   const currentIdx = inPlaylist
     ? videos.findIndex((video) => toPublicWatchParam(video.url) === currentParam)
     : -1;
+  const loadedPublicPageCount = publicPlaylist.data?.pages.length ?? 0;
+  const canLoadPublicPage =
+    !isManaged && Boolean(publicPlaylist.hasNextPage) && !publicPlaylist.isFetchingNextPage;
+  const loadMorePublic = useCallback(() => {
+    if (canLoadPublicPage) void publicPlaylist.fetchNextPage();
+  }, [canLoadPublicPage, publicPlaylist.fetchNextPage]);
   const nextVideo = currentIdx >= 0 ? videos[currentIdx + 1] : undefined;
   const nextParam = nextVideo ? toPublicWatchParam(nextVideo.url) : null;
+
+  useEffect(() => {
+    if (!canLoadPublicPage || videos.length === 0) return;
+    const missingCurrent = currentIdx < 0 && loadedPublicPageCount < MISSING_CURRENT_PREFETCH_LIMIT;
+    const nearEnd = currentIdx >= 0 && currentIdx >= videos.length - PREFETCH_REMAINING_ITEMS;
+    if (missingCurrent || nearEnd) void publicPlaylist.fetchNextPage();
+  }, [
+    canLoadPublicPage,
+    currentIdx,
+    loadedPublicPageCount,
+    videos.length,
+    publicPlaylist.fetchNextPage,
+  ]);
 
   const panel =
     inPlaylist && list ? (
@@ -64,6 +86,8 @@ export function useWatchPlaylist(
         listId={list}
         currentParam={currentParam}
         shuffle={shuffle}
+        isLoadingMore={publicPlaylist.isFetchingNextPage}
+        onLoadMore={canLoadPublicPage ? loadMorePublic : undefined}
         onToggleShuffle={() =>
           navigate({
             to: "/watch",
