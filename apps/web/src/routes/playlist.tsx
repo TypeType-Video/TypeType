@@ -114,8 +114,8 @@ function PublicPlaylistPage() {
 
 export const Route = createFileRoute("/playlist")({
   validateSearch: (search: Record<string, unknown>) => ({
-    list: typeof search.list === "string" ? search.list : "",
-    url: typeof search.url === "string" ? search.url : "",
+    list: typeof search.list === "string" && search.list.length > 0 ? search.list : undefined,
+    url: typeof search.url === "string" && search.url.length > 0 ? search.url : undefined,
   }),
   component: PublicPlaylistPage,
 });
