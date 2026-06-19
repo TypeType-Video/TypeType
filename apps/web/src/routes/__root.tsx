@@ -1,5 +1,5 @@
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { MobileTabBar } from "../components/mobile-tab-bar";
 import { Navbar } from "../components/navbar";
 import { Sidebar } from "../components/sidebar";
@@ -30,6 +30,7 @@ function AuthShell() {
 function RootLayout() {
   const isMobile = useMobile();
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   const closeMobileSidebar = useUiStore((s) => s.closeMobileSidebar);
   const theme = useThemeStore((s) => s.theme);
   const cinemaMode = useWatchLayoutStore((s) => s.cinemaMode);
@@ -39,6 +40,7 @@ function RootLayout() {
   const pathWithSearch = `${pathname}${location.searchStr}`;
   const shortsPage = pathname === "/shorts";
   const watchCinemaPage = pathname === "/watch" && cinemaMode;
+  const wasWatchCinemaPage = useRef(watchCinemaPage);
   useSessionActivityReporting();
 
   useEffect(() => {
@@ -58,6 +60,13 @@ function RootLayout() {
   useEffect(() => {
     if (!isMobile) closeMobileSidebar();
   }, [isMobile, closeMobileSidebar]);
+
+  useLayoutEffect(() => {
+    if (watchCinemaPage && !wasWatchCinemaPage.current && !isMobile) {
+      setSidebarCollapsed(true);
+    }
+    wasWatchCinemaPage.current = watchCinemaPage;
+  }, [watchCinemaPage, isMobile, setSidebarCollapsed]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -117,7 +126,7 @@ function RootLayout() {
   return (
     <div className="min-h-screen bg-app text-fg">
       <Navbar />
-      {!watchCinemaPage && <Sidebar />}
+      {watchCinemaPage ? !isMobile && <Sidebar overlay /> : <Sidebar />}
       <main className={mainClasses} style={topPadding}>
         <Outlet />
       </main>

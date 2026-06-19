@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 type UiStore = {
   sidebarCollapsed: boolean;
   mobileSidebarOpen: boolean;
+  setSidebarCollapsed: (value: boolean) => void;
   toggleSidebar: () => void;
   openMobileSidebar: () => void;
   closeMobileSidebar: () => void;
@@ -15,6 +16,7 @@ export const useUiStore = create<UiStore>()(
     (set) => ({
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
+      setSidebarCollapsed: (value) => set({ sidebarCollapsed: value }),
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       openMobileSidebar: () => set({ mobileSidebarOpen: true }),
       closeMobileSidebar: () => set({ mobileSidebarOpen: false }),

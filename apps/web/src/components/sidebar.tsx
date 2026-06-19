@@ -26,6 +26,10 @@ const BTN_BASE = "flex items-center h-10 rounded-lg transition-colors w-full";
 const BTN_ACTIVE = "text-fg bg-surface-strong";
 const BTN_INACTIVE = "text-fg-muted hover:text-fg hover:bg-surface-strong";
 
+type Props = {
+  overlay?: boolean;
+};
+
 function NavIcon({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <svg
@@ -47,11 +51,12 @@ function NavIcon({ children, label }: { children: React.ReactNode; label: string
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ overlay = false }: Props) {
   const isMobile = useMobile();
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const mobileOpen = useUiStore((s) => s.mobileSidebarOpen);
   const closeMobileSidebar = useUiStore((s) => s.closeMobileSidebar);
+  const visualCollapsed = overlay ? false : collapsed;
   const { isAdmin, isAuthed, signOut } = useAuth();
   const { settings, update } = useSettings();
   const service = settings.defaultService;
@@ -73,17 +78,25 @@ export function Sidebar() {
     return true;
   });
 
+  const desktopShell = overlay
+    ? "z-50 border-border border-r bg-app/95 shadow-2xl backdrop-blur"
+    : "z-40 bg-app";
+  const desktopMotion = overlay
+    ? collapsed
+      ? "pointer-events-none -translate-x-full"
+      : "translate-x-0"
+    : "";
   const baseClasses = isMobile
     ? `fixed top-14 left-0 bottom-0 z-50 w-72 max-w-[85vw] bg-app flex flex-col py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-transform duration-200 ${
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       }`
-    : `fixed top-14 left-0 bottom-0 z-40 bg-app flex flex-col py-4 transition-all duration-200 ${
-        collapsed ? "w-14" : "w-48"
+    : `fixed top-14 left-0 bottom-0 ${desktopShell} ${desktopMotion} flex flex-col py-4 transition-all duration-200 ${
+        visualCollapsed ? "w-14" : "w-48"
       }`;
   const sectionPadding = isMobile ? "px-3" : "px-2";
   const itemLayout = isMobile
     ? "justify-start gap-3 px-2"
-    : collapsed
+    : visualCollapsed
       ? "justify-center px-0"
       : "gap-3 px-2";
 
@@ -113,7 +126,7 @@ export function Sidebar() {
               inactiveProps={{ className: BTN_INACTIVE }}
             >
               <NavIcon label={item.label}>{item.icon}</NavIcon>
-              {(!collapsed || isMobile) && (
+              {(!visualCollapsed || isMobile) && (
                 <span className="text-sm font-medium">{item.label}</span>
               )}
             </Link>
@@ -121,7 +134,7 @@ export function Sidebar() {
         </div>
 
         <div className={`mt-4 ${sectionPadding} border-t border-border pt-4 flex flex-col gap-1`}>
-          {(!collapsed || isMobile) && (
+          {(!visualCollapsed || isMobile) && (
             <p className="text-xs text-fg-soft px-2 mb-1 uppercase tracking-wider">Services</p>
           )}
           {SERVICES.map((svc) => (
@@ -132,13 +145,13 @@ export function Sidebar() {
               className={`${BTN_BASE} ${
                 isMobile
                   ? "justify-start gap-3 px-2 text-left"
-                  : collapsed
+                  : visualCollapsed
                     ? "justify-center px-0"
                     : "gap-3 px-2 text-left"
               } ${service === svc.id ? BTN_ACTIVE : BTN_INACTIVE}`}
             >
               <ServiceIcon path={svc.path} color={svc.color} label={svc.label} />
-              {(!collapsed || isMobile) && <span className="text-sm">{svc.label}</span>}
+              {(!visualCollapsed || isMobile) && <span className="text-sm">{svc.label}</span>}
             </button>
           ))}
         </div>
