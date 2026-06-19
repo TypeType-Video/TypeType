@@ -259,6 +259,7 @@ fi
 cd "${ROOT_DIR}"
 
 ensure_youtube_remote_login_env "${ENV_FILE}"
+"${ROOT_DIR}/scripts/bootstrap-env.sh"
 
 HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_SERVER" "${DEFAULT_HOST_PORT_SERVER}" "API")"
 HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_TOKEN" "${DEFAULT_HOST_PORT_TOKEN}" "token")"
