@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { fetchHomeRecommendations, type RecommendationIntent } from "../lib/api-recommendations";
 import { mapVideoItem } from "../lib/mappers";
 import type { VideoStream } from "../types/stream";
@@ -37,7 +38,10 @@ export function useHomeRecommendations(): Result {
     staleTime: 90 * 1000,
   });
 
-  const streams = (query.data?.pages ?? []).flatMap((page) => page.items).map(mapVideoItem);
+  const streams = useMemo(
+    () => (query.data?.pages ?? []).flatMap((page) => page.items).map(mapVideoItem),
+    [query.data],
+  );
 
   return {
     streams,

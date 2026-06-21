@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { fetchSubscriptionFeed } from "../lib/api-user";
 import { mapVideoItem } from "../lib/mappers";
 import { proxyImage } from "../lib/proxy";
@@ -17,8 +18,9 @@ type Result = {
 export function useSubscriptionFeed(): Result {
   const { authReady, isAuthed } = useAuth();
   const { query: subsQuery } = useSubscriptions();
-  const avatarMap = new Map(
-    (subsQuery.data ?? []).map((s) => [s.channelUrl, proxyImage(s.avatarUrl)]),
+  const avatarMap = useMemo(
+    () => new Map((subsQuery.data ?? []).map((s) => [s.channelUrl, proxyImage(s.avatarUrl)])),
+    [subsQuery.data],
   );
 
   const query = useInfiniteQuery({
@@ -30,16 +32,20 @@ export function useSubscriptionFeed(): Result {
     enabled: authReady && isAuthed,
   });
 
-  const streams = (query.data?.pages ?? [])
-    .flatMap((page) => page.videos)
-    .map((video) => {
-      const mapped = mapVideoItem(video);
-      if (!mapped.channelAvatar && mapped.channelUrl) {
-        const avatar = avatarMap.get(mapped.channelUrl);
-        if (avatar) return { ...mapped, channelAvatar: avatar };
-      }
-      return mapped;
-    });
+  const streams = useMemo(
+    () =>
+      (query.data?.pages ?? [])
+        .flatMap((page) => page.videos)
+        .map((video) => {
+          const mapped = mapVideoItem(video);
+          if (!mapped.channelAvatar && mapped.channelUrl) {
+            const avatar = avatarMap.get(mapped.channelUrl);
+            if (avatar) return { ...mapped, channelAvatar: avatar };
+          }
+          return mapped;
+        }),
+    [query.data, avatarMap],
+  );
 
   return {
     streams,

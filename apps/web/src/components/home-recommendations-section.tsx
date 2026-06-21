@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useHomeRecommendations } from "../hooks/use-home-recommendations";
 import { HomeFallbackSection } from "./home-fallback-section";
@@ -9,7 +10,7 @@ export function HomeRecommendationsSection() {
   const { streams, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useHomeRecommendations();
   const { filter } = useBlockedFilter();
-  const filtered = filter(streams);
+  const filtered = useMemo(() => filter(streams), [filter, streams]);
 
   if (isLoading) return <VideoGridSkeleton idPrefix="home-recommendations" />;
   if (isError || filtered.length === 0) return <HomeFallbackSection />;
