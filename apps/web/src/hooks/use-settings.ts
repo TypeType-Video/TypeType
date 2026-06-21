@@ -45,6 +45,7 @@ export function useSettings() {
     queryFn: () => fetchSettings(),
     enabled: authReady && isAuthed,
     placeholderData: DEFAULTS,
+    staleTime: 5 * 60 * 1000,
   });
   const settingsReady =
     (authReady && !isAuthed) || (query.isSuccess && !query.isPlaceholderData) || query.isError;

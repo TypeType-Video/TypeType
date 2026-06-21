@@ -7,5 +7,6 @@ export function useInstance() {
   return useQuery({
     queryKey: INSTANCE_KEY,
     queryFn: fetchInstanceCapabilities,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
