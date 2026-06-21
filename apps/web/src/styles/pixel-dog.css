@@ -1,0 +1,79 @@
+@keyframes pixel-dog-run {
+  0%,
+  19.9% {
+    opacity: 1;
+  }
+  20%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.pixel-dog-run {
+  animation-name: pixel-dog-run;
+  animation-duration: 0.55s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes pixel-dog-wag {
+  0%,
+  33.2% {
+    opacity: 1;
+  }
+  33.3%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.pixel-dog-wag {
+  animation-name: pixel-dog-wag;
+  animation-duration: 1.5s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes pixel-dog-carry-run {
+  0%,
+  9.9% {
+    opacity: 1;
+  }
+  10%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.pixel-dog-carry-run {
+  animation-name: pixel-dog-carry-run;
+  animation-duration: 0.6s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes pixel-prompt-drop {
+  0% {
+    transform: translateY(-100vh);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.35);
+  }
+  64% {
+    transform: translateY(0);
+    animation-timing-function: ease-out;
+  }
+  80% {
+    transform: translateY(-16%);
+    animation-timing-function: ease-in;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.pixel-prompt-drop {
+  animation: pixel-prompt-drop 1.4s 0.25s both;
+}
+
+.pixel-prompt-drop-logo {
+  animation: pixel-prompt-drop 1.4s 3.2s both;
+}
