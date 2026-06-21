@@ -1,7 +1,32 @@
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 import { useSettings } from "../hooks/use-settings";
+import { allowHideEverything } from "../lib/hide-everything";
 import type { SettingsItem } from "../types/user";
+import { HideEverythingToggle } from "./hide-everything-toggle";
+import { ROW, ToggleSwitch } from "./settings-toggle-switch";
 
-const ROW = "flex items-center justify-between gap-4 px-4 py-4";
+const HIDE_KEYS = [
+  "hideContinueWatching",
+  "hideHomeRecommendations",
+  "hideRelatedVideos",
+  "hideComments",
+  "hideShorts",
+] as const;
+
+function useHideEverythingTrigger() {
+  const { settings } = useSettings();
+  const navigate = useNavigate();
+  const allHidden = HIDE_KEYS.every((key) => settings[key]);
+  const wasAllHidden = useRef(allHidden);
+  useEffect(() => {
+    if (allHidden && !wasAllHidden.current) {
+      allowHideEverything();
+      navigate({ to: "/hide-everything" });
+    }
+    wasAllHidden.current = allHidden;
+  }, [allHidden, navigate]);
+}
 
 type ToggleKey = Extract<
   keyof SettingsItem,
@@ -62,38 +87,18 @@ const DISCOVERY_OPTIONS: ToggleOption[] = [
   },
 ];
 
-function ToggleSwitch({ checked, onClick }: { checked: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={onClick}
-      className={`relative h-5 w-10 flex-shrink-0 rounded-full transition-colors duration-200 ${
-        checked ? "bg-fg" : "bg-surface-soft"
-      }`}
-    >
-      <span
-        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full transition-all duration-200 ${
-          checked ? "translate-x-5 bg-surface" : "translate-x-0 bg-surface-soft"
-        }`}
-      />
-    </button>
-  );
-}
-
 function ToggleRows({ options }: { options: ToggleOption[] }) {
   const { settings, update } = useSettings();
   return options.map((option) => (
     <div key={option.key} className={ROW}>
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-fg">{option.label}</span>
+          <span className="text-fg text-sm">{option.label}</span>
           <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] text-fg-soft">
             {option.area}
           </span>
         </div>
-        <span className="text-xs text-fg-soft">{option.description}</span>
+        <span className="text-fg-soft text-xs">{option.description}</span>
       </div>
       <ToggleSwitch
         checked={settings[option.key]}
@@ -104,16 +109,18 @@ function ToggleRows({ options }: { options: ToggleOption[] }) {
 }
 
 export function SettingsContentToggles() {
+  useHideEverythingTrigger();
   return (
     <>
-      <div className="bg-surface-soft/30 px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-fg-soft">
+      <div className="bg-surface-soft/30 px-4 py-2 font-medium text-[11px] text-fg-soft uppercase tracking-wider">
         Watch page
       </div>
       <ToggleRows options={WATCH_OPTIONS} />
-      <div className="bg-surface-soft/30 px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-fg-soft">
+      <div className="bg-surface-soft/30 px-4 py-2 font-medium text-[11px] text-fg-soft uppercase tracking-wider">
         Discovery surfaces
       </div>
       <ToggleRows options={DISCOVERY_OPTIONS} />
+      <HideEverythingToggle />
     </>
   );
 }
