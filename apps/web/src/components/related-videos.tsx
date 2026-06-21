@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import type { VideoStream } from "../types/stream";
 import { AutoplayToggle } from "./autoplay-toggle";
@@ -24,7 +25,7 @@ function uniqueStreams(streams: VideoStream[]): VideoStream[] {
 
 export function RelatedVideos({ streams, isLoading = false }: Props) {
   const { filter } = useBlockedFilter();
-  const visible = uniqueStreams(filter(streams));
+  const visible = useMemo(() => uniqueStreams(filter(streams)), [filter, streams]);
   return (
     <div className="flex flex-col gap-3">
       <AutoplayToggle />

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { memo } from "react";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration, formatViews } from "../lib/format";
 import { watchRouteSearch } from "../lib/watch-url";
@@ -13,7 +14,7 @@ type Props = {
   stream: VideoStream;
 };
 
-export function RelatedCard({ stream }: Props) {
+function RelatedCardComponent({ stream }: Props) {
   const prefetch = useWatchPrefetch(stream.id);
 
   return (
@@ -92,3 +93,5 @@ export function RelatedCard({ stream }: Props) {
     </div>
   );
 }
+
+export const RelatedCard = memo(RelatedCardComponent);
