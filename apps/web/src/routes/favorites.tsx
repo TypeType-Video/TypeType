@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { VideoGrid } from "../components/video-grid";
 import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
@@ -11,7 +11,7 @@ function FavoritesPage() {
   const [limit, setLimit] = useState(FAVORITES_BATCH_SIZE);
   const { videos, count, requestedCount, isLoading } = useFavoriteStreams({ limit });
   const { filter } = useBlockedFilter();
-  const visibleVideos = filter(videos);
+  const visibleVideos = useMemo(() => filter(videos), [filter, videos]);
   const canLoadMore = requestedCount < count;
 
   return (

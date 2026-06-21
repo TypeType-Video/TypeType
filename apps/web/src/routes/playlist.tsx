@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BookmarkCheck, BookmarkPlus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PlaylistActions } from "../components/playlist-actions";
 import { PublicPlaylistHeader } from "../components/public-playlist-header";
 import { ScrollSentinel } from "../components/scroll-sentinel";
@@ -25,6 +25,10 @@ function PublicPlaylistPage() {
   const navigate = useNavigate();
   const [toast, setToast] = useState<string | null>(null);
   const saved = savedPlaylists.findSaved(playlistUrl);
+  const streams = useMemo(
+    () => filter((data?.pages ?? []).flatMap((p) => p.streams)),
+    [filter, data],
+  );
 
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
@@ -50,7 +54,6 @@ function PublicPlaylistPage() {
   }
 
   const info = data.pages[0]?.playlist;
-  const streams = filter(data.pages.flatMap((p) => p.streams));
   function playFrom(url: string | undefined, shuffle?: string) {
     if (!url) return;
     navigate({

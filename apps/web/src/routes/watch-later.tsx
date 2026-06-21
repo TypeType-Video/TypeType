@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { VideoGrid } from "../components/video-grid";
 import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
@@ -7,6 +8,7 @@ import { useWatchLaterStreams } from "../hooks/use-watch-later-streams";
 function WatchLaterPage() {
   const { videos, count, isLoading } = useWatchLaterStreams();
   const { filter } = useBlockedFilter();
+  const visibleVideos = useMemo(() => filter(videos), [filter, videos]);
 
   return (
     <div className="flex flex-col gap-6 [animation:page-fade-in_0.2s_ease-out]">
@@ -21,7 +23,7 @@ function WatchLaterPage() {
       ) : videos.length === 0 ? (
         <p className="py-24 text-center text-sm text-fg-muted">No videos saved for later.</p>
       ) : (
-        <VideoGrid streams={filter(videos)} />
+        <VideoGrid streams={visibleVideos} />
       )}
     </div>
   );

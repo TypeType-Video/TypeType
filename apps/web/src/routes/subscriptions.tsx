@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ScrollSentinel } from "../components/scroll-sentinel";
 import { VideoGrid } from "../components/video-grid";
 import { VideoGridSkeleton } from "../components/video-grid-skeleton";
@@ -18,6 +18,7 @@ function SubscriptionsPage() {
   const { streams, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useSubscriptionFeed();
   const { filter } = useBlockedFilter();
+  const visible = useMemo(() => filter(streams), [filter, streams]);
 
   useEffect(() => {
     if (streams.length > 0) {
@@ -46,7 +47,7 @@ function SubscriptionsPage() {
 
   return (
     <>
-      <VideoGrid streams={filter(streams)} />
+      <VideoGrid streams={visible} />
       {isFetchingNextPage && <VideoGridSkeleton idPrefix="subscriptions-next" />}
       <ScrollSentinel onIntersect={fetchNextPage} enabled={hasNextPage && !isFetchingNextPage} />
     </>

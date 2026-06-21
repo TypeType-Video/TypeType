@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { ChannelAvatar } from "../components/channel-avatar";
 import { PageSpinner } from "../components/page-spinner";
 import { ScrollSentinel } from "../components/scroll-sentinel";
@@ -14,15 +15,22 @@ function PodcastsPage() {
   const firstPage = query.data?.pages[0];
   const podcast = firstPage?.podcast;
   const { filter } = useBlockedFilter();
-  const rawEpisodes = query.data?.pages.flatMap((page) => page.episodes) ?? [];
+  const rawEpisodes = useMemo(
+    () => query.data?.pages.flatMap((page) => page.episodes) ?? [],
+    [query.data],
+  );
   const channelAvatar =
     avatar || rawEpisodes.find((episode) => episode.channelAvatar)?.channelAvatar || "";
-  const episodes = filter(
-    rawEpisodes.map((episode) =>
-      episode.channelAvatar || !channelAvatar
-        ? episode
-        : { ...episode, channelAvatar, rawChannelAvatar: channelAvatar },
-    ),
+  const episodes = useMemo(
+    () =>
+      filter(
+        rawEpisodes.map((episode) =>
+          episode.channelAvatar || !channelAvatar
+            ? episode
+            : { ...episode, channelAvatar, rawChannelAvatar: channelAvatar },
+        ),
+      ),
+    [filter, rawEpisodes, channelAvatar],
   );
 
   if (url.trim().length === 0) {

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useChannel } from "../hooks/use-channel";
 import { useDocumentTitle } from "../hooks/use-document-title";
@@ -44,7 +45,7 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, tab, onNaviga
 
   const subscribed = isSubscribed(sourceUrl);
   const searchAvailable = detectProvider(sourceUrl) === "youtube";
-  const visibleVideos = filter(videos);
+  const visibleVideos = useMemo(() => filter(videos), [filter, videos]);
   const isInitialLoading = isLoading && !meta;
   const isReplacingVideos = isFetching && !isFetchingNextPage && visibleVideos.length === 0;
 
