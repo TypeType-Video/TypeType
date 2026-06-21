@@ -26,6 +26,7 @@ import { Route as PlaylistRouteImport } from './routes/playlist'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as HideEverythingRouteImport } from './routes/hide-everything'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as ChannelRouteImport } from './routes/channel'
 import { Route as AdminConsoleRouteImport } from './routes/admin-console'
@@ -122,6 +123,11 @@ const HistoryRoute = HistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HideEverythingRoute = HideEverythingRouteImport.update({
+  id: '/hide-everything',
+  path: '/hide-everything',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FavoritesRoute = FavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/admin-console': typeof AdminConsoleRoute
   '/channel': typeof ChannelRoute
   '/favorites': typeof FavoritesRoute
+  '/hide-everything': typeof HideEverythingRoute
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/admin-console': typeof AdminConsoleRoute
   '/channel': typeof ChannelRoute
   '/favorites': typeof FavoritesRoute
+  '/hide-everything': typeof HideEverythingRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
   '/playlist': typeof PlaylistRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/admin-console': typeof AdminConsoleRoute
   '/channel': typeof ChannelRoute
   '/favorites': typeof FavoritesRoute
+  '/hide-everything': typeof HideEverythingRoute
   '/history': typeof HistoryRoute
   '/import': typeof ImportRouteWithChildren
   '/login': typeof LoginRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/admin-console'
     | '/channel'
     | '/favorites'
+    | '/hide-everything'
     | '/history'
     | '/import'
     | '/login'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/admin-console'
     | '/channel'
     | '/favorites'
+    | '/hide-everything'
     | '/history'
     | '/login'
     | '/playlist'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/admin-console'
     | '/channel'
     | '/favorites'
+    | '/hide-everything'
     | '/history'
     | '/import'
     | '/login'
@@ -354,6 +366,7 @@ export interface RootRouteChildren {
   AdminConsoleRoute: typeof AdminConsoleRoute
   ChannelRoute: typeof ChannelRoute
   FavoritesRoute: typeof FavoritesRoute
+  HideEverythingRoute: typeof HideEverythingRoute
   HistoryRoute: typeof HistoryRoute
   ImportRoute: typeof ImportRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -497,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hide-everything': {
+      id: '/hide-everything'
+      path: '/hide-everything'
+      fullPath: '/hide-everything'
+      preLoaderRoute: typeof HideEverythingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/favorites': {
       id: '/favorites'
       path: '/favorites'
@@ -590,6 +610,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminConsoleRoute: AdminConsoleRoute,
   ChannelRoute: ChannelRoute,
   FavoritesRoute: FavoritesRoute,
+  HideEverythingRoute: HideEverythingRoute,
   HistoryRoute: HistoryRoute,
   ImportRoute: ImportRouteWithChildren,
   LoginRoute: LoginRoute,
