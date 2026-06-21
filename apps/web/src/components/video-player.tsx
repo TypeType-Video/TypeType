@@ -8,6 +8,7 @@ import {
 } from "../lib/vidstack";
 import { AudioTrackSelector } from "./audio-track-selector";
 import { CaptionStyleRestorer } from "./caption-style-restorer";
+import { CinemaModeControl } from "./cinema-mode-control";
 import { FormatSelector } from "./format-selector";
 import { MediaProgressEvents } from "./media-progress-events";
 import { MediaSessionSync } from "./media-session-sync";
@@ -20,7 +21,6 @@ import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
 import { buildSafeSubtitleTracks } from "./subtitle-track-utils";
 import { ChaptersTrack } from "./video-player-core";
 import { useVideoPlayerEvents } from "./video-player-events";
-import { VideoPlayerLayoutControls } from "./video-player-layout-controls";
 import type { VideoPlayerProps } from "./video-player-types";
 import { VolumeRestorer } from "./volume-restorer";
 
@@ -118,7 +118,7 @@ export function VideoPlayer({
               <FormatSelector />
             </>
           ),
-          beforeFullscreenButton: <VideoPlayerLayoutControls />,
+          beforeFullscreenButton: <CinemaModeControl />,
         }}
       />
       <PlayerSeeker startTime={startTime} />

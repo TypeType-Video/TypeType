@@ -6,11 +6,9 @@ import "./index.css";
 import { PageSpinner } from "./components/page-spinner";
 import { ApiError } from "./lib/api";
 import { initErrorCapture } from "./lib/error-capture";
-import { guardVidstackPictureInPicture } from "./lib/picture-in-picture-guard";
 import { routeTree } from "./routeTree.gen";
 
 initErrorCapture();
-guardVidstackPictureInPicture();
 
 const router = createRouter({ routeTree, defaultPendingComponent: PageSpinner });
 const queryClient = new QueryClient({
