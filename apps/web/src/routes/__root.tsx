@@ -38,6 +38,7 @@ function RootLayout() {
   const location = useRouterState({ select: (state) => state.location });
   const pathname = location.pathname;
   const pathWithSearch = `${pathname}${location.searchStr}`;
+  const hideEverythingPage = pathname === "/hide-everything";
   const shortsPage = pathname === "/shorts";
   const watchCinemaPage = pathname === "/watch" && cinemaMode;
   const wasWatchCinemaPage = useRef(watchCinemaPage);
@@ -98,6 +99,14 @@ function RootLayout() {
 
   if (authPage) {
     return <AuthShell />;
+  }
+
+  if (hideEverythingPage) {
+    return (
+      <div className="min-h-screen bg-[#050806] text-white">
+        <Outlet />
+      </div>
+    );
   }
 
   if (shortsPage) {

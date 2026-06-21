@@ -5,6 +5,10 @@
 @import "./styles/shorts-overrides.css";
 @import "./styles/player-menu-overrides.css";
 @import "./styles/player-hotkeys.css";
+@import "./styles/pixel-scene-enter.css";
+@import "./styles/pixel-scene-loop.css";
+@import "./styles/pixel-intro.css";
+@import "./styles/pixel-dog.css";
 
 @keyframes card-pop-in {
   from {

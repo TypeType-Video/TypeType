@@ -70,6 +70,11 @@
     <div id="app-loader">
       <img src="/loader.gif" width="160" height="160" alt="" />
     </div>
+    <script>
+      if (window.location.pathname === "/hide-everything") {
+        document.getElementById("app-loader")?.remove();
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
