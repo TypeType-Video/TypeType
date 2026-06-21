@@ -47,7 +47,10 @@ export function useShortsFeed(): ShortsFeed {
     staleTime: 5 * 60 * 1000,
   });
 
-  const recommendationShorts = fromRecommendations(recommendations.data?.pages);
+  const recommendationShorts = useMemo(
+    () => fromRecommendations(recommendations.data?.pages),
+    [recommendations.data],
+  );
   const hasRecommendationShorts = recommendationShorts.length > 0;
 
   const fallbackSubscriptions = useInfiniteQuery({
