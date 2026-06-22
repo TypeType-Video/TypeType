@@ -1,4 +1,4 @@
-import type { ChannelSort } from "./api";
+import type { ChannelSort } from "./api-discovery";
 
 const YOUTUBE_CHANNEL_ID_PATTERN = /^UC[A-Za-z0-9_-]{22}$/;
 const YOUTUBE_HANDLE_PATTERN = /^@[A-Za-z0-9._-]{2,48}$/;
@@ -77,4 +77,11 @@ export function channelLegacySearch(
   tab: ChannelTab = "videos",
 ): ChannelLegacySearch {
   return { url: toPublicChannelParam(sourceUrl), ...channelPathSearch(sort, query, tab) };
+}
+
+export function channelRoutePath(sourceUrl: string): string {
+  const pathParam = toChannelPathParam(sourceUrl);
+  if (pathParam) return `/channel/${encodeURIComponent(pathParam)}`;
+  const params = new URLSearchParams({ url: toPublicChannelParam(sourceUrl) });
+  return `/channel?${params.toString()}`;
 }
