@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMediaPlayer } from "../lib/vidstack";
 
 type Props = {
@@ -14,6 +14,15 @@ function toPositionMs(media: HTMLMediaElement): number {
 
 export function MediaProgressEvents({ onTimeUpdate, onPause, onSeeked, onEnded }: Props) {
   const player = useMediaPlayer();
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+  const onPauseRef = useRef(onPause);
+  const onSeekedRef = useRef(onSeeked);
+  const onEndedRef = useRef(onEnded);
+
+  onTimeUpdateRef.current = onTimeUpdate;
+  onPauseRef.current = onPause;
+  onSeekedRef.current = onSeeked;
+  onEndedRef.current = onEnded;
 
   useEffect(() => {
     const root = player?.el;
@@ -26,22 +35,21 @@ export function MediaProgressEvents({ onTimeUpdate, onPause, onSeeked, onEnded }
       const media = rootElement.querySelector<HTMLMediaElement>("video,audio");
       if (!media) return false;
 
-      const update = () => onTimeUpdate?.(toPositionMs(media));
+      const update = () => onTimeUpdateRef.current?.(toPositionMs(media));
       const pause = () => {
         update();
-        onPause?.();
+        onPauseRef.current?.();
       };
       const seeked = () => {
         update();
-        onSeeked?.();
+        onSeekedRef.current?.();
       };
       const seeking = () => {
         update();
-        onSeeked?.();
       };
       const ended = () => {
         update();
-        onEnded?.();
+        onEndedRef.current?.();
       };
 
       media.addEventListener("timeupdate", update);
@@ -68,7 +76,7 @@ export function MediaProgressEvents({ onTimeUpdate, onPause, onSeeked, onEnded }
       observer.disconnect();
       cleanup?.();
     };
-  }, [onEnded, onPause, onSeeked, onTimeUpdate, player]);
+  }, [player]);
 
   return null;
 }

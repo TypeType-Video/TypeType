@@ -13,6 +13,7 @@ type Args = {
 export function useWatchProgressPersistence({ durationSec, isLive, mutate }: Args) {
   const positionRef = useRef(0);
   const lastSavedPositionRef = useRef(0);
+  const lastSeekedSaveRef = useRef(0);
   const maxPositionSeenRef = useRef(0);
   const mutateRef = useRef(mutate);
   mutateRef.current = mutate;
@@ -53,6 +54,9 @@ export function useWatchProgressPersistence({ durationSec, isLive, mutate }: Arg
   }, []);
 
   const handleSeeked = useCallback(() => {
+    const positionMs = Math.max(0, Math.round(positionRef.current));
+    if (positionMs === lastSeekedSaveRef.current) return;
+    lastSeekedSaveRef.current = positionMs;
     saveRef.current("seeked");
   }, []);
 
