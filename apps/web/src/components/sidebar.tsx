@@ -3,6 +3,7 @@ import { siBilibili, siNiconico, siYoutube } from "simple-icons";
 import { useAuth } from "../hooks/use-auth";
 import { useMobile } from "../hooks/use-mobile";
 import { useSettings } from "../hooks/use-settings";
+import { getStoredAdminSection } from "../lib/admin-console-section";
 import { logoutSession } from "../lib/auth-session";
 import { useUiStore } from "../stores/ui-store";
 import type { ServiceId } from "../types/user";
@@ -71,7 +72,7 @@ export function Sidebar({ overlay = false }: Props) {
     navigate({ to: "/search", search: { q, service: id } });
   }
 
-  const adminSearch = { section: "issues" as const };
+  const adminSearch = { section: getStoredAdminSection() };
   const navItems = NAV_ITEMS.filter((item) => {
     if (item.adminOnly && !isAdmin) return false;
     if (item.to === "/shorts" && settings.hideShorts) return false;
@@ -80,14 +81,14 @@ export function Sidebar({ overlay = false }: Props) {
 
   const desktopShell = overlay
     ? "z-50 border-border border-r bg-app/95 shadow-2xl backdrop-blur"
-    : "z-40 bg-app";
+    : "z-40 border-r border-border bg-app";
   const desktopMotion = overlay
     ? collapsed
       ? "pointer-events-none -translate-x-full"
       : "translate-x-0"
     : "";
   const baseClasses = isMobile
-    ? `fixed top-14 left-0 bottom-0 z-50 w-72 max-w-[85vw] bg-app flex flex-col py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-transform duration-200 ${
+    ? `fixed top-14 left-0 bottom-0 z-50 w-72 max-w-[85vw] border-r border-border bg-app flex flex-col py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-transform duration-200 ${
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       }`
     : `fixed top-14 left-0 bottom-0 ${desktopShell} ${desktopMotion} flex flex-col py-4 transition-all duration-200 ${
