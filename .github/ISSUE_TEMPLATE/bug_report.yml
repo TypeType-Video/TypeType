@@ -1,0 +1,56 @@
+name: Bug report
+description: Report something that isn't working
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for the report! Every bug you flag makes TypeType better for everyone :)"
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect instead?
+      placeholder: When I ..., I expected ..., but ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part is affected? Pick "Not sure" if you don't know.
+      options:
+        - Not sure
+        - Frontend (web app)
+        - Backend (API / extraction)
+        - Downloader
+        - Token / remote login
+    validations:
+      required: true
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Channel
+      options:
+        - Not sure
+        - main (stable)
+        - beta
+    validations:
+      required: false
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else?
+      description: Logs, screenshots, the video link, or the provider (YouTube, NicoNico, BiliBili).
+    validations:
+      required: false

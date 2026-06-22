@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest an idea or an improvement
+title: "[Feature]: "
+labels: ["feature request"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for your idea! It helps you and TypeType grow :D"
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type of request
+      description: A new capability, or an improvement to something that already exists?
+      options:
+        - New feature
+        - Enhancement (improve existing UI/UX)
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: I often can't ...
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Not sure
+        - Frontend (web app)
+        - Backend (API / extraction)
+        - Downloader
+        - Token / remote login
+    validations:
+      required: false
