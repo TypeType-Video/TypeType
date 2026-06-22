@@ -5,7 +5,7 @@ labels: ["feature request"]
 body:
   - type: markdown
     attributes:
-      value: "Thanks for your idea! It helps you and TypeType grow :D"
+      value: "Thanks for your idea! It helps you and TypeType to grow :D"
   - type: dropdown
     id: kind
     attributes:
