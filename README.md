@@ -15,6 +15,13 @@ TypeType is a self-hostable video app for YouTube, NicoNico and BiliBili.
 
 It is not only a web UI. This repository contains the TypeType web client and the deployment files for running the full stack: frontend, Kotlin API backend, PostgreSQL, Dragonfly, media proxying, token service, downloader service and Garage-backed download storage.
 
+## Documentation
+
+Full documentation lives at **[priveetee.github.io/Docs-TypeType](https://priveetee.github.io/Docs-TypeType/)**:
+
+- [Self-hosting guide](https://priveetee.github.io/Docs-TypeType/self-hosting/introduction), set up and operate the stack, including a fully script-free Docker Compose setup.
+- [User guide](https://priveetee.github.io/Docs-TypeType/guide/), everything the app can do.
+
 ## Start Here
 
 Install and start the stack with one command:
@@ -201,7 +208,7 @@ Service IDs:
 
 ## Manual Install
 
-The installer is recommended. If you want to run from a cloned repository instead:
+The installer is recommended. For a fully **script-free** Docker Compose setup (no bootstrap scripts), follow the [manual setup guide](https://priveetee.github.io/Docs-TypeType/self-hosting/docker-compose). If you want to run from a cloned repository with the helper scripts instead:
 
 ```sh
 git clone https://github.com/Priveetee/TypeType.git
