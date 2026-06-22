@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { fetchSearch } from "../lib/api";
+import { fetchSearch } from "../lib/api-discovery";
 import { fetchShortsRecommendations, type RecommendationIntent } from "../lib/api-recommendations";
 import { fetchSubscriptionShorts } from "../lib/api-user";
 import type { VideoStream } from "../types/stream";

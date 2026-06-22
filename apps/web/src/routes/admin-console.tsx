@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { AdminAllowListSection } from "../components/admin-allow-list-section";
 import { AdminBugReportsSection } from "../components/admin-bug-reports-section";
 import { AdminConsoleHeader } from "../components/admin-console-header";
 import { AdminConsoleNav } from "../components/admin-console-nav";
@@ -8,21 +9,22 @@ import { AdminSettingsSection } from "../components/admin-settings-section";
 import { AdminUsersSection } from "../components/admin-users-section";
 import { Toast } from "../components/toast";
 import { useAuth } from "../hooks/use-auth";
+import {
+  type AdminSection,
+  getStoredAdminSection,
+  isAdminSection,
+  rememberAdminSection,
+} from "../lib/admin-console-section";
 import { goto } from "../lib/route-redirect";
 
-type AdminSection = "settings" | "users" | "sessions" | "issues";
-
-function isSection(value: unknown): value is AdminSection {
-  return value === "settings" || value === "users" || value === "sessions" || value === "issues";
-}
-
 function availableSections(isAdmin: boolean, isModerator: boolean): AdminSection[] {
-  if (isAdmin) return ["settings", "users", "sessions", "issues"];
+  if (isAdmin) return ["settings", "allow-list", "users", "sessions", "issues"];
   if (isModerator) return ["issues"];
   return [];
 }
 
 function sectionLabel(section: AdminSection): string {
+  if (section === "allow-list") return "Allow list";
   if (section === "issues") return "Issues";
   if (section === "users") return "Users";
   if (section === "sessions") return "Sessions";
@@ -42,6 +44,11 @@ function AdminConsolePage() {
     if (!canAccessAdmin || section === activeSection) return;
     navigate({ search: { section: activeSection }, replace: true });
   }, [activeSection, canAccessAdmin, navigate, section]);
+
+  useEffect(() => {
+    if (!canAccessAdmin) return;
+    rememberAdminSection(activeSection);
+  }, [activeSection, canAccessAdmin]);
 
   useEffect(() => {
     if (!toast) return;
@@ -68,6 +75,9 @@ function AdminConsolePage() {
       {activeSection === "settings" && isAdmin && (
         <AdminSettingsSection enabled={isAdmin} onToast={setToast} />
       )}
+      {activeSection === "allow-list" && isAdmin && (
+        <AdminAllowListSection enabled={isAdmin} onToast={setToast} />
+      )}
       {activeSection === "users" && isAdmin && (
         <AdminUsersSection enabled={isAdmin} currentUserId={me?.id ?? null} onToast={setToast} />
       )}
@@ -82,7 +92,7 @@ function AdminConsolePage() {
 
 export const Route = createFileRoute("/admin-console")({
   validateSearch: (search: Record<string, unknown>) => ({
-    section: isSection(search.section) ? search.section : "issues",
+    section: isAdminSection(search.section) ? search.section : getStoredAdminSection(),
   }),
   component: AdminConsolePage,
 });

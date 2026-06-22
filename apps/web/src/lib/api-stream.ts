@@ -5,6 +5,8 @@ import { recordClientEvent } from "./client-debug-log";
 import { sanitizeVideoContext } from "./debug-sanitize";
 import { API_BASE as BASE } from "./env";
 
+type StreamFetchMode = "anonymous_first" | "authenticated_first";
+
 function streamInit(token: string | null): RequestInit {
   if (!token) return { cache: "no-store" };
   return {
@@ -13,10 +15,17 @@ function streamInit(token: string | null): RequestInit {
   };
 }
 
-export async function fetchStream(url: string): Promise<StreamResponse> {
+export async function fetchStream(
+  url: string,
+  mode: StreamFetchMode = "anonymous_first",
+): Promise<StreamResponse> {
   const endpoint = `${BASE}/streams?url=${encodeURIComponent(url)}`;
   const token = useAuthStore.getState().token;
   const video = sanitizeVideoContext(url) ?? "unknown";
+  if (token && mode === "authenticated_first") {
+    recordClientEvent("stream.fetch_start", { authed: true, video });
+    return request<StreamResponse>(endpoint, streamInit(token));
+  }
   recordClientEvent("stream.fetch_start", { authed: false, video });
   try {
     const result = await request<StreamResponse>(endpoint, streamInit(null));

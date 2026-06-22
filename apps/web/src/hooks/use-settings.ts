@@ -33,6 +33,7 @@ const DEFAULTS: SettingsItem = {
   hideRelatedVideos: false,
   hideComments: false,
   hideShorts: false,
+  accessMode: "unrestricted",
   captionStyles: EMPTY_CAPTION_STYLES,
 };
 

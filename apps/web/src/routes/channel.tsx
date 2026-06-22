@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ChannelPageContent } from "../components/channel-page-content";
 import { PageSpinner } from "../components/page-spinner";
-import type { ChannelSort } from "../lib/api";
+import type { ChannelSort } from "../lib/api-discovery";
 import {
   channelLegacySearch,
   channelPathSearch,

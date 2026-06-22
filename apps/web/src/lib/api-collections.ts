@@ -1,4 +1,10 @@
-import type { BlockedItem, FavoriteItem, ProgressItem, WatchLaterItem } from "../types/user";
+import type {
+  AllowedChannelItem,
+  BlockedItem,
+  FavoriteItem,
+  ProgressItem,
+  WatchLaterItem,
+} from "../types/user";
 import { ApiError } from "./api";
 import { authed, authedJson } from "./authed";
 
@@ -73,6 +79,30 @@ export async function unblockVideo(url: string): Promise<void> {
     method: "DELETE",
   });
   await throwIfFailed(res, "unblock failed");
+}
+
+export function fetchAllowedChannels(): Promise<AllowedChannelItem[]> {
+  return authedJson(`${BASE}/allowed/channels`);
+}
+
+export function allowChannel(
+  url: string,
+  name?: string | null,
+  thumbnailUrl?: string | null,
+  global = false,
+): Promise<AllowedChannelItem> {
+  return authedJson(`${BASE}/allowed/channels`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, name, thumbnailUrl, global }),
+  });
+}
+
+export async function disallowChannel(url: string): Promise<void> {
+  const res = await authed(`${BASE}/allowed/channels/${encodeURIComponent(url)}`, {
+    method: "DELETE",
+  });
+  await throwIfFailed(res, "remove allowed channel failed");
 }
 
 export function fetchFavorites(): Promise<FavoriteItem[]> {

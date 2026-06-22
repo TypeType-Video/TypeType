@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { FamilyListEmptyState } from "../components/family-list-empty-state";
 import { ScrollSentinel } from "../components/scroll-sentinel";
 import { SearchFilterBar } from "../components/search-filter-bar";
 import { type SearchResultItem, SearchResultsGrid } from "../components/search-results-grid";
@@ -7,11 +8,13 @@ import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useSearch } from "../hooks/use-search";
 import { useSearchFilters } from "../hooks/use-search-filters";
+import { useSettings } from "../hooks/use-settings";
 
 function SearchPage() {
   const { q, service, contentFilter, sortFilter } = Route.useSearch();
   const navigate = useNavigate();
   const filters = useSearchFilters(service);
+  const { settings } = useSettings();
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useSearch(
     q,
     service,
@@ -108,7 +111,14 @@ function SearchPage() {
         </p>
       )}
       {items.length === 0 ? (
-        <p className="text-fg-muted text-sm">No results for &ldquo;{q}&rdquo;</p>
+        settings.accessMode === "allow_list" ? (
+          <FamilyListEmptyState
+            title="No family-list results"
+            description="Try a channel you already trust, or add more channels to the family list."
+          />
+        ) : (
+          <p className="text-fg-muted text-sm">No results for &ldquo;{q}&rdquo;</p>
+        )
       ) : (
         <SearchResultsGrid items={items} />
       )}

@@ -1,3 +1,5 @@
+import type { AccessMode } from "./user";
+
 export type AdminSettings = {
   name: string;
   tagline: string | null;
@@ -11,6 +13,7 @@ export type AdminSettings = {
   localLoginEnabled: boolean;
   oidcAutoRedirect: boolean;
   youtubeRemoteLoginEnabled: boolean;
+  accessMode: AccessMode;
 };
 
 type AdminSessionNowPlaying = {

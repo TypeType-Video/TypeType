@@ -1,6 +1,7 @@
 export type ServiceId = 0 | 5 | 6;
 export type SponsorBlockMode = "auto_skip" | "mark_only" | "disabled";
 export type SponsorBlockCategoryAction = "auto_skip" | "mark_only" | "disabled";
+export type AccessMode = "unrestricted" | "allow_list";
 type SponsorBlockCategoryActions = Record<string, SponsorBlockCategoryAction>;
 
 export type HistoryItem = {
@@ -107,6 +108,7 @@ export type SettingsItem = {
   hideRelatedVideos: boolean;
   hideComments: boolean;
   hideShorts: boolean;
+  accessMode: AccessMode;
   captionStyles: CaptionStyles;
 };
 
@@ -121,5 +123,13 @@ export type BlockedItem = {
   name?: string;
   thumbnailUrl?: string;
   blockedAt: number;
+  global?: boolean;
+};
+
+export type AllowedChannelItem = {
+  url: string;
+  name: string | null;
+  thumbnailUrl: string | null;
+  allowedAt: number;
   global?: boolean;
 };

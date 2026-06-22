@@ -1,7 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import type { ChannelSort } from "../lib/api";
-import { fetchChannel } from "../lib/api";
+import { type ChannelSort, fetchChannel } from "../lib/api-discovery";
 import { buildChannelRequestUrl } from "../lib/channel-search-url";
 import { mapVideoItem } from "../lib/mappers";
 import { proxyImage } from "../lib/proxy";

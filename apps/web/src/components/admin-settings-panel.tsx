@@ -3,8 +3,12 @@ import type { AdminSettings } from "../types/admin";
 type Props = {
   settings: AdminSettings;
   pending: boolean;
-  onToggle: (key: keyof AdminSettings) => void;
+  onToggle: (key: BooleanAdminSetting) => void;
 };
+
+type BooleanAdminSetting = {
+  [Key in keyof AdminSettings]: AdminSettings[Key] extends boolean ? Key : never;
+}[keyof AdminSettings];
 
 const ROW =
   "flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3";

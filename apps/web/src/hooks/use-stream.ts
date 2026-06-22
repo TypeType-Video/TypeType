@@ -9,17 +9,23 @@ import {
 
 export { MEMBER_ONLY_MESSAGE };
 
-export function streamQueryOptions(url: string) {
+export function streamQueryOptions(url: string, useAuthenticatedStream = false, enabled = true) {
   return queryOptions({
-    queryKey: ["stream", url],
-    queryFn: () => fetchStream(url).then((r) => mapStreamResponse(r, url)),
-    enabled: url.startsWith("http"),
+    queryKey: ["stream", url, useAuthenticatedStream ? "auth" : "anon"],
+    queryFn: () =>
+      fetchStream(url, useAuthenticatedStream ? "authenticated_first" : "anonymous_first").then(
+        (r) => mapStreamResponse(r, url),
+      ),
+    enabled: enabled && url.startsWith("http"),
     staleTime: 3 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: (count, error) => {
       if (
         error instanceof ApiError &&
-        (error.status === 400 || error.status === 404 || error.status === 422)
+        (error.status === 400 ||
+          error.status === 403 ||
+          error.status === 404 ||
+          error.status === 422)
       ) {
         return false;
       }
@@ -42,6 +48,9 @@ export function isMemberOnlyApiError(error: unknown): boolean {
   return isMemberOnlyApiResponse(error);
 }
 
-export function useStream(url: string) {
-  return useQuery({ ...streamQueryOptions(url), placeholderData: keepPreviousData });
+export function useStream(url: string, useAuthenticatedStream = false, enabled = true) {
+  return useQuery({
+    ...streamQueryOptions(url, useAuthenticatedStream, enabled),
+    placeholderData: keepPreviousData,
+  });
 }

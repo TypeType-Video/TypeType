@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { getStoredAdminSection } from "../lib/admin-console-section";
 import { logoutSession } from "../lib/auth-session";
 import { goto } from "../lib/route-redirect";
+import { getStoredSettingsSection } from "../lib/settings-section";
 import type { AuthMe, AuthStatus } from "../types/auth";
 import { ProfileAvatar } from "./profile-avatar";
 import { ThemeToggleButton } from "./theme-toggle-button";
@@ -140,6 +142,7 @@ export function NavbarAccountControls({
           {!isGuest && !isAdmin && (
             <Link
               to="/settings"
+              search={{ section: getStoredSettingsSection() }}
               className="hidden sm:inline-flex h-8 px-3 items-center text-xs rounded-full bg-surface-strong hover:bg-surface-soft text-fg"
             >
               Account
@@ -148,7 +151,7 @@ export function NavbarAccountControls({
           {isAdmin && (
             <Link
               to="/admin-console"
-              search={{ section: "issues" }}
+              search={{ section: getStoredAdminSection() }}
               className="h-8 px-3 inline-flex items-center text-xs rounded-full bg-surface-strong hover:bg-surface-soft text-fg"
             >
               Admin

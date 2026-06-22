@@ -10,7 +10,11 @@ import { routeTree } from "./routeTree.gen";
 
 initErrorCapture();
 
-const router = createRouter({ routeTree, defaultPendingComponent: PageSpinner });
+const router = createRouter({
+  routeTree,
+  defaultPendingComponent: PageSpinner,
+  scrollRestoration: true,
+});
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

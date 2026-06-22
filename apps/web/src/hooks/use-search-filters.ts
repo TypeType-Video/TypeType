@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchSearchFilters } from "../lib/api";
+import { fetchSearchFilters } from "../lib/api-discovery";
 
 export function useSearchFilters(service: number) {
   return useQuery({

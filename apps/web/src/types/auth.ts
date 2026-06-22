@@ -1,3 +1,5 @@
+import type { AccessMode } from "./user";
+
 export type AuthRole = "admin" | "moderator" | "user";
 
 export type AuthMe = {
@@ -35,6 +37,7 @@ export type AuthUser = {
   avatarCode: string | null;
   suspended: boolean;
   verified: boolean;
+  accessMode: AccessMode;
   createdAt: number | string;
 };
 

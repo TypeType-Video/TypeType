@@ -3,6 +3,7 @@ import { useClientLocale } from "../hooks/use-client-locale";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import { formatPublishedDate, formatSubscribers, formatViews } from "../lib/format";
 import type { VideoStream } from "../types/stream";
+import { AllowChannelButton } from "./allow-channel-button";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
 import { Toast } from "./toast";
@@ -103,19 +104,27 @@ export function WatchInfo({ stream }: Props) {
         <div className="flex items-center justify-between gap-3 flex-shrink-0 sm:justify-start">
           <WatchLikeDislike stream={stream} />
           {stream.channelUrl && (
-            <button
-              type="button"
-              onClick={handleSubscribe}
-              disabled={add.isPending || remove.isPending}
-              aria-pressed={subscribed}
-              className={`flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:ring-border disabled:opacity-50 disabled:cursor-not-allowed ${
-                subscribed
-                  ? "ring-1 ring-border-strong bg-surface-strong text-fg hover:bg-surface-soft"
-                  : "bg-fg text-app hover:bg-fg-strong"
-              }`}
-            >
-              {subscribed ? "Subscribed" : "Subscribe"}
-            </button>
+            <>
+              <AllowChannelButton
+                url={stream.channelUrl}
+                name={stream.channelName}
+                thumbnailUrl={stream.rawChannelAvatar}
+                compact
+              />
+              <button
+                type="button"
+                onClick={handleSubscribe}
+                disabled={add.isPending || remove.isPending}
+                aria-pressed={subscribed}
+                className={`flex-shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:ring-border disabled:opacity-50 disabled:cursor-not-allowed ${
+                  subscribed
+                    ? "ring-1 ring-border-strong bg-surface-strong text-fg hover:bg-surface-soft"
+                    : "bg-fg text-app hover:bg-fg-strong"
+                }`}
+              >
+                {subscribed ? "Subscribed" : "Subscribe"}
+              </button>
+            </>
           )}
         </div>
       </div>

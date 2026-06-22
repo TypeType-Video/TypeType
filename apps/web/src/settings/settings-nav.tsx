@@ -1,20 +1,20 @@
-import type { AdminSection } from "../lib/admin-console-section";
+import type { SettingsSection } from "../lib/settings-section";
 
 type Item = {
-  key: AdminSection;
+  key: SettingsSection;
   label: string;
 };
 
 type Props = {
   items: Item[];
-  active: AdminSection;
-  onSelect: (section: AdminSection) => void;
+  active: SettingsSection;
+  onSelect: (section: SettingsSection) => void;
 };
 
-export function AdminConsoleNav({ items, active, onSelect }: Props) {
+export function SettingsNav({ items, active, onSelect }: Props) {
   return (
-    <nav className="overflow-x-auto pt-3" aria-label="Admin sections">
-      <div className="flex min-w-max gap-3 sm:grid sm:min-w-0 sm:grid-cols-5 sm:gap-1">
+    <nav className="overflow-x-auto" aria-label="Settings sections">
+      <div className="flex min-w-max gap-3 sm:grid sm:min-w-0 sm:grid-cols-8 sm:gap-1">
         {items.map((item) => {
           const isActive = item.key === active;
           return (

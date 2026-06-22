@@ -6,12 +6,14 @@ import { useAuth } from "../hooks/use-auth";
 import { useDocumentTitle } from "../hooks/use-document-title";
 import { useHistory } from "../hooks/use-history";
 import { useProgress } from "../hooks/use-progress";
+import { useSettings } from "../hooks/use-settings";
 import {
   isMemberOnlyApiError,
   isStreamUnavailableError,
   MEMBER_ONLY_MESSAGE,
   useStream,
 } from "../hooks/use-stream";
+import { FAMILY_LIST_BLOCKED_MESSAGE, isChannelNotAllowedError } from "../lib/allow-list-error";
 import { ApiError } from "../lib/api";
 import { isYoutubeSessionReconnectError } from "../lib/api-youtube-session";
 import { toPublicWatchParam, toWatchSourceUrl } from "../lib/watch-url";
@@ -40,7 +42,16 @@ function WatchPage() {
   const sourceUrl = toWatchSourceUrl(v);
   const publicParam = toPublicWatchParam(sourceUrl);
   const { authReady, isAuthed } = useAuth();
-  const { data: stream, isLoading, isError, error, refetch } = useStream(sourceUrl);
+  const { settings, settingsReady } = useSettings();
+  const useAuthenticatedStream = isAuthed && settings.accessMode === "allow_list";
+  const streamEnabled = authReady && (!isAuthed || settingsReady);
+  const {
+    data: stream,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useStream(sourceUrl, useAuthenticatedStream, streamEnabled);
   const { add } = useHistory();
   const progressFetch = useProgress(sourceUrl);
   useDocumentTitle(stream?.title);
@@ -86,23 +97,26 @@ function WatchPage() {
         "Error occurs when fetching the page. Try increase the loading timeout in Settings.";
     const isMemberOnlyError = isMemberOnlyApiError(error) || genericExtractorError;
     const needsYoutubeSession = isYoutubeSessionReconnectError(error);
+    const familyListBlocked = isChannelNotAllowedError(error);
     const youtubeSessionReturnTo = needsYoutubeSession
       ? youtubeSessionReturnToForWatch(publicParam, list, shuffle)
       : undefined;
     const message = isMemberOnlyError
       ? MEMBER_ONLY_MESSAGE
-      : needsYoutubeSession
-        ? "Connect YouTube to load this browser-only video."
-        : error instanceof ApiError && (error.status === 400 || error.status === 422)
-          ? error.message
-          : isStreamUnavailableError(error)
-            ? "This video is currently unavailable"
-            : "Failed to load stream.";
+      : familyListBlocked
+        ? FAMILY_LIST_BLOCKED_MESSAGE
+        : needsYoutubeSession
+          ? "Connect YouTube to load this browser-only video."
+          : error instanceof ApiError && (error.status === 400 || error.status === 422)
+            ? error.message
+            : isStreamUnavailableError(error)
+              ? "This video is currently unavailable"
+              : "Failed to load stream.";
     return (
       <StreamError
         message={message}
         onRetry={
-          needsYoutubeSession
+          needsYoutubeSession || familyListBlocked
             ? undefined
             : () => {
                 void refetch();

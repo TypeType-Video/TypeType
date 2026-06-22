@@ -1,4 +1,4 @@
-import type { ChannelSort } from "./api";
+import type { ChannelSort } from "./api-discovery";
 
 export const CHANNEL_SORT_OPTIONS: { value: ChannelSort; label: string }[] = [
   { value: "latest", label: "Newest" },

@@ -1,4 +1,4 @@
-type AdminSection = "settings" | "users" | "sessions" | "issues";
+import type { AdminSection } from "../lib/admin-console-section";
 
 type Props = {
   section: AdminSection;
@@ -6,6 +6,7 @@ type Props = {
 
 const TITLES: Record<AdminSection, string> = {
   settings: "Admin Settings",
+  "allow-list": "Allow List",
   users: "User Management",
   sessions: "Active Sessions",
   issues: "Issue Triage",
@@ -13,6 +14,7 @@ const TITLES: Record<AdminSection, string> = {
 
 const DESCRIPTIONS: Record<AdminSection, string> = {
   settings: "Global moderation and platform switches.",
+  "allow-list": "Control which channels are available in allow-list mode.",
   users: "Roles, suspension, and account recovery tools.",
   sessions: "Connected clients, playback state, and recent activity.",
   issues: "Bug reports, diagnostics, status updates, and GitHub sync.",

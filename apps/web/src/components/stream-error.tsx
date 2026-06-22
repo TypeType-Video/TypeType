@@ -1,4 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
+import { useAuth } from "../hooks/use-auth";
+import { FAMILY_LIST_BLOCKED_MESSAGE } from "../lib/allow-list-error";
 import { parseGeoRestriction } from "../lib/geo-restriction";
 import { isMemberOnlyMessage } from "../lib/member-only";
 import { FlagIcon } from "./flag-icon";
@@ -12,15 +14,22 @@ type Props = {
 
 export function StreamError({ message, onRetry, youtubeSessionReturnTo }: Props) {
   const router = useRouter();
+  const { canGlobalBlock } = useAuth();
   const countryCode = parseGeoRestriction(message);
   const isMemberOnly = isMemberOnlyMessage(message);
+  const familyListBlocked = message === FAMILY_LIST_BLOCKED_MESSAGE;
+  const imageSrc = familyListBlocked
+    ? "/family-list-blocked.gif"
+    : isMemberOnly
+      ? "/member-only-source.gif"
+      : "/error-cat.gif";
 
   return (
     <div className="fixed inset-0 bg-app flex flex-col items-center justify-center gap-5">
       <img
-        src={isMemberOnly ? "/member-only-source.gif" : "/error-cat.gif"}
+        src={imageSrc}
         width="220"
-        height="220"
+        height={familyListBlocked ? "181" : "220"}
         alt=""
         className="rounded-2xl"
       />
@@ -51,6 +60,15 @@ export function StreamError({ message, onRetry, youtubeSessionReturnTo }: Props)
           >
             <YoutubeIcon className="h-4 w-4 text-[#ff0000]" />
             <span>Connect with YouTube</span>
+          </Link>
+        )}
+        {familyListBlocked && canGlobalBlock && (
+          <Link
+            to="/admin-console"
+            search={{ section: "allow-list" }}
+            className="px-5 py-2 rounded-full bg-white hover:bg-fg text-app text-sm font-medium transition-colors cursor-pointer"
+          >
+            Open allow list
           </Link>
         )}
         <button

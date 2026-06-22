@@ -27,7 +27,8 @@ function isAdminSettings(value: unknown): value is AdminSettings {
     typeof record.activeSessionsEnabled === "boolean" &&
     typeof record.localLoginEnabled === "boolean" &&
     typeof record.oidcAutoRedirect === "boolean" &&
-    typeof record.youtubeRemoteLoginEnabled === "boolean"
+    typeof record.youtubeRemoteLoginEnabled === "boolean" &&
+    (record.accessMode === "unrestricted" || record.accessMode === "allow_list")
   );
 }
 
@@ -39,6 +40,7 @@ function normalizeAdminUser(user: AuthUser): AuthUser {
     avatarUrl: user.avatarUrl ?? null,
     avatarType: user.avatarType ?? null,
     avatarCode: user.avatarCode ?? null,
+    accessMode: user.accessMode === "allow_list" ? "allow_list" : "unrestricted",
   };
 }
 

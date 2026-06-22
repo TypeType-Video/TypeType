@@ -7,18 +7,25 @@ type Props = {
   onToast: (message: string) => void;
 };
 
+type BooleanAdminSetting = {
+  [Key in keyof AdminSettings]: AdminSettings[Key] extends boolean ? Key : never;
+}[keyof AdminSettings];
+
 export function AdminSettingsSection({ enabled, onToast }: Props) {
   const adminSettings = useAdminSettings(enabled);
 
-  function toggleSetting(key: keyof AdminSettings) {
-    const current = adminSettings.query.data;
-    if (!current) return;
-    const next = { ...current, [key]: !current[key] };
+  function updateSettings(next: AdminSettings) {
     adminSettings.update.mutate(next, {
       onSuccess: () => onToast("Admin settings updated"),
       onError: (error) =>
         onToast(error instanceof Error ? error.message : "Unable to update admin settings"),
     });
+  }
+
+  function toggleSetting(key: BooleanAdminSetting) {
+    const current = adminSettings.query.data;
+    if (!current) return;
+    updateSettings({ ...current, [key]: !current[key] });
   }
 
   if (adminSettings.query.isPending) {

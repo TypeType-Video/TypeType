@@ -1,10 +1,7 @@
 import type {
-  ChannelResponse,
   CommentsPageResponse,
   PodcastEpisodesResponse,
   PodcastPageResponse,
-  SearchFiltersResponse,
-  SearchPageResponse,
 } from "../types/api";
 import { recordApiError } from "./api-error-log";
 import { extractRequestId, recordClientEvent } from "./client-debug-log";
@@ -22,8 +19,6 @@ export class ApiError extends Error {
     this.code = code;
   }
 }
-
-export type ChannelSort = "latest" | "popular" | "oldest";
 
 type ErrorLikeBody = {
   code?: string;
@@ -111,24 +106,6 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-export function fetchSearchFilters(service: number): Promise<SearchFiltersResponse> {
-  return request(`${BASE}/search/filters?service=${service}`);
-}
-
-export function fetchSearch(
-  q: string,
-  service: number,
-  nextpage?: string,
-  contentFilter?: string,
-  sortFilter?: string,
-): Promise<SearchPageResponse> {
-  const params = new URLSearchParams({ q, service: String(service) });
-  if (nextpage) params.set("nextpage", nextpage);
-  if (contentFilter) params.set("contentFilter", contentFilter);
-  if (sortFilter) params.set("sortFilter", sortFilter);
-  return request(`${BASE}/search?${params}`);
-}
-
 export function fetchComments(url: string, nextpage?: string): Promise<CommentsPageResponse> {
   const params = new URLSearchParams({ url });
   if (nextpage) params.set("nextpage", nextpage);
@@ -141,18 +118,6 @@ export function fetchCommentReplies(
 ): Promise<CommentsPageResponse> {
   const params = new URLSearchParams({ url, repliesPage });
   return request(`${BASE}/comments/replies?${params}`);
-}
-
-export function fetchChannel(
-  url: string,
-  nextpage?: string,
-  sort?: ChannelSort,
-): Promise<ChannelResponse> {
-  return request(`${BASE}/channel/page`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url, nextpage: nextpage ?? null, sort: sort ?? null }),
-  });
 }
 
 export function fetchPodcasts(url: string, nextpage?: string): Promise<PodcastPageResponse> {

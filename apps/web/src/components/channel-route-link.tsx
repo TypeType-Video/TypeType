@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import type { ChannelSort } from "../lib/api";
+import type { ChannelSort } from "../lib/api-discovery";
 import {
   channelLegacySearch,
   channelPathSearch,

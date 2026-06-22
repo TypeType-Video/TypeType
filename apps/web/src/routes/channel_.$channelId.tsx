@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChannelPageContent } from "../components/channel-page-content";
-import type { ChannelSort } from "../lib/api";
+import type { ChannelSort } from "../lib/api-discovery";
 import {
   channelPathSearch,
   channelTabOrDefault,

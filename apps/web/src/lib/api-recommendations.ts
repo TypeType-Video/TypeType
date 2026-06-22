@@ -1,6 +1,7 @@
 import type { HomeRecommendationsResponse } from "../types/api";
-import { authedJson } from "./authed";
+import { request } from "./api";
 import { API_BASE as BASE } from "./env";
+import { optionalBearer } from "./optional-bearer";
 
 export type RecommendationIntent = "quick" | "deep" | "auto";
 
@@ -16,7 +17,7 @@ export async function fetchHomeRecommendations(
     intent,
   });
   if (cursor) search.set("cursor", cursor);
-  return authedJson(`${BASE}/recommendations/home?${search.toString()}`);
+  return request(`${BASE}/recommendations/home?${search.toString()}`, optionalBearer());
 }
 
 export async function fetchShortsRecommendations(
@@ -31,5 +32,5 @@ export async function fetchShortsRecommendations(
     intent,
   });
   if (cursor) search.set("cursor", cursor);
-  return authedJson(`${BASE}/recommendations/shorts?${search.toString()}`);
+  return request(`${BASE}/recommendations/shorts?${search.toString()}`, optionalBearer());
 }

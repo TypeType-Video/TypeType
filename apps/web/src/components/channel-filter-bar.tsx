@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import type { ChannelSort } from "../lib/api";
+import type { ChannelSort } from "../lib/api-discovery";
 import type { ChannelTab } from "../lib/channel-route-url";
 import { CHANNEL_SORT_OPTIONS, channelSortOrDefault } from "../lib/channel-sort";
 

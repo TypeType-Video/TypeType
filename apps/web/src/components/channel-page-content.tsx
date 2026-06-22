@@ -3,19 +3,20 @@ import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { useChannel } from "../hooks/use-channel";
 import { useDocumentTitle } from "../hooks/use-document-title";
 import { useSubscriptions } from "../hooks/use-subscriptions";
-import { ApiError, type ChannelSort } from "../lib/api";
+import { isChannelNotAllowedError } from "../lib/allow-list-error";
+import { ApiError } from "../lib/api";
+import type { ChannelSort } from "../lib/api-discovery";
 import type { ChannelTab } from "../lib/channel-route-url";
-import { formatViews } from "../lib/format";
 import { detectProvider } from "../lib/provider";
-import { ChannelAvatar } from "./channel-avatar";
 import { ChannelFilterBar } from "./channel-filter-bar";
+import { ChannelPageHeader } from "./channel-page-header";
 import { ChannelPlaylistsSection } from "./channel-playlists-section";
 import { ChannelPodcastsSection } from "./channel-podcasts-section";
+import { FamilyListEmptyState } from "./family-list-empty-state";
 import { PageSpinner } from "./page-spinner";
 import { ScrollSentinel } from "./scroll-sentinel";
 import { VideoCard } from "./video-card";
 import { VideoGridSkeleton } from "./video-grid-skeleton";
-import { VerifiedBadgeIcon } from "./watch-icons";
 
 type Props = {
   sourceUrl: string;
@@ -72,6 +73,14 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, tab, onNaviga
 
   if (isInitialLoading) return <PageSpinner />;
   if (isError) {
+    if (isChannelNotAllowedError(error)) {
+      return (
+        <FamilyListEmptyState
+          title="This channel is outside the family list"
+          description="A parent can add this channel if it belongs in your trusted family space."
+        />
+      );
+    }
     const message = error instanceof ApiError ? error.message : "Unable to load channel right now.";
     return (
       <div className="rounded-xl border border-border bg-surface p-6 flex flex-col gap-3 max-w-xl">
@@ -90,37 +99,16 @@ export function ChannelPageContent({ sourceUrl, sort, searchQuery, tab, onNaviga
   return (
     <div className="flex flex-col gap-6">
       {meta && (
-        <div className="flex flex-col gap-4">
-          {meta.bannerUrl && (
-            <img src={meta.bannerUrl} alt="" className="w-full h-32 object-cover rounded-lg" />
-          )}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <ChannelAvatar src={meta.avatarUrl} name={meta.name} className="w-14 h-14" />
-              <div className="flex flex-col">
-                <h1 className="text-lg font-semibold text-fg flex items-center gap-1.5">
-                  {meta.name}
-                  {meta.isVerified && <VerifiedBadgeIcon />}
-                </h1>
-                <p className="text-sm text-fg-soft">
-                  {formatViews(meta.subscriberCount)} subscribers
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleSubscribe}
-              aria-pressed={subscribed}
-              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
-                subscribed
-                  ? "ring-1 ring-border-strong bg-surface-strong text-fg hover:bg-surface-soft"
-                  : "bg-fg text-app hover:bg-fg-strong"
-              }`}
-            >
-              {subscribed ? "Subscribed" : "Subscribe"}
-            </button>
-          </div>
-        </div>
+        <ChannelPageHeader
+          sourceUrl={sourceUrl}
+          name={meta.name}
+          avatarUrl={meta.avatarUrl}
+          bannerUrl={meta.bannerUrl}
+          subscriberCount={meta.subscriberCount}
+          isVerified={meta.isVerified}
+          subscribed={subscribed}
+          onSubscribe={handleSubscribe}
+        />
       )}
       {tab === "videos" && (
         <ChannelPodcastsSection channelUrl={sourceUrl} channelAvatar={meta?.avatarUrl} />
