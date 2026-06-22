@@ -1,8 +1,10 @@
 import type { MutableRefObject, ReactNode } from "react";
+import type { AutoplayState } from "../hooks/use-watch-ended-navigation";
 import type { MediaSrc } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
 import type { CaptionStyles, SettingsItem } from "../types/user";
+import { AutoplayCountdownOverlay } from "./autoplay-countdown-overlay";
 import { PageSpinner } from "./page-spinner";
 import { PlayerError } from "./player-error";
 import { VideoPlayer } from "./video-player";
@@ -21,6 +23,7 @@ type Props = {
   navigating: boolean;
   originalLocale: string | null;
   overlay: ReactNode;
+  autoplayState: AutoplayState | null;
   sponsorBlockSegments?: SponsorBlockSegmentItem[];
   autoSkipSegments?: SponsorBlockSegmentItem[];
   manualSkipSegments?: SponsorBlockSegmentItem[];
@@ -37,6 +40,9 @@ type Props = {
   onPause: () => void;
   onSeeked: () => void;
   onEnded: () => void;
+  onAutoplayPlayNow: () => void;
+  onAutoplayCancel: () => void;
+  onAutoplayPauseToggle: () => void;
   onError: () => void;
   onReset: () => void;
 };
@@ -53,6 +59,7 @@ export function WatchStage({
   navigating,
   originalLocale,
   overlay,
+  autoplayState,
   sponsorBlockSegments,
   autoSkipSegments,
   manualSkipSegments,
@@ -69,6 +76,9 @@ export function WatchStage({
   onPause,
   onSeeked,
   onEnded,
+  onAutoplayPlayNow,
+  onAutoplayCancel,
+  onAutoplayPauseToggle,
   onError,
   onReset,
 }: Props) {
@@ -116,6 +126,16 @@ export function WatchStage({
               mediaClassName={classes.mediaClassName}
             />
             {playerFailed && <PlayerError onRetry={onReset} />}
+            {autoplayState && (
+              <AutoplayCountdownOverlay
+                target={autoplayState.target}
+                totalSeconds={autoplayState.totalSeconds}
+                paused={autoplayState.paused}
+                onPlayNow={onAutoplayPlayNow}
+                onCancel={onAutoplayCancel}
+                onPauseToggle={onAutoplayPauseToggle}
+              />
+            )}
           </>
         ) : (
           <div className="aspect-video w-full bg-black" />

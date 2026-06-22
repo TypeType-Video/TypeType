@@ -76,11 +76,12 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const handleEnded = useWatchEndedNavigation({
+  const autoplay = useWatchEndedNavigation({
     settingsReady,
     autoplay: settings.autoplay,
     hideRelatedVideos: settings.hideRelatedVideos,
     nextParam: playlist.nextParam,
+    nextVideo: playlist.nextVideo,
     list,
     shuffle,
     related: stream.related,
@@ -90,7 +91,7 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
     stream,
     isLive,
     mutate: save.mutate,
-    onEnded: handleEnded,
+    onEnded: autoplay.handleEnded,
   });
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
     stream.id,
@@ -132,6 +133,7 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
         navigating={navigating}
         originalLocale={originalLocale}
         overlay={overlay}
+        autoplayState={autoplay.autoplayState}
         sponsorBlockSegments={sponsor.segments}
         autoSkipSegments={sponsor.autoSkipSegments}
         manualSkipSegments={sponsor.manualSkipSegments}
@@ -148,6 +150,9 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
         onPause={playerEvents.handlePause}
         onSeeked={playerEvents.handleSeeked}
         onEnded={playerEvents.handleEnded}
+        onAutoplayPlayNow={autoplay.playNow}
+        onAutoplayCancel={autoplay.cancel}
+        onAutoplayPauseToggle={autoplay.togglePause}
         onError={handlePlayerError}
         onReset={reset}
       />

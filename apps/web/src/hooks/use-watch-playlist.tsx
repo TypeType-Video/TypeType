@@ -14,6 +14,7 @@ const PREFETCH_REMAINING_ITEMS = 10;
 
 type WatchPlaylist = {
   nextParam: string | null;
+  nextVideo: WatchPlaylistItem | null;
   panel: ReactNode;
 };
 
@@ -109,5 +110,5 @@ export function useWatchPlaylist(
       />
     ) : null;
 
-  return { nextParam, panel };
+  return { nextParam, nextVideo: nextVideo ?? null, panel };
 }
