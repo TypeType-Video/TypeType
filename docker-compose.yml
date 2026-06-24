@@ -75,9 +75,7 @@ services:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
       TYPETYPE_API_BASE: http://typetype-server:8080
-      DB_URL: postgres://${DATABASE_USER:-typetype}:${DATABASE_PASSWORD:-typetype}@postgres:5432/typetype_downloader
-      DB_USER: typetype
-      DB_PASSWORD: typetype
+      DB_URL: postgres://typetype:typetype@postgres:5432/typetype_downloader?sslmode=disable
       REDIS_HOST: dragonfly
       REDIS_PORT: "6379"
       REDIS_QUEUE_KEY: downloader:queue
