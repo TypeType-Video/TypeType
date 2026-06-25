@@ -1,28 +1,22 @@
 import { isIosDevice } from "../lib/ios-device";
-import {
-  DefaultVideoLayout,
-  defaultLayoutIcons,
-  MediaPlayer,
-  MediaProvider,
-  Track,
-} from "../lib/vidstack";
-import { AudioTrackSelector } from "./audio-track-selector";
+import { MediaPlayer, MediaProvider, Track } from "../lib/vidstack";
+import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-patch";
 import { CaptionStyleRestorer } from "./caption-style-restorer";
-import { CinemaModeControl } from "./cinema-mode-control";
-import { FormatSelector } from "./format-selector";
 import { MediaProgressEvents } from "./media-progress-events";
 import { MediaSessionSync } from "./media-session-sync";
 import { PlayerHotkeys } from "./player-hotkeys";
 import { PlayerSeeker, SeekBridge, SponsorBlockSkipper } from "./player-internals";
 import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
-import { QualitySelector } from "./quality-selector";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
 import { buildSafeSubtitleTracks } from "./subtitle-track-utils";
 import { ChaptersTrack } from "./video-player-core";
 import { useVideoPlayerEvents } from "./video-player-events";
+import { VideoPlayerLayout } from "./video-player-layout";
 import type { VideoPlayerProps } from "./video-player-types";
 import { VolumeRestorer } from "./volume-restorer";
+
+patchVidstackProviderLoaders();
 
 export function VideoPlayer({
   src,
@@ -54,6 +48,8 @@ export function VideoPlayer({
   onError,
   onSeekReady,
   onEnded,
+  onPreviousVideo,
+  onNextVideo,
   className,
   mediaClassName,
 }: VideoPlayerProps) {
@@ -105,21 +101,11 @@ export function VideoPlayer({
         onEnded={handleEnded}
       />
       {overlay}
-      <DefaultVideoLayout
-        icons={defaultLayoutIcons}
-        thumbnails={thumbnailVtt}
-        smallLayoutWhen={false}
-        translations={{ Captions: "Subtitles" }}
-        slots={{
-          settingsMenuItemsStart: (
-            <>
-              <AudioTrackSelector originalLocale={originalAudioLocale} />
-              <QualitySelector />
-              <FormatSelector />
-            </>
-          ),
-          beforeFullscreenButton: <CinemaModeControl />,
-        }}
+      <VideoPlayerLayout
+        thumbnailVtt={thumbnailVtt}
+        originalAudioLocale={originalAudioLocale}
+        onPreviousVideo={onPreviousVideo}
+        onNextVideo={onNextVideo}
       />
       <PlayerSeeker startTime={startTime} />
       <VolumeRestorer
@@ -141,6 +127,8 @@ export function VideoPlayer({
         artwork={poster}
         canSeek={streamType !== "live"}
         isLive={streamType === "live"}
+        onPreviousTrack={onPreviousVideo}
+        onNextTrack={onNextVideo}
       />
       <PlayerHotkeys canSeek={streamType !== "live"} />
       <PlayerPlayPauseIndicator />

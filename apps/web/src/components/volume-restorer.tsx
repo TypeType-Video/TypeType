@@ -25,6 +25,7 @@ export function VolumeRestorer({
   const resumeOnReturnRef = useRef(false);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
+  const mountedRef = useRef(true);
 
   const clearRetry = useCallback(() => {
     if (retryTimerRef.current) {
@@ -34,8 +35,9 @@ export function VolumeRestorer({
     retryCountRef.current = 0;
   }, []);
 
-  const attemptPlay = useCallback(() => {
-    return Promise.resolve(remote.play());
+  const attemptPlay = useCallback(async () => {
+    if (!mountedRef.current) return;
+    await remote.play();
   }, [remote]);
 
   const tryPlay = useCallback(
@@ -44,6 +46,7 @@ export function VolumeRestorer({
       if (!force && !autoplay) return;
       void attemptPlay()
         .then(() => {
+          if (!mountedRef.current) return;
           clearRetry();
           if (force) resumeOnReturnRef.current = false;
         })
@@ -55,6 +58,7 @@ export function VolumeRestorer({
           if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
           retryTimerRef.current = setTimeout(() => {
             retryTimerRef.current = null;
+            if (!mountedRef.current) return;
             void attemptPlay()
               .then(() => clearRetry())
               .catch(() => {});
@@ -108,7 +112,9 @@ export function VolumeRestorer({
   }, [settingsReady, paused, tryPlay]);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       clearRetry();
     };
   }, [clearRetry]);

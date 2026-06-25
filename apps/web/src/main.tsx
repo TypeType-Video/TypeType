@@ -1,13 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { PageSpinner } from "./components/page-spinner";
 import { ApiError } from "./lib/api";
+import { installConsoleWarningFilter } from "./lib/console-warning-filter";
 import { initErrorCapture } from "./lib/error-capture";
 import { routeTree } from "./routeTree.gen";
 
+installConsoleWarningFilter();
 initErrorCapture();
 
 const router = createRouter({
@@ -43,9 +44,7 @@ if (!root) {
 }
 
 createRoot(root).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>,
+  <QueryClientProvider client={queryClient}>
+    <RouterProvider router={router} />
+  </QueryClientProvider>,
 );

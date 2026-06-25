@@ -54,43 +54,76 @@ export function SponsorBlockSkipper({
 }) {
   const player = useMediaPlayer();
   const remote = useMediaRemote();
-  const currentTime = useMediaState("currentTime");
-  const duration = useMediaState("duration");
-  const muted = useMediaState("muted");
   const activeMuteRef = useRef<string | null>(null);
   const restoreMutedRef = useRef(false);
   useEffect(() => {
-    function setMuted(value: boolean) {
-      const media = player?.el?.ownerDocument.querySelector<HTMLMediaElement>("video,audio");
-      if (!media) return;
+    const root = player?.el;
+    if (!root) return;
+    const rootElement = root;
+    let cleanup: (() => void) | null = null;
+
+    function setMuted(media: HTMLMediaElement, value: boolean) {
       media.muted = value;
       media.dispatchEvent(new Event("volumechange", { bubbles: true }));
     }
 
-    let activeMute: string | null = null;
-    for (const seg of segments) {
-      if (seg.action !== "skip") continue;
-      const startTime = getSponsorBlockStartTime(seg, duration);
-      const endTime = getSponsorBlockEndTime(seg, duration);
-      if (currentTime >= startTime && currentTime < endTime) {
-        if (!muteInsteadOfSkip) {
-          remote.seek(endTime);
+    function process(media: HTMLMediaElement) {
+      const duration = Number.isFinite(media.duration) ? media.duration : 0;
+      const currentTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
+      let activeMute: string | null = null;
+      for (const seg of segments) {
+        if (seg.action !== "skip") continue;
+        const startTime = getSponsorBlockStartTime(seg, duration);
+        const endTime = getSponsorBlockEndTime(seg, duration);
+        if (currentTime >= startTime && currentTime < endTime) {
+          if (!muteInsteadOfSkip) {
+            remote.seek(endTime);
+            break;
+          }
+          activeMute = `${seg.category}:${seg.startTime}`;
+          if (activeMuteRef.current !== activeMute) {
+            activeMuteRef.current = activeMute;
+            restoreMutedRef.current = !media.muted;
+          }
+          setMuted(media, true);
           break;
         }
-        activeMute = `${seg.category}:${seg.startTime}`;
-        if (activeMuteRef.current !== activeMute) {
-          activeMuteRef.current = activeMute;
-          restoreMutedRef.current = !muted;
-        }
-        setMuted(true);
-        break;
+      }
+      if (muteInsteadOfSkip && !activeMute && activeMuteRef.current) {
+        if (restoreMutedRef.current) setMuted(media, false);
+        activeMuteRef.current = null;
+        restoreMutedRef.current = false;
       }
     }
-    if (muteInsteadOfSkip && !activeMute && activeMuteRef.current) {
-      if (restoreMutedRef.current) setMuted(false);
-      activeMuteRef.current = null;
-      restoreMutedRef.current = false;
+
+    function attach() {
+      if (cleanup) return true;
+      const media = rootElement.querySelector<HTMLMediaElement>("video,audio");
+      if (!media) return false;
+      const update = () => process(media);
+      media.addEventListener("timeupdate", update);
+      media.addEventListener("seeking", update);
+      media.addEventListener("durationchange", update);
+      media.addEventListener("loadedmetadata", update);
+      update();
+      cleanup = () => {
+        media.removeEventListener("timeupdate", update);
+        media.removeEventListener("seeking", update);
+        media.removeEventListener("durationchange", update);
+        media.removeEventListener("loadedmetadata", update);
+      };
+      return true;
     }
-  }, [currentTime, duration, muted, muteInsteadOfSkip, player, segments, remote]);
+
+    if (attach()) return () => cleanup?.();
+    const observer = new MutationObserver(() => {
+      if (attach()) observer.disconnect();
+    });
+    observer.observe(rootElement, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      cleanup?.();
+    };
+  }, [muteInsteadOfSkip, player, segments, remote]);
   return null;
 }

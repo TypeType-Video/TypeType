@@ -17,8 +17,7 @@ export function PlaylistsPageHeader({
   onDelete,
   onCreate,
 }: Props) {
-  const base =
-    "rounded-lg bg-surface-strong px-3 py-2 text-sm transition-colors hover:bg-surface-soft";
+  const base = "rounded-lg px-3 py-2 text-sm transition-colors";
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="font-semibold text-fg text-lg">Playlists</h1>
@@ -44,12 +43,16 @@ export function PlaylistsPageHeader({
               <button
                 type="button"
                 onClick={onSelect}
-                className={`${base} text-fg-muted hover:text-fg`}
+                className={`${base} border border-border bg-surface text-fg-muted hover:border-border-strong hover:text-fg`}
               >
                 Select
               </button>
             )}
-            <button type="button" onClick={onCreate} className={`${base} text-fg`}>
+            <button
+              type="button"
+              onClick={onCreate}
+              className={`${base} border border-border-strong bg-surface-strong text-fg hover:bg-surface-soft`}
+            >
               New playlist
             </button>
           </>

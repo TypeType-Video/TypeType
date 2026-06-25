@@ -28,6 +28,7 @@ const DEFAULTS: SettingsItem = {
   sponsorBlockManualSkipOnFullVideo: true,
   sponsorBlockSkipNonMusicOnlyOnMusicVideos: false,
   sponsorBlockMuteInsteadOfSkip: false,
+  disableWatchHistory: false,
   hideContinueWatching: false,
   hideHomeRecommendations: false,
   hideRelatedVideos: false,

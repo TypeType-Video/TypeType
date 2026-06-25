@@ -14,6 +14,7 @@ import {
 const FORMAT_ORDER: CodecFamily[] = ["H.264", "VP9", "AV1"];
 const MENU_ITEMS_CLASS =
   "vds-menu-items overflow-y-auto overscroll-y-contain pr-0.5 [scrollbar-width:thin] [scrollbar-color:var(--color-zinc-500)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-surface-soft/80 [&::-webkit-scrollbar-thumb:hover]:bg-surface-soft [&::-webkit-scrollbar-track]:bg-transparent";
+const QUALITY_OPTIONS = { sort: "descending" } as const;
 
 function isCodecFamily(value: string): value is CodecFamily {
   return value === "H.264" || value === "VP9" || value === "AV1";
@@ -27,7 +28,7 @@ function formatLabel(family: CodecFamily, track: dashjs.MediaInfo): string {
 export function FormatSelector() {
   const menuRef = useRef<MenuInstance>(null);
   const { player, selectedVideoTrack } = useDashPlayerSnapshot();
-  const options = useVideoQualityOptions({ sort: "descending" });
+  const options = useVideoQualityOptions(QUALITY_OPTIONS);
 
   const videoOptions = options.filter((o) => o.quality !== null);
   const dashGroups = player ? dashTrackGroups(player) : null;

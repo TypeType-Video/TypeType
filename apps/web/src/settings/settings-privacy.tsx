@@ -3,7 +3,9 @@ import { ConfirmModal } from "../components/confirm-modal";
 import { Toast } from "../components/toast";
 import { useHistory } from "../hooks/use-history";
 import { useSearchHistory } from "../hooks/use-search-history";
+import { useSettings } from "../hooks/use-settings";
 import { useSubscriptions } from "../hooks/use-subscriptions";
+import { ToggleSwitch } from "./settings-toggle-switch";
 
 const SECTION_LABEL = "text-xs font-medium text-fg-soft uppercase tracking-wider px-1";
 const CARD = "bg-surface rounded-xl border border-border overflow-hidden divide-y divide-border";
@@ -15,6 +17,7 @@ export function SettingsPrivacy() {
   const { total: historyTotal, clear: clearHistory } = useHistory();
   const { query: subsQuery, remove: removeSubscription } = useSubscriptions();
   const { total: searchHistoryTotal, clear: clearSearchHistory } = useSearchHistory();
+  const { settings, update } = useSettings();
   const subscriptions = subsQuery.data ?? [];
   const [modal, setModal] = useState<ActiveModal>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -26,21 +29,26 @@ export function SettingsPrivacy() {
   }, [toast]);
 
   async function handleConfirm() {
-    if (modal === "history") {
-      clearHistory.mutate();
-      setToast("Watch history cleared");
-    }
-    if (modal === "subscriptions") {
-      for (const sub of subsQuery.data ?? []) {
-        removeSubscription.mutate(sub.channelUrl);
-      }
-      setToast("Unsubscribed from all channels");
-    }
-    if (modal === "search-history") {
-      clearSearchHistory.mutate();
-      setToast("Search history cleared");
-    }
+    const activeModal = modal;
     setModal(null);
+    try {
+      if (activeModal === "history") {
+        await clearHistory.mutateAsync();
+        setToast("Watch history cleared");
+      }
+      if (activeModal === "subscriptions") {
+        for (const sub of subsQuery.data ?? []) {
+          removeSubscription.mutate(sub.channelUrl);
+        }
+        setToast("Unsubscribed from all channels");
+      }
+      if (activeModal === "search-history") {
+        await clearSearchHistory.mutateAsync();
+        setToast("Search history cleared");
+      }
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Action failed");
+    }
   }
 
   const historyLabel = historyTotal === 1 ? "1 entry" : `${historyTotal} entries`;
@@ -60,6 +68,16 @@ export function SettingsPrivacy() {
     <section className="flex flex-col gap-3">
       <p className={SECTION_LABEL}>Privacy</p>
       <div className={CARD}>
+        <div className={ROW}>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm text-fg">Watch history tracking</span>
+            <span className="text-xs text-fg-soft">Save watched videos and playback progress</span>
+          </div>
+          <ToggleSwitch
+            checked={!settings.disableWatchHistory}
+            onClick={() => update.mutate({ disableWatchHistory: !settings.disableWatchHistory })}
+          />
+        </div>
         <div className={ROW}>
           <div className="flex flex-col gap-1">
             <span className="text-sm text-fg">Watch history</span>

@@ -3,6 +3,7 @@ import { GripVertical } from "lucide-react";
 import type { DragEvent } from "react";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration, formatViews } from "../lib/format";
+import { proxyImage } from "../lib/proxy";
 import { isVideoWatched } from "../lib/watch-progress";
 import { watchRouteSearch } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
@@ -43,7 +44,8 @@ type Props = {
 
 export function PlaylistVideoRow({ video, onRemove, reorderable, listId, onDragStart }: Props) {
   const prefetch = useWatchPrefetch(video.url);
-  const thumbnail = video.thumbnail.trim().length > 0 ? video.thumbnail : null;
+  const rawThumbnail = video.thumbnail.trim();
+  const thumbnail = rawThumbnail.length > 0 ? proxyImage(rawThumbnail) : null;
   const watched = video.watched || isVideoWatched(video.watchPosition, video.duration);
   const rawChannelName = video.channelName?.trim() ?? "";
   const rawChannelUrl = video.channelUrl?.trim() ?? "";
@@ -56,8 +58,8 @@ export function PlaylistVideoRow({ video, onRemove, reorderable, listId, onDragS
   const menuStream: VideoStream = {
     id: video.url,
     title: video.title,
-    thumbnail: video.thumbnail,
-    rawThumbnail: video.thumbnail,
+    thumbnail: thumbnail ?? "",
+    rawThumbnail,
     rawChannelAvatar: rawChannelAvatar,
     channelName,
     channelUrl: channelUrl || undefined,

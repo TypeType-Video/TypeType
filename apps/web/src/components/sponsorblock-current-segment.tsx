@@ -1,10 +1,11 @@
 import { BadgeInfo, SkipForward } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
   getSponsorBlockCategoryLabel,
   getSponsorBlockEndTime,
   getSponsorBlockStartTime,
 } from "../lib/sponsorblock-settings";
-import { useMediaRemote, useMediaState } from "../lib/vidstack";
+import { useMediaPlayer, useMediaRemote } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 
 type Props = {
@@ -12,6 +13,11 @@ type Props = {
   autoSkipSegments?: SponsorBlockSegmentItem[];
   manualSkipSegments?: SponsorBlockSegmentItem[];
   muteInsteadOfSkip: boolean;
+};
+
+type ActiveSegment = {
+  segment: SponsorBlockSegmentItem;
+  duration: number;
 };
 
 function includesSegment(
@@ -30,15 +36,62 @@ export function SponsorBlockCurrentSegment({
   muteInsteadOfSkip,
 }: Props) {
   const remote = useMediaRemote();
-  const currentTime = useMediaState("currentTime");
-  const duration = useMediaState("duration");
-  const current = segments.find(
-    (segment) =>
-      currentTime >= getSponsorBlockStartTime(segment, duration) &&
-      currentTime < getSponsorBlockEndTime(segment, duration),
-  );
+  const player = useMediaPlayer();
+  const [active, setActive] = useState<ActiveSegment | null>(null);
+  const activeKeyRef = useRef("");
 
-  if (!current) return null;
+  useEffect(() => {
+    const root = player?.el;
+    if (!root) return;
+    const rootElement = root;
+    let cleanup: (() => void) | null = null;
+
+    function updateActive(media: HTMLMediaElement) {
+      const duration = Number.isFinite(media.duration) ? media.duration : 0;
+      const currentTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
+      const segment = segments.find(
+        (item) =>
+          currentTime >= getSponsorBlockStartTime(item, duration) &&
+          currentTime < getSponsorBlockEndTime(item, duration),
+      );
+      const nextKey = segment ? `${segment.category}:${segment.startTime}:${duration}` : "";
+      if (nextKey === activeKeyRef.current) return;
+      activeKeyRef.current = nextKey;
+      setActive(segment ? { segment, duration } : null);
+    }
+
+    function attach() {
+      if (cleanup) return true;
+      const media = rootElement.querySelector<HTMLMediaElement>("video,audio");
+      if (!media) return false;
+      const update = () => updateActive(media);
+      media.addEventListener("timeupdate", update);
+      media.addEventListener("seeking", update);
+      media.addEventListener("durationchange", update);
+      media.addEventListener("loadedmetadata", update);
+      update();
+      cleanup = () => {
+        media.removeEventListener("timeupdate", update);
+        media.removeEventListener("seeking", update);
+        media.removeEventListener("durationchange", update);
+        media.removeEventListener("loadedmetadata", update);
+      };
+      return true;
+    }
+
+    if (attach()) return () => cleanup?.();
+    const observer = new MutationObserver(() => {
+      if (attach()) observer.disconnect();
+    });
+    observer.observe(rootElement, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      cleanup?.();
+    };
+  }, [player, segments]);
+
+  if (!active) return null;
+  const { segment: current, duration } = active;
   const autoSkip = includesSegment(autoSkipSegments, current);
   const canSkip = includesSegment(manualSkipSegments, current) || !autoSkip || muteInsteadOfSkip;
 

@@ -6,6 +6,7 @@ import { useSearchHistory } from "../hooks/use-search-history";
 import { useSearchOverlayNavigation } from "../hooks/use-search-overlay-navigation";
 import { fetchSuggestions } from "../lib/api-suggestions";
 import { buildSearchOverlayItems } from "../lib/search-overlay-items";
+import { ConfirmModal } from "./confirm-modal";
 import { SearchOverlayList } from "./search-overlay-list";
 
 export function NavbarSearch() {
@@ -16,12 +17,13 @@ export function NavbarSearch() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const { service, navigateAndClose } = useSearchOverlayNavigation({
     onClose: () => setOpen(false),
   });
-  const { visibleItems, canLoadMore, loadMore } = useSearchHistory();
+  const { visibleItems, canLoadMore, loadMore, clear } = useSearchHistory();
   const debouncedQuery = useDebouncedValue(query, 300);
   const items = buildSearchOverlayItems(query, visibleItems, suggestions);
   const showHistory = query.trim().length === 0 && visibleItems.length > 0;
@@ -107,6 +109,11 @@ export function NavbarSearch() {
     if (target.scrollTop >= threshold) loadMore();
   }
 
+  function handleConfirmClear() {
+    clear.mutate();
+    setConfirmClearOpen(false);
+  }
+
   return (
     <search className="mx-4 flex min-w-0 flex-1 justify-center">
       <div ref={rootRef} className="relative w-full max-w-2xl min-w-0">
@@ -140,9 +147,19 @@ export function NavbarSearch() {
               selectedIndex={selectedIndex}
               listRef={listRef}
               onScroll={handleScroll}
+              onClearAll={() => setConfirmClearOpen(true)}
               onSelect={selectTerm}
             />
           </div>
+        )}
+        {confirmClearOpen && (
+          <ConfirmModal
+            title="Clear search history?"
+            description="This removes all saved searches from your account."
+            confirmLabel="Clear all"
+            onConfirm={handleConfirmClear}
+            onCancel={() => setConfirmClearOpen(false)}
+          />
         )}
       </div>
     </search>

@@ -174,3 +174,9 @@ body {
 .vds-playback-menu .vds-menu-section:has(.vds-quality-slider) {
   display: none;
 }
+
+@media (max-width: 639px) {
+  .vds-video-layout .typetype-track-button {
+    display: none;
+  }
+}

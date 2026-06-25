@@ -69,7 +69,7 @@ export function AdminAllowListPlaylistSearch({
   }
 
   return (
-    <section className="border-t border-border pt-4">
+    <section className="min-w-0 border-t border-border pt-4">
       <div className="mb-3 flex flex-col gap-1">
         <h2 className="text-sm font-semibold text-fg">{title}</h2>
         <p className="text-xs text-fg-soft">{description}</p>
@@ -108,7 +108,7 @@ export function AdminAllowListPlaylistSearch({
             {playlists.slice(0, 8).map((playlist) => {
               const alreadyAdded = added.has(playlist.url);
               return (
-                <div key={playlist.url} className="flex items-center gap-3 px-3 py-2.5">
+                <div key={playlist.url} className="flex min-w-0 items-center gap-3 px-3 py-2.5">
                   <img
                     src={proxyImage(playlist.thumbnailUrl)}
                     alt=""

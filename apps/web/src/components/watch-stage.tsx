@@ -43,6 +43,8 @@ type Props = {
   onAutoplayPlayNow: () => void;
   onAutoplayCancel: () => void;
   onAutoplayPauseToggle: () => void;
+  onPreviousVideo?: () => void;
+  onNextVideo?: () => void;
   onError: () => void;
   onReset: () => void;
 };
@@ -79,6 +81,8 @@ export function WatchStage({
   onAutoplayPlayNow,
   onAutoplayCancel,
   onAutoplayPauseToggle,
+  onPreviousVideo,
+  onNextVideo,
   onError,
   onReset,
 }: Props) {
@@ -121,6 +125,8 @@ export function WatchStage({
               onSeeked={onSeeked}
               onError={onError}
               onEnded={onEnded}
+              onPreviousVideo={onPreviousVideo}
+              onNextVideo={onNextVideo}
               onSeekReady={(seek) => (seekRef.current = seek)}
               className={classes.playerClassName}
               mediaClassName={classes.mediaClassName}

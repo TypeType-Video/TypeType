@@ -13,7 +13,7 @@ type Props = {
 
 export function AdminConsoleNav({ items, active, onSelect }: Props) {
   return (
-    <nav className="overflow-x-auto pt-3" aria-label="Admin sections">
+    <nav className="min-w-0 overflow-x-auto pt-3" aria-label="Admin sections">
       <div className="flex min-w-max gap-3 sm:grid sm:min-w-0 sm:grid-cols-5 sm:gap-1">
         {items.map((item) => {
           const isActive = item.key === active;

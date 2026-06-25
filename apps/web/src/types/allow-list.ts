@@ -5,6 +5,15 @@ export type AdminAllowListUser = {
   email: string;
   name: string;
   accessMode: AccessMode;
+  adminManagedAccessMode?: boolean;
+  avatarUrl?: string | null;
+  avatarType?: "custom" | "emoji" | null;
+  avatarCode?: string | null;
+};
+
+export type AdminManagedAccessUsersPage = {
+  items: AdminAllowListUser[];
+  nextpage: string | null;
 };
 
 export type AllowedPlaylistItem = {

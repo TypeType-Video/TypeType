@@ -50,11 +50,13 @@ export async function addHistory(item: Omit<HistoryItem, "id" | "watchedAt">): P
 }
 
 export async function removeHistory(id: string): Promise<void> {
-  await authed(`${BASE}/history/${encodeURIComponent(id)}`, { method: "DELETE" });
+  const res = await authed(`${BASE}/history/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (!res.ok) throw new ApiError("Failed to remove history item", res.status);
 }
 
 export async function clearHistory(): Promise<void> {
-  await authed(`${BASE}/history`, { method: "DELETE" });
+  const res = await authed(`${BASE}/history`, { method: "DELETE" });
+  if (!res.ok) throw new ApiError("Failed to clear history", res.status);
 }
 
 export function fetchSubscriptions(): Promise<SubscriptionItem[]> {

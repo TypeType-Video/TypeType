@@ -99,64 +99,20 @@ export async function deleteDownloaderJob(jobId: string): Promise<void> {
   throw new ApiError(readErrorMessage(body, "Failed to delete download job"), res.status);
 }
 
-function extensionFromType(contentType: string | null): string {
-  const value = contentType ?? "";
-  if (value.includes("video/mp4")) return "mp4";
-  if (value.includes("audio/mpeg")) return "mp3";
-  if (value.includes("audio/webm")) return "webm";
-  if (value.includes("audio/mp4")) return "m4a";
-  return "bin";
-}
-
-function filenameFromHeader(contentDisposition: string | null): string | null {
-  const value = contentDisposition ?? "";
-  const utf8 = value.match(/filename\*=UTF-8''([^;]+)/i);
-  if (utf8?.[1]) return decodeURIComponent(utf8[1]);
-  const classic = value.match(/filename="?([^";]+)"?/i);
-  return classic?.[1] ?? null;
-}
-
-function canUseShareApi(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return typeof navigator.share === "function";
-}
-
-function supportsFileShare(data: ShareData): boolean {
-  if (typeof navigator === "undefined") return false;
-  if (typeof navigator.canShare !== "function") return false;
-  return navigator.canShare(data);
-}
-
-function fallbackFileName(jobId: string, headers: Headers): string {
-  return (
-    filenameFromHeader(headers.get("content-disposition")) ??
-    `typetype-download-${jobId}.${extensionFromType(headers.get("content-type"))}`
-  );
-}
-
-async function shareDownloaderArtifact(endpoint: string, jobId: string): Promise<void> {
-  const res = await fetch(endpoint);
-  if (!res.ok) {
-    const body = await readJson(res);
-    throw new ApiError(readErrorMessage(body, "Failed to download artifact"), res.status);
+function openArtifactLocation(endpoint: string, preferNewContext = false): void {
+  if (preferNewContext) {
+    const opened = window.open("about:blank", "_blank");
+    if (opened) {
+      opened.opener = null;
+      opened.location.href = endpoint;
+      return;
+    }
   }
-  const blob = await res.blob();
-  const fileName = fallbackFileName(jobId, res.headers);
-  const fileType = blob.type.length > 0 ? blob.type : "application/octet-stream";
-  const file = new File([blob], fileName, { type: fileType });
-  const shareData: ShareData = { files: [file], title: fileName };
-  if (!supportsFileShare(shareData)) {
-    throw new ApiError("Native iOS share is unavailable for this file", 422);
-  }
-  await navigator.share(shareData);
-}
-
-function openArtifactLocation(endpoint: string): void {
   window.location.assign(endpoint);
 }
 
 export function canUseIosShareFlow(): boolean {
-  return isIosWebKitBrowser() && canUseShareApi();
+  return isIosWebKitBrowser();
 }
 
 export async function downloadDownloaderArtifact(
@@ -165,7 +121,7 @@ export async function downloadDownloaderArtifact(
 ): Promise<void> {
   const endpoint = `${BASE}/downloader/jobs/${encodeURIComponent(jobId)}/artifact`;
   if (options.preferShare && canUseIosShareFlow()) {
-    await shareDownloaderArtifact(endpoint, jobId);
+    openArtifactLocation(endpoint, true);
     return;
   }
   openArtifactLocation(endpoint);

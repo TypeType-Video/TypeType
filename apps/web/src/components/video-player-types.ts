@@ -33,6 +33,8 @@ export type VideoPlayerProps = {
   onError?: () => void;
   onSeekReady?: (seek: (seconds: number) => void) => void;
   onEnded?: () => void;
+  onPreviousVideo?: () => void;
+  onNextVideo?: () => void;
   className?: string;
   mediaClassName?: string;
 };

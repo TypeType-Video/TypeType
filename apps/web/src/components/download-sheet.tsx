@@ -134,7 +134,7 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
           {requiresManualArtifactTap && (
             <div className="mt-2 flex flex-col gap-3 rounded-lg border border-border bg-surface/60 p-3">
               <p className="text-xs text-fg-muted">
-                File is ready. Tap below to open the iOS share sheet and save to Files.
+                File is ready. Tap below to open it in iOS and save to Files.
               </p>
               <button
                 type="button"
@@ -142,7 +142,7 @@ export function DownloadSheet({ stream, onClose, onDone }: Props) {
                 disabled={completion.isCompleting}
                 className="w-full rounded-lg bg-fg px-3 py-2 text-sm font-medium text-app transition-colors hover:bg-fg-strong disabled:cursor-not-allowed disabled:bg-surface-soft disabled:text-fg-muted"
               >
-                {completion.isCompleting ? "Opening..." : "Open iOS share sheet"}
+                {completion.isCompleting ? "Opening..." : "Open file"}
               </button>
             </div>
           )}

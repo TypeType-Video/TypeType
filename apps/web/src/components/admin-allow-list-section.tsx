@@ -57,16 +57,16 @@ export function AdminAllowListSection({ enabled, onToast }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-w-0 flex-col gap-5">
       <section className="border-t border-border pt-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex flex-col gap-1">
             <h2 className="text-sm font-semibold text-fg">Entire instance</h2>
             <p className="text-xs text-fg-soft">
               Restrict everyone to the admin allow list, including guests.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={adminSettings.update.isPending}
@@ -86,7 +86,11 @@ export function AdminAllowListSection({ enabled, onToast }: Props) {
           </div>
         </div>
       </section>
-      <AdminAllowListUsers enabled={enabled} onToast={onToast} />
+      <AdminAllowListUsers
+        enabled={enabled}
+        instanceRestricted={instanceRestricted}
+        onToast={onToast}
+      />
       <AdminAllowListForm
         title="Add global channel"
         description="Search by channel name or handle. Added channels apply to every restricted user."

@@ -73,7 +73,7 @@ function PlaylistsPage() {
   const hasLocalCollections = playlists.length > 0 || favorites.count > 0 || watchLater.count > 0;
 
   return (
-    <div className="flex flex-col gap-6 [animation:page-fade-in_0.2s_ease-out]">
+    <div className="flex flex-col gap-6 pt-2 sm:pt-4 [animation:page-fade-in_0.2s_ease-out]">
       <PlaylistsPageHeader
         selectionMode={selectionMode}
         selectedCount={selectedIds.size}

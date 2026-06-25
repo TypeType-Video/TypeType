@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useMediaRemote, useMediaState } from "../lib/vidstack";
+import { MediaSessionPositionSync } from "./media-session-position-sync";
 
 type Props = {
   title?: string;
@@ -7,6 +8,8 @@ type Props = {
   artwork?: string;
   canSeek?: boolean;
   isLive?: boolean;
+  onPreviousTrack?: () => void;
+  onNextTrack?: () => void;
 };
 
 function safeSetActionHandler(
@@ -25,18 +28,15 @@ export function MediaSessionSync({
   artwork,
   canSeek = true,
   isLive = false,
+  onPreviousTrack,
+  onNextTrack,
 }: Props) {
   const remote = useMediaRemote();
   const paused = useMediaState("paused");
-  const currentTime = useMediaState("currentTime");
-  const duration = useMediaState("duration");
-  const playbackRate = useMediaState("playbackRate");
   const currentTimeRef = useRef(0);
   const durationRef = useRef(0);
   const pausedRef = useRef(true);
 
-  currentTimeRef.current = Number.isFinite(currentTime) ? currentTime : 0;
-  durationRef.current = Number.isFinite(duration) ? duration : 0;
   pausedRef.current = paused;
 
   useEffect(() => {
@@ -85,10 +85,8 @@ export function MediaSessionSync({
     safeSetActionHandler(session, "stop", () => {
       void Promise.resolve(remote.pause()).catch(() => {});
     });
-    if (isLive) {
-      safeSetActionHandler(session, "previoustrack", null);
-      safeSetActionHandler(session, "nexttrack", null);
-    }
+    safeSetActionHandler(session, "previoustrack", isLive ? null : (onPreviousTrack ?? null));
+    safeSetActionHandler(session, "nexttrack", isLive ? null : (onNextTrack ?? null));
     return () => {
       safeSetActionHandler(session, "play", null);
       safeSetActionHandler(session, "pause", null);
@@ -99,7 +97,7 @@ export function MediaSessionSync({
       safeSetActionHandler(session, "previoustrack", null);
       safeSetActionHandler(session, "nexttrack", null);
     };
-  }, [canSeek, isLive, remote]);
+  }, [canSeek, isLive, onPreviousTrack, onNextTrack, remote]);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
@@ -129,22 +127,5 @@ export function MediaSessionSync({
     navigator.mediaSession.playbackState = paused ? "paused" : "playing";
   }, [paused]);
 
-  useEffect(() => {
-    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
-    const session = navigator.mediaSession;
-    const setPositionState = session.setPositionState?.bind(session);
-    if (!setPositionState) return;
-    if (!Number.isFinite(duration) || duration <= 0) return;
-    if (!Number.isFinite(currentTime) || currentTime < 0) return;
-    const safePlaybackRate = Number.isFinite(playbackRate) && playbackRate > 0 ? playbackRate : 1;
-    try {
-      setPositionState({
-        duration,
-        playbackRate: safePlaybackRate,
-        position: Math.min(duration, currentTime),
-      });
-    } catch {}
-  }, [duration, currentTime, playbackRate]);
-
-  return null;
+  return <MediaSessionPositionSync currentTimeRef={currentTimeRef} durationRef={durationRef} />;
 }

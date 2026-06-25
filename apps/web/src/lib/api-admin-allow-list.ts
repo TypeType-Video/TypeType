@@ -1,5 +1,6 @@
 import type {
   AdminAllowListUser,
+  AdminManagedAccessUsersPage,
   AdminUserAllowList,
   AllowedPlaylistItem,
   AllowPlaylistInput,
@@ -12,6 +13,15 @@ import { API_BASE as BASE } from "./env";
 export function searchAdminUsers(q: string, limit = 20): Promise<AdminAllowListUser[]> {
   const params = new URLSearchParams({ q, limit: String(limit) });
   return authedJson(`${BASE}/admin/users/search?${params}`);
+}
+
+export function fetchAdminManagedAccessUsers(
+  limit = 100,
+  page?: string,
+): Promise<AdminManagedAccessUsersPage> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (page) params.set("page", page);
+  return authedJson(`${BASE}/admin/users/managed-access?${params}`);
 }
 
 export function fetchAdminUserAllowList(id: string): Promise<AdminUserAllowList> {

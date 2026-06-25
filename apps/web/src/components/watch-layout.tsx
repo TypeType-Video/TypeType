@@ -11,11 +11,7 @@ import { useWatchVttAssets } from "../hooks/use-watch-layout-assets";
 import { useWatchPlayerEvents } from "../hooks/use-watch-player-events";
 import { useWatchPlaylist } from "../hooks/use-watch-playlist";
 import { useWatchSponsorBlock } from "../hooks/use-watch-sponsorblock";
-import {
-  getOriginalAudioLocale,
-  getOriginalAudioTrackId,
-  getPreferredDefaultAudioTrackId,
-} from "../lib/audio-track";
+import { getOriginalAudioLocale } from "../lib/audio-track";
 import { detectProvider } from "../lib/provider";
 import { useDanmakuStore } from "../stores/danmaku-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
@@ -107,17 +103,18 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
       bulletCommentsOn={bulletCommentsOn}
       bulletComments={bulletComments}
       positionRef={playerEvents.positionRef}
+      stream={stream}
       settings={settings}
       qualityFailed={qualityFailed}
       onOriginalLanguageUnavailable={() => setToast("Original audio unavailable")}
-      originalAudioTrackId={getOriginalAudioTrackId(stream)}
-      preferredDefaultAudioTrackId={getPreferredDefaultAudioTrackId(stream)}
       originalAudioLocale={originalLocale}
     />
   );
 
-  const hasSecondaryContent = Boolean(!isMobile && (playlist.panel || relatedStreams.length > 0));
-  const classes = getWatchLayoutClasses(cinemaMode, hasSecondaryContent);
+  const classes = getWatchLayoutClasses(
+    cinemaMode,
+    Boolean(!isMobile && (playlist.panel || relatedStreams.length > 0)),
+  );
 
   return (
     <div className={classes.containerClass}>
@@ -153,6 +150,8 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
         onAutoplayPlayNow={autoplay.playNow}
         onAutoplayCancel={autoplay.cancel}
         onAutoplayPauseToggle={autoplay.togglePause}
+        onPreviousVideo={playlist.playPrevious}
+        onNextVideo={playlist.playNext}
         onError={handlePlayerError}
         onReset={reset}
       />

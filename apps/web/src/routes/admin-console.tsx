@@ -62,7 +62,7 @@ function AdminConsolePage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 pt-2 [animation:page-fade-in_0.2s_ease-out]">
+    <div className="flex min-w-0 flex-col gap-5 pt-2 [animation:page-fade-in_0.2s_ease-out]">
       <AdminConsoleNav
         items={sections.map((key) => ({
           key,

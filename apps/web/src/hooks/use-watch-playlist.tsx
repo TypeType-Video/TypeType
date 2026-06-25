@@ -15,6 +15,8 @@ const PREFETCH_REMAINING_ITEMS = 10;
 type WatchPlaylist = {
   nextParam: string | null;
   nextVideo: WatchPlaylistItem | null;
+  playPrevious?: () => void;
+  playNext?: () => void;
   panel: ReactNode;
 };
 
@@ -63,8 +65,26 @@ export function useWatchPlaylist(
   const loadMorePublic = useCallback(() => {
     if (canLoadPublicPage) void publicPlaylist.fetchNextPage();
   }, [canLoadPublicPage, publicPlaylist.fetchNextPage]);
+  const previousVideo = currentIdx > 0 ? videos[currentIdx - 1] : undefined;
   const nextVideo = currentIdx >= 0 ? videos[currentIdx + 1] : undefined;
+  const previousParam = previousVideo ? toPublicWatchParam(previousVideo.url) : null;
   const nextParam = nextVideo ? toPublicWatchParam(nextVideo.url) : null;
+  const playPrevious = useCallback(() => {
+    if (!previousParam) return;
+    navigate({
+      to: "/watch",
+      search: { v: previousParam, list, ...(shuffle ? { shuffle } : {}) },
+      resetScroll: false,
+    });
+  }, [previousParam, list, shuffle, navigate]);
+  const playNext = useCallback(() => {
+    if (!nextParam) return;
+    navigate({
+      to: "/watch",
+      search: { v: nextParam, list, ...(shuffle ? { shuffle } : {}) },
+      resetScroll: false,
+    });
+  }, [nextParam, list, shuffle, navigate]);
 
   useEffect(() => {
     if (!canLoadPublicPage || videos.length === 0) return;
@@ -110,5 +130,11 @@ export function useWatchPlaylist(
       />
     ) : null;
 
-  return { nextParam, nextVideo: nextVideo ?? null, panel };
+  return {
+    nextParam,
+    nextVideo: nextVideo ?? null,
+    playPrevious: previousParam ? playPrevious : undefined,
+    playNext: nextParam ? playNext : undefined,
+    panel,
+  };
 }
