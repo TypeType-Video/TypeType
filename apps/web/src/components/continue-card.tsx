@@ -1,8 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration } from "../lib/format";
-import { resolveHistoryChannelMeta } from "../lib/history-enrichment";
 import { proxyImage } from "../lib/proxy";
 import { watchRouteSearch } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
@@ -19,7 +17,7 @@ type ContinueCardProps = {
 
 export function ContinueCard({ item }: ContinueCardProps) {
   const prefetch = useWatchPrefetch(item.url);
-  const [uploaderVerified, setUploaderVerified] = useState(item.uploaderVerified ?? false);
+  const uploaderVerified = item.uploaderVerified ?? false;
   const thumbnail = proxyImage(item.thumbnail);
   const menuStream: VideoStream = {
     id: item.url,
@@ -34,22 +32,6 @@ export function ContinueCard({ item }: ContinueCardProps) {
     views: 0,
     duration: item.duration,
   };
-
-  useEffect(() => {
-    let active = true;
-    setUploaderVerified(item.uploaderVerified ?? false);
-    if (item.uploaderVerified !== undefined) {
-      return () => {
-        active = false;
-      };
-    }
-    resolveHistoryChannelMeta(item).then((meta) => {
-      if (active) setUploaderVerified(meta.uploaderVerified);
-    });
-    return () => {
-      active = false;
-    };
-  }, [item]);
 
   return (
     <div className="w-44 flex-shrink-0">
