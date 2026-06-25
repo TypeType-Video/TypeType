@@ -1,7 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollSentinel } from "../components/scroll-sentinel";
+import { SubscriptionChannelList } from "../components/subscription-channel-list";
 import { VideoGrid } from "../components/video-grid";
 import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
@@ -10,9 +11,18 @@ import { useSubscriptionFeed } from "../hooks/use-subscription-feed";
 import { useSubscriptions } from "../hooks/use-subscriptions";
 import { ApiError } from "../lib/api";
 
+type SubscriptionView = "videos" | "channels";
+
+function viewButtonClass(active: boolean): string {
+  return active
+    ? "bg-fg text-app"
+    : "border border-border bg-surface text-fg-muted hover:border-border-strong hover:text-fg";
+}
+
 function SubscriptionsPage() {
   const queryClient = useQueryClient();
   const prefetchedIdsRef = useRef(new Set<string>());
+  const [view, setView] = useState<SubscriptionView>("videos");
   const { query } = useSubscriptions();
   const subscriptions = query.data ?? [];
   const { streams, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -43,14 +53,47 @@ function SubscriptionsPage() {
     );
   }
 
-  if (isLoading) return <VideoGridSkeleton idPrefix="subscriptions" />;
-
   return (
-    <>
-      <VideoGrid streams={visible} />
-      {isFetchingNextPage && <VideoGridSkeleton idPrefix="subscriptions-next" />}
-      <ScrollSentinel onIntersect={fetchNextPage} enabled={hasNextPage && !isFetchingNextPage} />
-    </>
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-fg">Subscriptions</h1>
+          <p className="text-xs text-fg-soft">
+            {subscriptions.length} {subscriptions.length === 1 ? "channel" : "channels"}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <button
+            type="button"
+            onClick={() => setView("videos")}
+            className={`rounded-full px-4 py-2 text-sm transition-colors ${viewButtonClass(view === "videos")}`}
+          >
+            Videos
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("channels")}
+            className={`rounded-full px-4 py-2 text-sm transition-colors ${viewButtonClass(view === "channels")}`}
+          >
+            Channels
+          </button>
+        </div>
+      </div>
+      {view === "channels" ? (
+        <SubscriptionChannelList subscriptions={subscriptions} />
+      ) : isLoading ? (
+        <VideoGridSkeleton idPrefix="subscriptions" />
+      ) : (
+        <>
+          <VideoGrid streams={visible} />
+          {isFetchingNextPage && <VideoGridSkeleton idPrefix="subscriptions-next" />}
+          <ScrollSentinel
+            onIntersect={fetchNextPage}
+            enabled={hasNextPage && !isFetchingNextPage}
+          />
+        </>
+      )}
+    </div>
   );
 }
 
