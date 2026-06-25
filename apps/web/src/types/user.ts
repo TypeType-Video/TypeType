@@ -54,6 +54,14 @@ export type PlaylistItem = {
 export type FavoriteItem = {
   videoUrl: string;
   favoritedAt: number;
+  title?: string;
+  thumbnail?: string;
+  duration?: number;
+  channelName?: string;
+  channelUrl?: string;
+  channelAvatar?: string;
+  viewCount?: number;
+  publishedAt?: number;
 };
 
 export type WatchLaterItem = {
@@ -62,6 +70,11 @@ export type WatchLaterItem = {
   thumbnail: string;
   duration: number;
   addedAt: number;
+  channelName?: string;
+  channelUrl?: string;
+  channelAvatar?: string;
+  viewCount?: number;
+  publishedAt?: number;
 };
 
 export type ProgressItem = {

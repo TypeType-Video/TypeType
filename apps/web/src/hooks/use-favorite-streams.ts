@@ -1,17 +1,31 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { fetchFavorites } from "../lib/api-collections";
-import { fetchStream } from "../lib/api-stream";
-import { mapStreamResponse } from "../lib/mappers";
+import { proxyImage } from "../lib/proxy";
 import type { VideoStream } from "../types/stream";
+import type { FavoriteItem } from "../types/user";
 import { useAuth } from "./use-auth";
-
-function isVideoStream(value: VideoStream | undefined): value is VideoStream {
-  return value !== undefined;
-}
 
 type UseFavoriteStreamsOptions = {
   limit?: number;
 };
+
+function mapFavoriteItem(item: FavoriteItem): VideoStream {
+  const rawThumbnail = item.thumbnail ?? "";
+  const rawChannelAvatar = item.channelAvatar ?? "";
+  return {
+    id: item.videoUrl,
+    title: item.title ?? "",
+    thumbnail: proxyImage(rawThumbnail),
+    rawThumbnail,
+    rawChannelAvatar,
+    channelName: item.channelName ?? "",
+    channelUrl: item.channelUrl || undefined,
+    channelAvatar: proxyImage(rawChannelAvatar),
+    views: item.viewCount ?? 0,
+    duration: item.duration ?? 0,
+    publishedAt: item.publishedAt && item.publishedAt > 0 ? item.publishedAt : undefined,
+  };
+}
 
 export function useFavoriteStreams(options: UseFavoriteStreamsOptions = {}) {
   const { authReady, isAuthed } = useAuth();
@@ -24,19 +38,11 @@ export function useFavoriteStreams(options: UseFavoriteStreamsOptions = {}) {
     options.limit === undefined
       ? (favorites.data ?? [])
       : (favorites.data ?? []).slice(0, options.limit);
-  const streams = useQueries({
-    queries: items.map((item) => ({
-      queryKey: ["favorite-stream", item.videoUrl],
-      queryFn: () =>
-        fetchStream(item.videoUrl).then((res) => mapStreamResponse(res, item.videoUrl)),
-      enabled: favorites.isSuccess,
-    })),
-  });
 
   return {
     count: favorites.data?.length ?? 0,
     requestedCount: items.length,
-    videos: streams.map((query) => query.data).filter(isVideoStream),
-    isLoading: favorites.isLoading || streams.some((query) => query.isLoading),
+    videos: items.map(mapFavoriteItem),
+    isLoading: favorites.isLoading,
   };
 }
