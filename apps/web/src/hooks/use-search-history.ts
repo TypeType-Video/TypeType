@@ -1,9 +1,30 @@
+import type { InfiniteData } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addSearchHistory, clearSearchHistory, fetchSearchHistoryPage } from "../lib/api-user";
+import type { SearchHistoryItem } from "../types/user";
 import { useAuth } from "./use-auth";
 
 const KEY = ["search-history"];
 const PAGE_SIZE = 8;
+
+type SearchHistoryPage = {
+  items: SearchHistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+type SearchHistoryData = InfiniteData<SearchHistoryPage, number>;
+
+function emptySearchHistoryData(
+  data: SearchHistoryData | undefined,
+): SearchHistoryData | undefined {
+  if (!data) return data;
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({ ...page, items: [], total: 0 })),
+  };
+}
 
 export function useSearchHistory() {
   const qc = useQueryClient();
@@ -37,6 +58,7 @@ export function useSearchHistory() {
   const clear = useMutation({
     mutationFn: () => (isAuthed ? clearSearchHistory() : Promise.resolve()),
     onSuccess: () => {
+      qc.setQueryData<SearchHistoryData>(KEY, emptySearchHistoryData);
       qc.invalidateQueries({ queryKey: KEY });
     },
   });
