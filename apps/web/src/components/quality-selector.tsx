@@ -14,6 +14,7 @@ import {
 const qualityIcon: DefaultLayoutIcon = (props) => <ClipIcon {...props} />;
 const MENU_ITEMS_CLASS =
   "vds-menu-items max-h-[44svh] overflow-y-auto overscroll-y-contain pr-0.5 md:max-h-72 [scrollbar-width:thin] [scrollbar-color:var(--color-zinc-500)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-surface-soft/80 [&::-webkit-scrollbar-thumb:hover]:bg-surface-soft [&::-webkit-scrollbar-track]:bg-transparent";
+const QUALITY_OPTIONS = { sort: "descending" } as const;
 
 type QualityOption = ReturnType<typeof useVideoQualityOptions>[number];
 
@@ -42,7 +43,7 @@ function activeDashTrack(
 export function QualitySelector() {
   const menuRef = useRef<MenuInstance>(null);
   const { player, selectedVideoTrack } = useDashPlayerSnapshot();
-  const options = useVideoQualityOptions({ sort: "descending" });
+  const options = useVideoQualityOptions(QUALITY_OPTIONS);
 
   const dashTrack = player ? activeDashTrack(player, selectedVideoTrack) : null;
   if (player && dashTrack) {

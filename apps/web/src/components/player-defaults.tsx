@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { useAudioOptions, useMediaState, useVideoQualityOptions } from "../lib/vidstack";
 import { includesOriginal, normalizeLanguageTag } from "./player-language";
 
+const QUALITY_OPTIONS = { sort: "descending" } as const;
+
 type PlayerDefaultsProps = {
   defaultQuality?: string;
   defaultAudioLanguage?: string;
@@ -35,7 +37,7 @@ export function PlayerDefaults({
   defaultSubtitleLanguage,
 }: PlayerDefaultsProps) {
   const canPlay = useMediaState("canPlay");
-  const qualityOptions = useVideoQualityOptions({ sort: "descending" });
+  const qualityOptions = useVideoQualityOptions(QUALITY_OPTIONS);
   const audioOptions = useAudioOptions();
   const textTracks = useMediaState("textTracks");
   const qualityApplied = useRef(false);
