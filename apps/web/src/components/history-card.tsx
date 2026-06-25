@@ -83,10 +83,11 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               onRemove();
             }}
             aria-label="Remove from history"
-            className="absolute top-1.5 right-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1.5 right-1.5 rounded-full bg-black/70 p-1.5 text-white opacity-100 transition-opacity hover:bg-black/90 sm:p-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
           >
             <XIcon />
           </button>

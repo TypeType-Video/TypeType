@@ -55,7 +55,8 @@ function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<FilterState | null>(null);
   const [pendingRemoveItem, setPendingRemoveItem] = useState<HistoryItem | null>(null);
-  const { query, items, total, remove } = useHistory(searchQuery);
+  const [clearHistoryOpen, setClearHistoryOpen] = useState(false);
+  const { query, items, total, remove, clear } = useHistory(searchQuery);
   const dateRange = rangeFromFilter(filter);
 
   const allItemsQuery = useQuery({
@@ -101,7 +102,21 @@ function HistoryPage() {
         filter={filter}
         onFilterChange={setFilter}
         resultCount={filteredTotal}
+        canClearHistory={total > 0}
+        onClearHistory={() => setClearHistoryOpen(true)}
       />
+      {clearHistoryOpen && (
+        <ConfirmModal
+          title="Clear watch history?"
+          description="This removes every video from your watch history."
+          confirmLabel="Clear all"
+          onConfirm={() => {
+            clear.mutate();
+            setClearHistoryOpen(false);
+          }}
+          onCancel={() => setClearHistoryOpen(false)}
+        />
+      )}
       {pendingRemoveItem !== null && (
         <ConfirmModal
           title="Remove from history?"

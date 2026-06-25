@@ -11,6 +11,8 @@ type Props = {
   filter: FilterState | null;
   onFilterChange: (value: FilterState | null) => void;
   resultCount: number;
+  canClearHistory: boolean;
+  onClearHistory: () => void;
 };
 
 const PRESET_OPTIONS = [
@@ -50,6 +52,8 @@ export function HistoryFilter({
   filter,
   onFilterChange,
   resultCount,
+  canClearHistory,
+  onClearHistory,
 }: Props) {
   const [calendarOpen, setCalendarOpen] = useState(false);
 
@@ -89,9 +93,20 @@ export function HistoryFilter({
   return (
     <aside className="w-full lg:w-52 flex-shrink-0 flex flex-col gap-4 lg:gap-5 lg:sticky lg:top-20 lg:self-start">
       <div>
-        <p className="text-[11px] text-fg-soft uppercase tracking-wider mb-2.5">
-          {resultCount} {resultCount === 1 ? "video" : "videos"}
-        </p>
+        <div className="mb-2.5 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-fg-soft uppercase tracking-wider">
+            {resultCount} {resultCount === 1 ? "video" : "videos"}
+          </p>
+          {canClearHistory && (
+            <button
+              type="button"
+              onClick={onClearHistory}
+              className="text-[11px] text-danger transition-colors hover:text-danger-strong"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
         <div className="relative">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-soft pointer-events-none">
             <SearchIcon />
