@@ -35,7 +35,7 @@ function XIcon() {
 
 export function AdminAllowListPlaylistList({ title, playlists, onRemove }: Props) {
   return (
-    <section className="border-t border-border pt-4">
+    <section className="min-w-0 border-t border-border pt-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-fg">{title}</h2>
         <span className="text-xs text-fg-soft">
@@ -51,7 +51,7 @@ export function AdminAllowListPlaylistList({ title, playlists, onRemove }: Props
             return (
               <div
                 key={playlist.url}
-                className="flex items-center gap-3 border-b border-border px-0 py-3 last:border-b-0"
+                className="flex min-w-0 items-center gap-3 border-b border-border px-0 py-3 last:border-b-0"
               >
                 <img
                   src={proxyImage(playlist.thumbnailUrl ?? "")}
