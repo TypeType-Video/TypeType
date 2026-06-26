@@ -11,7 +11,7 @@ import {
   normalizeDownloaderErrorCode,
 } from "./downloader-errors";
 import { API_BASE as BASE } from "./env";
-import { isIosWebKitBrowser } from "./ios-device";
+import { isIosStandaloneApp, isIosWebKitBrowser } from "./ios-device";
 
 type DownloadArtifactOptions = {
   preferShare?: boolean;
@@ -121,7 +121,7 @@ export async function downloadDownloaderArtifact(
 ): Promise<void> {
   const endpoint = `${BASE}/downloader/jobs/${encodeURIComponent(jobId)}/artifact`;
   if (options.preferShare && canUseIosShareFlow()) {
-    openArtifactLocation(endpoint, true);
+    openArtifactLocation(endpoint, !isIosStandaloneApp());
     return;
   }
   openArtifactLocation(endpoint);

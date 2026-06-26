@@ -21,3 +21,12 @@ export function isIosDevice(): boolean {
 export function isIosWebKitBrowser(): boolean {
   return isIosDevice() && isWebKitEngine();
 }
+
+export function isIosStandaloneApp(): boolean {
+  if (!isIosDevice()) return false;
+  if (typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches) {
+    return true;
+  }
+  if (typeof navigator === "undefined" || !("standalone" in navigator)) return false;
+  return typeof navigator.standalone === "boolean" && navigator.standalone;
+}
