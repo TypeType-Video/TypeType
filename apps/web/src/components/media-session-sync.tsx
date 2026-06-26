@@ -35,9 +35,6 @@ export function MediaSessionSync({
   const paused = useMediaState("paused");
   const currentTimeRef = useRef(0);
   const durationRef = useRef(0);
-  const pausedRef = useRef(true);
-
-  pausedRef.current = paused;
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
@@ -98,29 +95,6 @@ export function MediaSessionSync({
       safeSetActionHandler(session, "nexttrack", null);
     };
   }, [canSeek, isLive, onPreviousTrack, onNextTrack, remote]);
-
-  useEffect(() => {
-    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
-    const onVisibilityChange = () => {
-      if (document.visibilityState !== "visible") return;
-      if (!pausedRef.current) {
-        void Promise.resolve(remote.play()).catch(() => {});
-      }
-    };
-    const onFocus = () => {
-      if (!pausedRef.current) {
-        void Promise.resolve(remote.play()).catch(() => {});
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("pageshow", onFocus);
-    window.addEventListener("focus", onFocus);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("pageshow", onFocus);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, [remote]);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;

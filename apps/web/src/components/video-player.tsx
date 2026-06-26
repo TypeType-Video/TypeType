@@ -4,6 +4,7 @@ import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-pa
 import { CaptionStyleRestorer } from "./caption-style-restorer";
 import { MediaProgressEvents } from "./media-progress-events";
 import { MediaSessionSync } from "./media-session-sync";
+import { PlaybackReturnGuard } from "./playback-return-guard";
 import { PlayerHotkeys } from "./player-hotkeys";
 import { PlayerSeeker, SeekBridge, SponsorBlockSkipper } from "./player-internals";
 import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
@@ -108,6 +109,7 @@ export function VideoPlayer({
         onNextVideo={onNextVideo}
       />
       <PlayerSeeker startTime={startTime} />
+      <PlaybackReturnGuard />
       <VolumeRestorer
         initialVolume={initialVolume}
         initialMuted={initialMuted}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useMediaRemote, useMediaState } from "../lib/vidstack";
+import { useMediaPlayer, useMediaRemote, useMediaState } from "../lib/vidstack";
 
 type Props = {
   initialVolume: number;
@@ -17,6 +17,7 @@ export function VolumeRestorer({
   onVolumeChange,
 }: Props) {
   const remote = useMediaRemote();
+  const player = useMediaPlayer();
   const volume = useMediaState("volume");
   const muted = useMediaState("muted");
   const canPlay = useMediaState("canPlay");
@@ -37,8 +38,10 @@ export function VolumeRestorer({
 
   const attemptPlay = useCallback(async () => {
     if (!mountedRef.current) return;
+    const media = player?.el?.querySelector<HTMLMediaElement>("video,audio");
+    if (media && !media.paused && !media.ended) return;
     await remote.play();
-  }, [remote]);
+  }, [player, remote]);
 
   const tryPlay = useCallback(
     (force: boolean) => {
