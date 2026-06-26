@@ -35,7 +35,12 @@ function needsProxy(url: string): boolean {
     const parsed = new URL(url);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
     const host = parsed.hostname;
-    return host.endsWith("hdslb.com") || host.endsWith("ytimg.com");
+    return (
+      host.endsWith("ggpht.com") ||
+      host.endsWith("googleusercontent.com") ||
+      host.endsWith("hdslb.com") ||
+      host.endsWith("ytimg.com")
+    );
   } catch {
     return false;
   }

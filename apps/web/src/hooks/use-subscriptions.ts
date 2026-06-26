@@ -4,7 +4,7 @@ import { normalizeChannelUrl } from "../lib/channel-url";
 import type { SubscriptionItem } from "../types/user";
 import { useAuth } from "./use-auth";
 
-const KEY = ["subscriptions"];
+export const SUBSCRIPTIONS_KEY = ["subscriptions"];
 
 function hasSubscription(data: SubscriptionItem[] | undefined, channelUrl: string): boolean {
   const target = normalizeChannelUrl(channelUrl);
@@ -28,7 +28,7 @@ export function useSubscriptions() {
   const { authReady, isAuthed } = useAuth();
 
   const query = useQuery({
-    queryKey: KEY,
+    queryKey: SUBSCRIPTIONS_KEY,
     queryFn: fetchSubscriptions,
     enabled: authReady && isAuthed,
     select: dedupeSubscriptions,
@@ -44,12 +44,12 @@ export function useSubscriptions() {
         channelUrl: normalizeChannelUrl(item.channelUrl),
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: SUBSCRIPTIONS_KEY }),
   });
 
   const remove = useMutation({
     mutationFn: (channelUrl: string) => (isAuthed ? unsubscribe(channelUrl) : Promise.resolve()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: SUBSCRIPTIONS_KEY }),
   });
 
   function isSubscribed(channelUrl: string): boolean {

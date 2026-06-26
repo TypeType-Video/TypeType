@@ -32,6 +32,7 @@ import { Route as ChannelRouteImport } from './routes/channel'
 import { Route as AdminConsoleRouteImport } from './routes/admin-console'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ImportIndexRouteImport } from './routes/import/index'
+import { Route as SubscriptionsChannelsRouteImport } from './routes/subscriptions_.channels'
 import { Route as PlaylistsIdRouteImport } from './routes/playlists_.$id'
 import { Route as ImportYoutubeRouteImport } from './routes/import/youtube'
 import { Route as ImportPipepipeRouteImport } from './routes/import/pipepipe'
@@ -153,6 +154,11 @@ const ImportIndexRoute = ImportIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ImportRoute,
 } as any)
+const SubscriptionsChannelsRoute = SubscriptionsChannelsRouteImport.update({
+  id: '/subscriptions_/channels',
+  path: '/subscriptions/channels',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlaylistsIdRoute = PlaylistsIdRouteImport.update({
   id: '/playlists_/$id',
   path: '/playlists/$id',
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
+  '/subscriptions/channels': typeof SubscriptionsChannelsRoute
   '/import/': typeof ImportIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
+  '/subscriptions/channels': typeof SubscriptionsChannelsRoute
   '/import': typeof ImportIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
@@ -266,6 +274,7 @@ export interface FileRoutesById {
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists_/$id': typeof PlaylistsIdRoute
+  '/subscriptions_/channels': typeof SubscriptionsChannelsRoute
   '/import/': typeof ImportIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
+    | '/subscriptions/channels'
     | '/import/'
     | '/auth/oidc/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
+    | '/subscriptions/channels'
     | '/import'
     | '/auth/oidc/callback'
   id:
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists_/$id'
+    | '/subscriptions_/channels'
     | '/import/'
     | '/auth/oidc/callback'
   fileRoutesById: FileRoutesById
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   YoutubeSessionRoute: typeof YoutubeSessionRoute
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute
   PlaylistsIdRoute: typeof PlaylistsIdRoute
+  SubscriptionsChannelsRoute: typeof SubscriptionsChannelsRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
 }
 
@@ -552,6 +565,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportIndexRouteImport
       parentRoute: typeof ImportRoute
     }
+    '/subscriptions_/channels': {
+      id: '/subscriptions_/channels'
+      path: '/subscriptions/channels'
+      fullPath: '/subscriptions/channels'
+      preLoaderRoute: typeof SubscriptionsChannelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/playlists_/$id': {
       id: '/playlists_/$id'
       path: '/playlists/$id'
@@ -630,6 +650,7 @@ const rootRouteChildren: RootRouteChildren = {
   YoutubeSessionRoute: YoutubeSessionRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   PlaylistsIdRoute: PlaylistsIdRoute,
+  SubscriptionsChannelsRoute: SubscriptionsChannelsRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
 }
 export const routeTree = rootRouteImport

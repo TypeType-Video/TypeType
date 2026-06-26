@@ -7,6 +7,8 @@ import type { VideoStream } from "../types/stream";
 import { useAuth } from "./use-auth";
 import { useSubscriptions } from "./use-subscriptions";
 
+export const SUBSCRIPTION_FEED_KEY = ["subscription-feed"];
+
 type Result = {
   streams: VideoStream[];
   isLoading: boolean;
@@ -24,7 +26,7 @@ export function useSubscriptionFeed(): Result {
   );
 
   const query = useInfiniteQuery({
-    queryKey: ["subscription-feed"],
+    queryKey: SUBSCRIPTION_FEED_KEY,
     queryFn: ({ pageParam }) => fetchSubscriptionFeed(pageParam as number),
     initialPageParam: 0,
     getNextPageParam: (last, pages) => (last.nextpage !== null ? pages.length : undefined),

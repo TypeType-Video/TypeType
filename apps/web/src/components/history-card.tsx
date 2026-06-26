@@ -50,21 +50,21 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
 
   return (
     <div
-      className="flex flex-col gap-2 group relative animate-card-pop-in"
+      className="group relative grid animate-card-pop-in grid-cols-[8.75rem_minmax(0,1fr)] gap-3 rounded-2xl border border-border bg-surface/45 p-2.5 sm:flex sm:flex-col sm:gap-2 sm:border-0 sm:bg-transparent sm:p-0"
       style={{ animationDelay: `${delay}ms` }}
     >
       <Link
         to="/watch"
         search={watchRouteSearch(item.url)}
-        className="block"
+        className="block min-w-0 sm:w-full"
         onMouseEnter={prefetch.onMouseEnter}
         onMouseLeave={prefetch.onMouseLeave}
       >
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-surface-strong">
+        <div className="relative aspect-video overflow-hidden rounded-xl bg-surface-strong sm:rounded-lg">
           <img
             src={proxyImage(item.thumbnail)}
             alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
             loading="lazy"
             decoding="async"
           />
@@ -93,34 +93,41 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
           </button>
         </div>
       </Link>
-      <div className="flex gap-2">
+      <div className="flex min-w-0 gap-2 py-0.5 sm:flex-none sm:py-0">
         {item.channelUrl ? (
-          <ChannelRouteLink url={item.channelUrl} className="flex-shrink-0 mt-0.5">
-            <HistoryChannelAvatar item={item} className="w-7 h-7" />
+          <ChannelRouteLink url={item.channelUrl} className="mt-0.5 hidden flex-shrink-0 sm:block">
+            <HistoryChannelAvatar item={item} className="h-7 w-7" />
           </ChannelRouteLink>
         ) : (
-          <HistoryChannelAvatar item={item} className="w-7 h-7" />
+          <span className="mt-0.5 hidden flex-shrink-0 sm:block">
+            <HistoryChannelAvatar item={item} className="h-7 w-7" />
+          </span>
         )}
-        <div className="flex flex-col gap-0.5 min-w-0">
+        <div className="flex min-w-0 flex-col gap-1.5 sm:gap-0.5">
           <Link
             to="/watch"
             search={watchRouteSearch(item.url)}
             onMouseEnter={prefetch.onMouseEnter}
             onMouseLeave={prefetch.onMouseLeave}
+            className="min-w-0"
           >
-            <p className="text-sm font-medium text-fg line-clamp-2 leading-snug">{item.title}</p>
+            <p className="line-clamp-2 text-sm font-semibold leading-snug text-fg sm:font-medium">
+              {item.title}
+            </p>
           </Link>
           {item.channelUrl ? (
             <ChannelRouteLink
               url={item.channelUrl}
-              className="text-xs text-fg-muted hover:text-fg transition-colors w-fit"
+              className="w-fit max-w-full truncate text-xs text-fg-muted transition-colors hover:text-fg"
             >
               {item.channelName}
             </ChannelRouteLink>
           ) : (
-            <p className="text-xs text-fg-muted">{item.channelName}</p>
+            <p className="truncate text-xs text-fg-muted">{item.channelName}</p>
           )}
-          <p className="text-[11px] text-fg-soft">Watched {formatWatchedAt(item.watchedAt)}</p>
+          <p className="line-clamp-1 text-[11px] text-fg-soft sm:mt-0">
+            Watched {formatWatchedAt(item.watchedAt)}
+          </p>
         </div>
       </div>
     </div>

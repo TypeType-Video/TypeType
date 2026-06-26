@@ -1,34 +1,53 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ScrollSentinel } from "../components/scroll-sentinel";
-import { SubscriptionChannelList } from "../components/subscription-channel-list";
+import { SubscriptionsHeader } from "../components/subscriptions-header";
 import { VideoGrid } from "../components/video-grid";
 import { VideoGridSkeleton } from "../components/video-grid-skeleton";
 import { useBlockedFilter } from "../hooks/use-blocked-filter";
 import { streamQueryOptions } from "../hooks/use-stream";
-import { useSubscriptionFeed } from "../hooks/use-subscription-feed";
-import { useSubscriptions } from "../hooks/use-subscriptions";
+import { SUBSCRIPTION_FEED_KEY, useSubscriptionFeed } from "../hooks/use-subscription-feed";
+import { SUBSCRIPTIONS_KEY, useSubscriptions } from "../hooks/use-subscriptions";
 import { ApiError } from "../lib/api";
+import { fetchSubscriptionFeed, fetchSubscriptions } from "../lib/api-user";
 
-type SubscriptionView = "videos" | "channels";
+const SUBSCRIPTION_STALE_MS = 5 * 60 * 1000;
 
-function viewButtonClass(active: boolean): string {
-  return active
-    ? "bg-fg text-app"
-    : "border border-border bg-surface text-fg-muted hover:border-border-strong hover:text-fg";
+function nextSubscriptionPage(
+  last: Awaited<ReturnType<typeof fetchSubscriptionFeed>>,
+  pages: unknown[],
+) {
+  return last.nextpage !== null ? pages.length : undefined;
 }
 
 function SubscriptionsPage() {
   const queryClient = useQueryClient();
   const prefetchedIdsRef = useRef(new Set<string>());
-  const [view, setView] = useState<SubscriptionView>("videos");
   const { query } = useSubscriptions();
   const subscriptions = query.data ?? [];
   const { streams, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useSubscriptionFeed();
   const { filter } = useBlockedFilter();
   const visible = useMemo(() => filter(streams), [filter, streams]);
+
+  function prefetchChannels() {
+    void queryClient.prefetchQuery({
+      queryKey: SUBSCRIPTIONS_KEY,
+      queryFn: fetchSubscriptions,
+      staleTime: SUBSCRIPTION_STALE_MS,
+    });
+  }
+
+  function prefetchVideos() {
+    void queryClient.prefetchInfiniteQuery({
+      queryKey: SUBSCRIPTION_FEED_KEY,
+      queryFn: ({ pageParam }) => fetchSubscriptionFeed(pageParam as number),
+      initialPageParam: 0,
+      getNextPageParam: nextSubscriptionPage,
+      staleTime: SUBSCRIPTION_STALE_MS,
+    });
+  }
 
   useEffect(() => {
     if (streams.length > 0) {
@@ -43,9 +62,7 @@ function SubscriptionsPage() {
     }
   }, [streams, queryClient]);
 
-  if (query.isLoading) return <VideoGridSkeleton idPrefix="subscriptions-list" />;
-
-  if (subscriptions.length === 0) {
+  if (query.isSuccess && subscriptions.length === 0) {
     return (
       <div className="flex items-center justify-center pt-32">
         <p className="text-fg-muted text-sm">No subscriptions yet.</p>
@@ -55,33 +72,13 @@ function SubscriptionsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-fg">Subscriptions</h1>
-          <p className="text-xs text-fg-soft">
-            {subscriptions.length} {subscriptions.length === 1 ? "channel" : "channels"}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex">
-          <button
-            type="button"
-            onClick={() => setView("videos")}
-            className={`rounded-full px-4 py-2 text-sm transition-colors ${viewButtonClass(view === "videos")}`}
-          >
-            Videos
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("channels")}
-            className={`rounded-full px-4 py-2 text-sm transition-colors ${viewButtonClass(view === "channels")}`}
-          >
-            Channels
-          </button>
-        </div>
-      </div>
-      {view === "channels" ? (
-        <SubscriptionChannelList subscriptions={subscriptions} />
-      ) : isLoading ? (
+      <SubscriptionsHeader
+        active="videos"
+        count={subscriptions.length}
+        onVideosIntent={prefetchVideos}
+        onChannelsIntent={prefetchChannels}
+      />
+      {query.isLoading || isLoading ? (
         <VideoGridSkeleton idPrefix="subscriptions" />
       ) : (
         <>

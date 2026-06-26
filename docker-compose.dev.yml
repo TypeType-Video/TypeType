@@ -15,7 +15,11 @@ services:
       - "${HOST_PORT_SERVER_BETA:-18080}:8080"
     env_file: .env
     environment:
+      DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-typetype}}
+      DATABASE_USER: ${DATABASE_USER:-${POSTGRES_USER:-typetype}}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
       DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
+      YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-false}
       YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://typetype-token:8081
       YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://typetype-server:8080
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
@@ -41,7 +45,9 @@ services:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
       TYPETYPE_API_BASE: http://typetype-server:8080
-      DB_URL: postgres://typetype:typetype@postgres:5432/typetype_downloader?sslmode=disable
+      DB_URL: ${DB_URL:-postgres://${POSTGRES_USER:-typetype}:${POSTGRES_PASSWORD:-typetype}@postgres:5432/typetype_downloader?sslmode=disable}
+      DB_USER: ${DB_USER:-${POSTGRES_USER:-typetype}}
+      DB_PASSWORD: ${DB_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
       REDIS_HOST: dragonfly
       REDIS_PORT: "6379"
       REDIS_QUEUE_KEY: downloader:queue
@@ -90,9 +96,9 @@ services:
   postgres:
     image: postgres:17
     environment:
-      POSTGRES_DB: typetype
-      POSTGRES_USER: typetype
-      POSTGRES_PASSWORD: typetype
+      POSTGRES_DB: ${POSTGRES_DB:-typetype}
+      POSTGRES_USER: ${POSTGRES_USER:-typetype}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-typetype}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -103,15 +109,17 @@ services:
       postgres:
         condition: service_started
     environment:
-      PGPASSWORD: typetype
+      POSTGRES_DB: ${POSTGRES_DB:-typetype}
+      POSTGRES_USER: ${POSTGRES_USER:-typetype}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-typetype}
     command:
       - /bin/sh
       - -ec
       - |
-        until pg_isready -h postgres -U typetype -d typetype; do sleep 1; done
-        EXISTS=$$(psql -h postgres -U typetype -d typetype -tAc "SELECT 1 FROM pg_database WHERE datname='typetype_downloader'")
+        until pg_isready -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"; do sleep 1; done
+        EXISTS=$$(psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT 1 FROM pg_database WHERE datname='typetype_downloader'")
         if [ "$$EXISTS" != "1" ]; then
-          psql -h postgres -U typetype -d typetype -c "CREATE DATABASE typetype_downloader"
+          psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -c "CREATE DATABASE typetype_downloader"
         fi
     restart: "no"
 
