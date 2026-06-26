@@ -162,17 +162,17 @@ services:
     ulimits:
       memlock: -1
     restart: unless-stopped
-
   garage:
     image: dxflrs/garage:v2.2.0
     ports:
       - "${HOST_PORT_GARAGE_S3:-3900}:3900"
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-}
     volumes:
       - ./garage.toml:/etc/garage.toml:ro
       - garage_meta:/var/lib/garage/meta
       - garage_data:/var/lib/garage/data
     restart: unless-stopped
-
 volumes:
   postgres_data:
   typetype_secrets:

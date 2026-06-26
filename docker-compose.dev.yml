@@ -133,6 +133,8 @@ services:
     image: dxflrs/garage:v2.2.0
     ports:
       - "${HOST_PORT_GARAGE_S3_BETA:-3900}:3900"
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-}
     volumes:
       - ./garage.toml:/etc/garage.toml:ro
       - garage_meta:/var/lib/garage/meta

@@ -229,7 +229,7 @@ docker compose up -d
 docker compose ps
 ```
 
-If you do the manual flow, edit `.env` before exposing the stack outside localhost. In particular, keep the generated downloader S3 access key, downloader S3 secret key, YouTube remote login token, and YouTube session encryption key private.
+If you do the manual flow, edit `.env` before exposing the stack outside localhost. In particular, keep the generated downloader S3 access key, downloader S3 secret key, Garage RPC secret, YouTube remote login token, and YouTube session encryption key private.
 
 ## Updating
 

@@ -7,6 +7,8 @@ ENV_FILE="${ENV_FILE:-${ROOT_DIR}/.env}"
 REMOTE_LOGIN_PLACEHOLDER="SET_ME_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN"
 REMOTE_LOGIN_LEGACY_PLACEHOLDER="SET_ME_SHARED_SECRET"
 SESSION_KEY_PLACEHOLDER="SET_ME_YOUTUBE_SESSION_ENCRYPTION_KEY"
+GARAGE_RPC_PLACEHOLDER="SET_ME_GARAGE_RPC_SECRET"
+GARAGE_RPC_STATIC_DEFAULT="f4db2c1d5aef1dce278d4315b80425e98831714a48c059e22c2a39001b15ca89"
 
 generate_secret() {
   if command -v openssl >/dev/null 2>&1; then
@@ -18,6 +20,19 @@ generate_secret() {
 import secrets
 
 print(secrets.token_urlsafe(48))
+PY
+}
+
+generate_hex_secret() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -hex 32
+    return
+  fi
+
+  python3 - <<'PY'
+import secrets
+
+print(secrets.token_hex(32))
 PY
 }
 
@@ -62,6 +77,21 @@ ensure_secret() {
   echo "[bootstrap-env] generated ${key} in ${ENV_FILE}"
 }
 
+ensure_hex_secret() {
+  local key="$1"
+  local placeholder="$2"
+  local current
+
+  current="$(env_value "${key}")"
+  if [[ -n "${current}" && "${current}" != "${placeholder}" && "${current}" != "${GARAGE_RPC_STATIC_DEFAULT}" ]]; then
+    return
+  fi
+
+  set_env_var "${key}" "$(generate_hex_secret)"
+  echo "[bootstrap-env] generated ${key} in ${ENV_FILE}"
+}
+
 ensure_env_file
 ensure_secret "YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN" "${REMOTE_LOGIN_PLACEHOLDER}"
 ensure_secret "YOUTUBE_SESSION_ENCRYPTION_KEY" "${SESSION_KEY_PLACEHOLDER}"
+ensure_hex_secret "GARAGE_RPC_SECRET" "${GARAGE_RPC_PLACEHOLDER}"

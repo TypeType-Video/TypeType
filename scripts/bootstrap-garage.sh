@@ -7,6 +7,8 @@ ENV_FILE="${ROOT_DIR}/.env"
 
 PLACEHOLDER_ACCESS_KEY="SET_ME_ACCESS_KEY"
 PLACEHOLDER_SECRET_KEY="SET_ME_SECRET_KEY"
+PLACEHOLDER_RPC_SECRET="SET_ME_GARAGE_RPC_SECRET"
+STATIC_RPC_SECRET="f4db2c1d5aef1dce278d4315b80425e98831714a48c059e22c2a39001b15ca89"
 
 generate_hex() {
   local bytes="$1"
@@ -31,6 +33,10 @@ generate_downloader_secret_key() {
   generate_hex 32
 }
 
+generate_garage_rpc_secret() {
+  generate_hex 32
+}
+
 set_env_var() {
   local env_file="$1"
   local key="$2"
@@ -47,10 +53,12 @@ ensure_random_env_keys() {
   local env_file="$1"
   local current_access_key
   local current_secret_key
+  local current_rpc_secret
   local changed=0
 
   current_access_key="$(grep '^DOWNLOADER_S3_ACCESS_KEY=' "${env_file}" | cut -d= -f2- || true)"
   current_secret_key="$(grep '^DOWNLOADER_S3_SECRET_KEY=' "${env_file}" | cut -d= -f2- || true)"
+  current_rpc_secret="$(grep '^GARAGE_RPC_SECRET=' "${env_file}" | cut -d= -f2- || true)"
 
   if [[ -z "${current_access_key}" || "${current_access_key}" == "${PLACEHOLDER_ACCESS_KEY}" ]]; then
     set_env_var "${env_file}" "DOWNLOADER_S3_ACCESS_KEY" "$(generate_downloader_access_key)"
@@ -62,13 +70,19 @@ ensure_random_env_keys() {
     changed=1
   fi
 
+  if [[ -z "${current_rpc_secret}" || "${current_rpc_secret}" == "${PLACEHOLDER_RPC_SECRET}" || "${current_rpc_secret}" == "${STATIC_RPC_SECRET}" ]]; then
+    set_env_var "${env_file}" "GARAGE_RPC_SECRET" "$(generate_garage_rpc_secret)"
+    changed=1
+  fi
+
   if [[ ${changed} -eq 1 ]]; then
-    echo "[garage-bootstrap] generated unique downloader S3 keys in ${env_file}"
+    echo "[garage-bootstrap] generated missing Garage credentials in ${env_file}"
   fi
 }
 
 KEY_ID="${DOWNLOADER_S3_ACCESS_KEY:-}"
 SECRET_KEY="${DOWNLOADER_S3_SECRET_KEY:-}"
+RPC_SECRET="${GARAGE_RPC_SECRET:-}"
 BUCKET_NAME="${DOWNLOADER_S3_BUCKET:-typetype-downloads}"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
@@ -80,6 +94,7 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     cat > "${ENV_FILE}" <<EOF
 DOWNLOADER_S3_ACCESS_KEY=${KEY_ID}
 DOWNLOADER_S3_SECRET_KEY=${SECRET_KEY}
+GARAGE_RPC_SECRET=${RPC_SECRET}
 EOF
   fi
 fi
@@ -93,9 +108,13 @@ fi
 if [[ -z "${SECRET_KEY}" || "${SECRET_KEY}" == "${PLACEHOLDER_SECRET_KEY}" ]]; then
   SECRET_KEY="$(grep '^DOWNLOADER_S3_SECRET_KEY=' "${ENV_FILE}" | cut -d= -f2-)"
 fi
+if [[ -z "${RPC_SECRET}" || "${RPC_SECRET}" == "${PLACEHOLDER_RPC_SECRET}" || "${RPC_SECRET}" == "${STATIC_RPC_SECRET}" ]]; then
+  RPC_SECRET="$(grep '^GARAGE_RPC_SECRET=' "${ENV_FILE}" | cut -d= -f2-)"
+fi
 
 export DOWNLOADER_S3_ACCESS_KEY="${KEY_ID}"
 export DOWNLOADER_S3_SECRET_KEY="${SECRET_KEY}"
+export GARAGE_RPC_SECRET="${RPC_SECRET}"
 
 compose() {
   docker compose -f "${COMPOSE_FILE}" "$@"
