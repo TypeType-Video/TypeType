@@ -25,7 +25,7 @@ type Item = {
 const BASE_ITEMS: Item[] = [
   { key: "playback", label: "Playback" },
   { key: "video", label: "Video" },
-  { key: "home", label: "Home" },
+  { key: "home", label: "Interface" },
   { key: "service", label: "Service" },
   { key: "import", label: "Import" },
   { key: "privacy", label: "Privacy" },

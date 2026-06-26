@@ -108,7 +108,7 @@ function ToggleRows({ options }: { options: ToggleOption[] }) {
   ));
 }
 
-export function SettingsContentToggles() {
+export function SettingsWatchToggles() {
   useHideEverythingTrigger();
   return (
     <>
@@ -116,6 +116,14 @@ export function SettingsContentToggles() {
         Watch page
       </div>
       <ToggleRows options={WATCH_OPTIONS} />
+    </>
+  );
+}
+
+export function SettingsDiscoveryToggles() {
+  useHideEverythingTrigger();
+  return (
+    <>
       <div className="bg-surface-soft/30 px-4 py-2 font-medium text-[11px] text-fg-soft uppercase tracking-wider">
         Discovery surfaces
       </div>

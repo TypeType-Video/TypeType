@@ -91,7 +91,7 @@ export function HistoryFilter({
   };
 
   return (
-    <aside className="order-first flex w-full flex-shrink-0 flex-col gap-4 lg:order-none lg:sticky lg:top-20 lg:w-52 lg:self-start lg:gap-5">
+    <aside className="order-first flex w-full flex-shrink-0 flex-col gap-4 rounded-2xl border border-border bg-surface/40 p-3 lg:order-none lg:sticky lg:top-20 lg:w-52 lg:self-start lg:gap-5 lg:border-0 lg:bg-transparent lg:p-0">
       <div>
         <div className="mb-2.5 flex items-center justify-between gap-3">
           <p className="text-[11px] text-fg-soft uppercase tracking-wider">
@@ -101,7 +101,7 @@ export function HistoryFilter({
             <button
               type="button"
               onClick={onClearHistory}
-              className="text-[11px] text-danger transition-colors hover:text-danger-strong"
+              className="rounded-full border border-danger/40 px-2.5 py-1 text-[11px] text-danger transition-colors hover:border-danger hover:text-danger-strong"
             >
               Clear all
             </button>
@@ -123,13 +123,13 @@ export function HistoryFilter({
 
       <div>
         <p className="text-[11px] text-fg-soft uppercase tracking-wider mb-2">Date</p>
-        <div className="grid grid-cols-2 gap-1 lg:flex lg:flex-col lg:gap-0.5">
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 lg:flex lg:flex-col lg:gap-0.5">
           {PRESET_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => handlePreset(opt.value)}
-              className={`h-8 px-2.5 rounded-lg text-xs text-left transition-colors ${
+              className={`h-8 rounded-lg px-2.5 text-left text-xs transition-colors sm:text-center lg:text-left ${
                 isPresetActive(opt.value)
                   ? "bg-fg text-app font-medium"
                   : "text-fg-muted hover:text-fg hover:bg-surface-strong"
@@ -142,7 +142,7 @@ export function HistoryFilter({
           <button
             type="button"
             onClick={handleOlderToggle}
-            className={`col-span-2 h-8 px-2.5 rounded-lg text-xs text-left transition-colors ${
+            className={`h-8 rounded-lg px-2.5 text-left text-xs transition-colors sm:text-center lg:text-left ${
               olderActive
                 ? "bg-fg text-app font-medium"
                 : "text-fg-muted hover:text-fg hover:bg-surface-strong"

@@ -1,4 +1,4 @@
-import { SettingsContentToggles } from "./settings-content-toggles";
+import { SettingsWatchToggles } from "./settings-content-toggles";
 import { SettingsSponsorBlockPreferences } from "./settings-sponsorblock-preferences";
 
 const SECTION_LABEL = "text-xs font-medium text-fg-soft uppercase tracking-wider px-1";
@@ -10,7 +10,7 @@ export function SettingsVideoPreferences() {
       <p className={SECTION_LABEL}>Content controls</p>
       <div className={CARD}>
         <SettingsSponsorBlockPreferences />
-        <SettingsContentToggles />
+        <SettingsWatchToggles />
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
 import { useSettings } from "../hooks/use-settings";
+import { SettingsDiscoveryToggles } from "./settings-content-toggles";
 
 const LANDING_OPTIONS = [
   { value: "home", label: "Home" },
@@ -14,8 +15,8 @@ export function SettingsLandingPage() {
 
   return (
     <section className="flex flex-col gap-3">
-      <p className="text-xs font-medium text-fg-soft uppercase tracking-wider px-1">Startup</p>
-      <div className="bg-surface rounded-xl border border-border px-4 py-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="px-1 text-xs font-medium text-fg-soft uppercase tracking-wider">Startup</p>
+      <div className="flex flex-col items-start gap-3 rounded-xl border border-border bg-surface px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <span className="text-sm text-fg">Default landing page</span>
           <span className="text-xs text-fg-soft">
@@ -34,6 +35,9 @@ export function SettingsLandingPage() {
             </option>
           ))}
         </select>
+      </div>
+      <div className="divide-y divide-border rounded-xl border border-border bg-surface">
+        <SettingsDiscoveryToggles />
       </div>
     </section>
   );
