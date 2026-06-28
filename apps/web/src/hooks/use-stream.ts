@@ -32,6 +32,7 @@ export function streamQueryOptions(url: string, useAuthenticatedStream = false, 
       return count < 2;
     },
     retryDelay: (attempt) => Math.min(250 * 2 ** attempt, 1500),
+    refetchOnWindowFocus: false,
   });
 }
 
