@@ -1,7 +1,12 @@
 import type { MediaContext, MediaProviderAdapter } from "@vidstack/react";
-import { DASHProviderLoader, HLSProviderLoader, VideoProviderLoader } from "@vidstack/react";
+import {
+  AudioProviderLoader,
+  DASHProviderLoader,
+  HLSProviderLoader,
+  VideoProviderLoader,
+} from "@vidstack/react";
 
-type Loader = VideoProviderLoader | HLSProviderLoader | DASHProviderLoader;
+type Loader = AudioProviderLoader | VideoProviderLoader | HLSProviderLoader | DASHProviderLoader;
 type LoaderConstructor<T extends Loader> = new () => T;
 
 declare global {
@@ -22,6 +27,7 @@ function patchLoader<T extends Loader>(LoaderClass: LoaderConstructor<T>) {
 export function patchVidstackProviderLoaders() {
   if (globalThis.typetypeVidstackProviderLoadersPatched) return;
   globalThis.typetypeVidstackProviderLoadersPatched = true;
+  patchLoader(AudioProviderLoader);
   patchLoader(VideoProviderLoader);
   patchLoader(HLSProviderLoader);
   patchLoader(DASHProviderLoader);

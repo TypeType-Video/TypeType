@@ -35,10 +35,11 @@ export function fetchAudioOnlyStream(
 }
 
 export function toAudioOnlyMediaSrc(response: AudioOnlyResponse): MediaSrc {
-  return {
+  const src = {
     src: toApiUrl(response.src),
-    type: response.mimeType.includes("webm") ? "audio/webm" : "audio/mp3",
+    type: response.mimeType.includes("webm") ? "audio/webm" : "audio/mp4",
   };
+  return src as MediaSrc;
 }
 
 export function isAudioOnlyUnavailable(error: unknown): boolean {

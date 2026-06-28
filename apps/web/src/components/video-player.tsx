@@ -59,6 +59,13 @@ export function VideoPlayer({
   const ios = isIosDevice();
   const subtitleTracks = buildSafeSubtitleTracks(subtitles);
   const mediaProps = mediaClassName ? { className: mediaClassName } : undefined;
+  const playerClassName = [
+    "w-full h-full dark",
+    audioOnly ? "typetype-audio-only-player" : null,
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
   const { handleProviderChange, handleError, handleEnded } = useVideoPlayerEvents({
     src,
     onError,
@@ -67,7 +74,7 @@ export function VideoPlayer({
 
   return (
     <MediaPlayer
-      className={className ? `w-full h-full dark ${className}` : "w-full h-full dark"}
+      className={playerClassName}
       src={src}
       viewType={audioOnly ? "audio" : "video"}
       streamType={streamType}
@@ -84,18 +91,19 @@ export function VideoPlayer({
       onError={handleError}
     >
       <MediaProvider className={mediaClassName ?? "h-full w-full"} mediaProps={mediaProps}>
-        {subtitleTracks.map((s) => (
-          <Track
-            key={s.key}
-            id={s.id}
-            kind="subtitles"
-            src={s.src}
-            label={s.label}
-            lang={s.lang}
-            type="vtt"
-          />
-        ))}
-        {chaptersVtt && <ChaptersTrack src={chaptersVtt} />}
+        {!audioOnly &&
+          subtitleTracks.map((s) => (
+            <Track
+              key={s.key}
+              id={s.id}
+              kind="subtitles"
+              src={s.src}
+              label={s.label}
+              lang={s.lang}
+              type="vtt"
+            />
+          ))}
+        {!audioOnly && chaptersVtt && <ChaptersTrack src={chaptersVtt} />}
       </MediaProvider>
       {audioOnly && <AudioOnlyPoster poster={poster} title={title} />}
       <MediaProgressEvents
@@ -106,6 +114,7 @@ export function VideoPlayer({
       />
       {overlay}
       <VideoPlayerLayout
+        audioOnly={audioOnly}
         thumbnailVtt={thumbnailVtt}
         originalAudioLocale={originalAudioLocale}
         onPreviousVideo={onPreviousVideo}

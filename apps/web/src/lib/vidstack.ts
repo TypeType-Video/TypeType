@@ -19,6 +19,7 @@ export {
 export { ClipIcon, LanguageIcon } from "@vidstack/react/icons";
 export type { DefaultLayoutIcon } from "@vidstack/react/player/layouts/default";
 export {
+  DefaultAudioLayout,
   DefaultMenuButton,
   DefaultMenuRadioGroup,
   DefaultVideoLayout,

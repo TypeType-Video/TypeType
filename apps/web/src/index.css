@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@vidstack/react/player/styles/default/theme.css";
+@import "@vidstack/react/player/styles/default/layouts/audio.css";
 @import "@vidstack/react/player/styles/default/layouts/video.css";
 @import "./styles/theme.css";
 @import "./styles/shorts-overrides.css";
@@ -173,6 +174,21 @@ body {
 
 .vds-playback-menu .vds-menu-section:has(.vds-quality-slider) {
   display: none;
+}
+
+.typetype-audio-only-player {
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.typetype-audio-only-player .vds-audio-layout {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.68));
 }
 
 @media (max-width: 639px) {
