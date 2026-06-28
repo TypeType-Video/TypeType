@@ -4,6 +4,7 @@ import { MobileTabBar } from "../components/mobile-tab-bar";
 import { Navbar } from "../components/navbar";
 import { Sidebar } from "../components/sidebar";
 import { useAuth } from "../hooks/use-auth";
+import { useInstance } from "../hooks/use-instance";
 import { useMobile } from "../hooks/use-mobile";
 import { useSessionActivityReporting } from "../hooks/use-session-activity-reporting";
 import { isAdminRoute, isAuthPage, requiresAuth } from "../lib/auth-routes";
@@ -34,7 +35,8 @@ function RootLayout() {
   const closeMobileSidebar = useUiStore((s) => s.closeMobileSidebar);
   const theme = useThemeStore((s) => s.theme);
   const cinemaMode = useWatchLayoutStore((s) => s.cinemaMode);
-  const { isAuthed, isAdmin, status } = useAuth();
+  const { isAuthed, isAdmin, isGuest, status } = useAuth();
+  const { data: instance } = useInstance();
   const location = useRouterState({ select: (state) => state.location });
   const pathname = location.pathname;
   const pathWithSearch = `${pathname}${location.searchStr}`;
@@ -71,6 +73,11 @@ function RootLayout() {
 
   useEffect(() => {
     if (status === "loading") return;
+    if (instance?.guestAllowed === false && (!isAuthed || isGuest) && !isAuthPage(pathname)) {
+      const redirect = encodeURIComponent(pathWithSearch);
+      window.location.replace(`/login?redirect=${redirect}`);
+      return;
+    }
     if (!isAuthed && isAdminRoute(pathname)) {
       const redirect = encodeURIComponent(pathWithSearch);
       window.location.replace(`/login?redirect=${redirect}`);
@@ -85,7 +92,7 @@ function RootLayout() {
       window.location.replace("/");
       return;
     }
-  }, [isAuthed, isAdmin, status, pathname, pathWithSearch]);
+  }, [instance?.guestAllowed, isAuthed, isAdmin, isGuest, status, pathname, pathWithSearch]);
 
   if (status === "loading" && (requiresAuth(pathname) || isAdminRoute(pathname))) {
     return (
