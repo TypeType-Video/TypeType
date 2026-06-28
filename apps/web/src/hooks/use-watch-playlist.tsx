@@ -6,7 +6,8 @@ import { isManagedPlaylistId } from "../lib/playlist-url";
 import { toPublicWatchParam } from "../lib/watch-url";
 import { usePlaylistOrderStore } from "../stores/playlist-order-store";
 import type { WatchPlaylistItem } from "../types/playlist";
-import { usePlaylist, usePlaylists } from "./use-playlists";
+import { usePlaylist } from "./use-playlist";
+import { usePlaylists } from "./use-playlists";
 import { usePublicPlaylist } from "./use-public-playlist";
 
 const MISSING_CURRENT_PREFETCH_LIMIT = 5;

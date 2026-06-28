@@ -47,7 +47,8 @@ export type PlaylistItem = {
   id: string;
   name: string;
   description: string;
-  videos: PlaylistVideoItem[];
+  videos?: PlaylistVideoItem[];
+  videoCount?: number;
   createdAt: number;
 };
 
@@ -100,6 +101,8 @@ export type SettingsItem = {
   defaultLandingPage: string;
   defaultQuality: string;
   autoplay: boolean;
+  autoplayCountdownSeconds: number;
+  audioOnlyPlayback: boolean;
   volume: number;
   muted: boolean;
   subtitlesEnabled: boolean;

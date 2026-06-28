@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchFavorites } from "../lib/api-collections";
 import { proxyImage } from "../lib/proxy";
 import type { VideoStream } from "../types/stream";
-import type { FavoriteItem } from "../types/user";
+import type { FavoriteItem, PlaylistVideoItem } from "../types/user";
 import { useAuth } from "./use-auth";
 
 type UseFavoriteStreamsOptions = {
@@ -27,6 +27,26 @@ function mapFavoriteItem(item: FavoriteItem): VideoStream {
   };
 }
 
+function mapFavoritePlaylistItem(item: FavoriteItem, position: number): PlaylistVideoItem {
+  return {
+    id: item.videoUrl,
+    url: item.videoUrl,
+    title: item.title ?? "Unavailable video",
+    thumbnail: item.thumbnail ?? "",
+    channelName: item.channelName ?? "",
+    channelUrl: item.channelUrl ?? "",
+    channelAvatar: item.channelAvatar ?? "",
+    viewCount: item.viewCount ?? 0,
+    duration: item.duration ?? 0,
+    position,
+    addedAt: item.favoritedAt,
+    publishedAt: item.publishedAt,
+    watchPosition: 0,
+    watched: false,
+    progressUpdatedAt: 0,
+  };
+}
+
 export function useFavoriteStreams(options: UseFavoriteStreamsOptions = {}) {
   const { authReady, isAuthed } = useAuth();
   const favorites = useQuery({
@@ -43,6 +63,7 @@ export function useFavoriteStreams(options: UseFavoriteStreamsOptions = {}) {
     count: favorites.data?.length ?? 0,
     requestedCount: items.length,
     videos: items.map(mapFavoriteItem),
+    playlistVideos: items.map(mapFavoritePlaylistItem),
     isLoading: favorites.isLoading,
   };
 }
