@@ -12,6 +12,8 @@ const DEFAULTS: SettingsItem = {
   defaultLandingPage: "home",
   defaultQuality: "1080p",
   autoplay: true,
+  autoplayCountdownSeconds: 10,
+  audioOnlyPlayback: false,
   volume: 1,
   muted: false,
   subtitlesEnabled: false,
@@ -60,10 +62,18 @@ export function useSettings() {
       if (!isAuthed) return Promise.resolve(next);
       return updateSettings(next);
     },
-    onSuccess: (data) => {
-      qc.setQueryData(KEY, data);
+    onMutate: async (patch) => {
+      await qc.cancelQueries({ queryKey: KEY });
+      const previous = qc.getQueryData<SettingsItem>(KEY);
+      qc.setQueryData<SettingsItem>(KEY, { ...DEFAULTS, ...previous, ...patch });
+      return { previous, patch };
     },
-    onError: (err) => {
+    onSuccess: (data, _patch, context) => {
+      const current = qc.getQueryData<SettingsItem>(KEY);
+      qc.setQueryData(KEY, { ...DEFAULTS, ...current, ...data, ...context?.patch });
+    },
+    onError: (err, _patch, context) => {
+      if (context?.previous) qc.setQueryData(KEY, context.previous);
       console.error("[settings] PUT failed", err);
     },
   });

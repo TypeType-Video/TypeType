@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { usePlaybackMode } from "../hooks/use-playback-mode";
 import { useSettings } from "../hooks/use-settings";
+import { PLAYBACK_ROW, PlaybackNumberRow, PlaybackToggleRow } from "./settings-playback-row";
 
 const SECTION_LABEL = "text-xs font-medium text-fg-soft uppercase tracking-wider px-1";
 const CARD = "bg-surface rounded-xl border border-border divide-y divide-border";
-const ROW = "flex items-center justify-between px-4 py-4";
 
 const QUALITY_OPTIONS = ["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"];
 
@@ -81,33 +81,38 @@ export function SettingsPlayback() {
   const { settings, update } = useSettings();
   const { playbackMode, setMode } = usePlaybackMode();
   const compatibilityMode = playbackMode === "ios-legacy-compat";
+  const autoplayCountdownSeconds = Math.min(
+    60,
+    Math.max(0, Math.round(settings.autoplayCountdownSeconds)),
+  );
 
   return (
     <section className="flex flex-col gap-3">
       <p className={SECTION_LABEL}>Playback</p>
       <div className={CARD}>
-        <div className={ROW}>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-fg">Autoplay</span>
-            <span className="text-xs text-fg-soft">Automatically play the next video</span>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={settings.autoplay}
-            onClick={() => update.mutate({ autoplay: !settings.autoplay })}
-            className={`relative w-10 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ml-6 ${
-              settings.autoplay ? "bg-fg" : "bg-surface-soft"
-            }`}
-          >
-            <span
-              className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full transition-all duration-200 ${
-                settings.autoplay ? "translate-x-5 bg-surface" : "translate-x-0 bg-surface-soft"
-              }`}
-            />
-          </button>
-        </div>
-        <div className={ROW}>
+        <PlaybackToggleRow
+          title="Autoplay"
+          description="Automatically play the next video"
+          checked={settings.autoplay}
+          onClick={() => update.mutate({ autoplay: !settings.autoplay })}
+        />
+        <PlaybackNumberRow
+          title="Autoplay countdown"
+          description="Seconds before autoplay advances, or 0 for immediate playlists"
+          value={autoplayCountdownSeconds}
+          min={0}
+          max={60}
+          onChange={(value) =>
+            update.mutate({ autoplayCountdownSeconds: Math.min(60, Math.max(0, value)) })
+          }
+        />
+        <PlaybackToggleRow
+          title="Audio-only playback"
+          description="Load a backend-provided audio stream when available"
+          checked={settings.audioOnlyPlayback}
+          onClick={() => update.mutate({ audioOnlyPlayback: !settings.audioOnlyPlayback })}
+        />
+        <div className={PLAYBACK_ROW}>
           <div className="flex flex-col gap-1">
             <span className="text-sm text-fg">Default quality</span>
             <span className="text-xs text-fg-soft">Preferred video resolution</span>
@@ -117,57 +122,20 @@ export function SettingsPlayback() {
             onChange={(q) => update.mutate({ defaultQuality: q })}
           />
         </div>
-        <div className={ROW}>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-fg">Enable high quality playback</span>
-            <span className="text-xs text-fg-soft">
-              Allows VP9/AV1 adaptive streams when supported. May not work on all browsers or
-              devices.
-            </span>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={settings.enableHighQualityPlayback}
-            onClick={() =>
-              update.mutate({ enableHighQualityPlayback: !settings.enableHighQualityPlayback })
-            }
-            className={`relative w-10 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ml-6 ${
-              settings.enableHighQualityPlayback ? "bg-fg" : "bg-surface-soft"
-            }`}
-          >
-            <span
-              className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full transition-all duration-200 ${
-                settings.enableHighQualityPlayback
-                  ? "translate-x-5 bg-surface"
-                  : "translate-x-0 bg-surface-soft"
-              }`}
-            />
-          </button>
-        </div>
-        <div className={ROW}>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-fg">Compatibility playback mode</span>
-            <span className="text-xs text-fg-soft">
-              Prioritize reliable iOS legacy playback over adaptive behavior
-            </span>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={compatibilityMode}
-            onClick={() => setMode(compatibilityMode ? "adaptive" : "ios-legacy-compat")}
-            className={`relative w-10 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ml-6 ${
-              compatibilityMode ? "bg-fg" : "bg-surface-soft"
-            }`}
-          >
-            <span
-              className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full transition-all duration-200 ${
-                compatibilityMode ? "translate-x-5 bg-surface" : "translate-x-0 bg-surface-soft"
-              }`}
-            />
-          </button>
-        </div>
+        <PlaybackToggleRow
+          title="Enable high quality playback"
+          description="Allows VP9/AV1 adaptive streams when supported. May not work on all browsers or devices."
+          checked={settings.enableHighQualityPlayback}
+          onClick={() =>
+            update.mutate({ enableHighQualityPlayback: !settings.enableHighQualityPlayback })
+          }
+        />
+        <PlaybackToggleRow
+          title="Compatibility playback mode"
+          description="Prioritize reliable iOS legacy playback over adaptive behavior"
+          checked={compatibilityMode}
+          onClick={() => setMode(compatibilityMode ? "adaptive" : "ios-legacy-compat")}
+        />
       </div>
     </section>
   );
