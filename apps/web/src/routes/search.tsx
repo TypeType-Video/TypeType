@@ -21,7 +21,7 @@ function SearchPage() {
     contentFilter,
     sortFilter,
   );
-  const { filter } = useBlockedFilter();
+  const { filter, isChannelBlocked, isPlaylistBlocked } = useBlockedFilter();
 
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
@@ -35,11 +35,13 @@ function SearchPage() {
   const items: SearchResultItem[] = [];
   for (const page of data?.pages ?? []) {
     for (const channel of page.channels) {
+      if (isChannelBlocked(channel)) continue;
       if (seen.has(channel.url)) continue;
       seen.add(channel.url);
       items.push({ kind: "channel", channel });
     }
     for (const playlist of page.playlists) {
+      if (isPlaylistBlocked(playlist)) continue;
       if (seen.has(playlist.url)) continue;
       seen.add(playlist.url);
       items.push({ kind: "playlist", playlist });
