@@ -56,6 +56,7 @@ export function SponsorBlockSkipper({
   const remote = useMediaRemote();
   const activeMuteRef = useRef<string | null>(null);
   const restoreMutedRef = useRef(false);
+  const previousTimeRef = useRef<number | null>(null);
   useEffect(() => {
     const root = player?.el;
     if (!root) return;
@@ -67,9 +68,21 @@ export function SponsorBlockSkipper({
       media.dispatchEvent(new Event("volumechange", { bubbles: true }));
     }
 
+    function finishAtEnd(media: HTMLMediaElement, duration: number) {
+      remote.seek(duration);
+      window.setTimeout(() => {
+        const currentTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
+        if (!media.ended && currentTime >= duration - 1.5) {
+          media.dispatchEvent(new Event("ended", { bubbles: true }));
+        }
+      }, 150);
+    }
+
     function process(media: HTMLMediaElement) {
       const duration = Number.isFinite(media.duration) ? media.duration : 0;
       const currentTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
+      const previousTime = previousTimeRef.current;
+      previousTimeRef.current = currentTime;
       let activeMute: string | null = null;
       for (const seg of segments) {
         if (seg.action !== "skip") continue;
@@ -77,7 +90,16 @@ export function SponsorBlockSkipper({
         const endTime = getSponsorBlockEndTime(seg, duration);
         if (currentTime >= startTime && currentTime < endTime) {
           if (!muteInsteadOfSkip) {
-            remote.seek(endTime);
+            const crossedStart =
+              previousTime === null
+                ? currentTime <= startTime + 0.5
+                : previousTime < startTime && previousTime <= currentTime;
+            if (!crossedStart) break;
+            if (duration > 0 && endTime >= duration - 0.75) {
+              finishAtEnd(media, duration);
+            } else {
+              remote.seek(endTime);
+            }
             break;
           }
           activeMute = `${seg.category}:${seg.startTime}`;
@@ -100,15 +122,20 @@ export function SponsorBlockSkipper({
       if (cleanup) return true;
       const media = rootElement.querySelector<HTMLMediaElement>("video,audio");
       if (!media) return false;
+      previousTimeRef.current = null;
       const update = () => process(media);
+      const seek = () => {
+        previousTimeRef.current = Number.isFinite(media.currentTime) ? media.currentTime : 0;
+        process(media);
+      };
       media.addEventListener("timeupdate", update);
-      media.addEventListener("seeking", update);
+      media.addEventListener("seeking", seek);
       media.addEventListener("durationchange", update);
       media.addEventListener("loadedmetadata", update);
       update();
       cleanup = () => {
         media.removeEventListener("timeupdate", update);
-        media.removeEventListener("seeking", update);
+        media.removeEventListener("seeking", seek);
         media.removeEventListener("durationchange", update);
         media.removeEventListener("loadedmetadata", update);
       };
