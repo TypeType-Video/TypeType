@@ -1,5 +1,6 @@
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { GuestDisabledScreen } from "../components/guest-disabled-screen";
 import { MobileTabBar } from "../components/mobile-tab-bar";
 import { Navbar } from "../components/navbar";
 import { Sidebar } from "../components/sidebar";
@@ -73,11 +74,6 @@ function RootLayout() {
 
   useEffect(() => {
     if (status === "loading") return;
-    if (instance?.guestAllowed === false && (!isAuthed || isGuest) && !isAuthPage(pathname)) {
-      const redirect = encodeURIComponent(pathWithSearch);
-      window.location.replace(`/login?redirect=${redirect}`);
-      return;
-    }
     if (!isAuthed && isAdminRoute(pathname)) {
       const redirect = encodeURIComponent(pathWithSearch);
       window.location.replace(`/login?redirect=${redirect}`);
@@ -92,7 +88,7 @@ function RootLayout() {
       window.location.replace("/");
       return;
     }
-  }, [instance?.guestAllowed, isAuthed, isAdmin, isGuest, status, pathname, pathWithSearch]);
+  }, [isAuthed, isAdmin, status, pathname, pathWithSearch]);
 
   if (status === "loading" && (requiresAuth(pathname) || isAdminRoute(pathname))) {
     return (
@@ -103,6 +99,10 @@ function RootLayout() {
   }
 
   const authPage = isAuthPage(pathname);
+
+  if (instance?.guestAllowed === false && (!isAuthed || isGuest) && !authPage) {
+    return <GuestDisabledScreen />;
+  }
 
   if (authPage) {
     return <AuthShell />;
