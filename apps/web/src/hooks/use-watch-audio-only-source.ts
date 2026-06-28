@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { isAudioOnlyUnavailable, toAudioOnlyMediaSrc } from "../lib/api-audio-only";
 import type { MediaSrc } from "../lib/vidstack";
 import type { VideoStream } from "../types/stream";
@@ -23,10 +24,14 @@ export function useWatchAudioOnlySource(
     settings.defaultAudioLanguage,
     enabled,
   );
+  const src = useMemo(
+    () => (enabled && query.data ? toAudioOnlyMediaSrc(query.data) : null),
+    [enabled, query.data],
+  );
   return {
     enabled,
     loading: enabled && query.isLoading,
-    src: enabled && query.data ? toAudioOnlyMediaSrc(query.data) : null,
+    src,
     unavailable: enabled && isAudioOnlyUnavailable(query.error),
   };
 }

@@ -11,6 +11,7 @@ import { useWatchEndedNavigation } from "../hooks/use-watch-ended-navigation";
 import { useWatchVttAssets } from "../hooks/use-watch-layout-assets";
 import { useWatchPlayerEvents } from "../hooks/use-watch-player-events";
 import { useWatchPlaylist } from "../hooks/use-watch-playlist";
+import { useWatchSourceStartTime } from "../hooks/use-watch-source-start-time";
 import { useWatchSponsorBlock } from "../hooks/use-watch-sponsorblock";
 import { useWatchToast } from "../hooks/use-watch-toast";
 import { getOriginalAudioLocale } from "../lib/audio-track";
@@ -61,14 +62,6 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
     sponsor.segments,
     settings.sponsorBlockShowChapters,
   );
-  const playerKey = [
-    stream.id,
-    retryKey,
-    settings.enableHighQualityPlayback ? "hq" : "std",
-    thumbnailVtt ? "thumbs" : "no-thumbs",
-    chaptersVtt ? "chapters" : "no-chapters",
-  ].join(":");
-
   const autoplay = useWatchEndedNavigation({
     settingsReady,
     autoplay: settings.autoplay,
@@ -93,6 +86,20 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
     playerEvents.positionRef,
     handleError,
   );
+  const sourceStart = useWatchSourceStartTime({
+    streamId: stream.id,
+    sourceKey: audioOnly.src ? "audio" : "video",
+    startTime: retryStartTime > 0 ? retryStartTime : startTime,
+    positionRef: playerEvents.positionRef,
+  });
+  const playerKey = [
+    stream.id,
+    retryKey,
+    sourceStart.keyPart,
+    settings.enableHighQualityPlayback ? "hq" : "std",
+    thumbnailVtt ? "thumbs" : "no-thumbs",
+    chaptersVtt ? "chapters" : "no-chapters",
+  ].join(":");
 
   const overlay = (
     <WatchPlayerOverlay
@@ -123,7 +130,7 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
         manifestSrc={audioOnly.src ?? manifestSrc}
         audioOnly={Boolean(audioOnly.src)}
         playerKey={playerKey}
-        startTime={retryStartTime > 0 ? retryStartTime : startTime}
+        startTime={sourceStart.startTime}
         isLive={isLive}
         settingsReady={settingsReady}
         navigating={navigating || audioOnly.loading}

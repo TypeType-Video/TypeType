@@ -58,6 +58,7 @@ export function MediaProgressEvents({ onTimeUpdate, onPause, onSeeked, onEnded }
       media.addEventListener("seeked", seeked);
       media.addEventListener("ended", ended);
       cleanup = () => {
+        update();
         media.removeEventListener("timeupdate", update);
         media.removeEventListener("pause", pause);
         media.removeEventListener("seeking", seeking);
