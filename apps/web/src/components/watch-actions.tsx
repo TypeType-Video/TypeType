@@ -3,9 +3,10 @@ import { useAuth } from "../hooks/use-auth";
 import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
 import { useSettings } from "../hooks/use-settings";
 import { useShareUrl } from "../hooks/use-share-url";
+import { useWatchAudioOnlySource } from "../hooks/use-watch-audio-only-source";
 import { detectProvider } from "../lib/provider";
 import { goto } from "../lib/route-redirect";
-import { toPublicWatchUrl } from "../lib/watch-url";
+import { toPublicWatchParam, toPublicWatchUrl, toWatchSourceUrl } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { DanmakuControls } from "./danmaku-controls";
 import { DownloadSheet } from "./download-sheet";
@@ -34,7 +35,7 @@ export function WatchActions({ stream }: Props) {
   const [reportOpen, setReportOpen] = useState(false);
   const [toastLabel, setToastLabel] = useState<string | null>(null);
   const saveAnchorRef = useRef<HTMLButtonElement>(null);
-  const { isAuthed } = useAuth();
+  const { authReady, isAuthed } = useAuth();
   const {
     add: addFavorite,
     remove: removeFavorite,
@@ -45,6 +46,16 @@ export function WatchActions({ stream }: Props) {
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
   const audioOnlyAvailable = !isLive && !isNicoNico;
+  const audioOnlySource = useWatchAudioOnlySource(
+    toWatchSourceUrl(toPublicWatchParam(stream.id)),
+    settings,
+    !audioOnlyAvailable,
+  );
+  const audioOnlyDisabled =
+    update.isPending ||
+    !authReady ||
+    audioOnlySource.loading ||
+    (!isAuthed && !settings.audioOnlyPlayback);
 
   function handleSaved(label: string) {
     setToastLabel(label);
@@ -95,11 +106,12 @@ export function WatchActions({ stream }: Props) {
       {audioOnlyAvailable && (
         <WatchActionButton
           onClick={() => update.mutate({ audioOnlyPlayback: !settings.audioOnlyPlayback })}
+          disabled={audioOnlyDisabled}
           pressed={settings.audioOnlyPlayback}
           active={settings.audioOnlyPlayback}
         >
           <HeadphonesIcon />
-          Audio only
+          {audioOnlySource.loading ? "Loading audio..." : "Audio only"}
         </WatchActionButton>
       )}
       <WatchActionButton onClick={() => share(toPublicWatchUrl(stream.id, window.location.origin))}>

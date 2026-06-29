@@ -4,6 +4,7 @@ import { API_BASE as BASE, toApiUrl } from "./env";
 import type { MediaSrc } from "./vidstack";
 
 export type AudioOnlyResponse = {
+  kind?: "progressive" | "hls";
   src: string;
   mimeType: string;
   codec: string;
@@ -35,11 +36,21 @@ export function fetchAudioOnlyStream(
 }
 
 export function toAudioOnlyMediaSrc(response: AudioOnlyResponse): MediaSrc {
-  const src = {
+  if (
+    response.kind === "hls" ||
+    response.mimeType.includes("mpegurl") ||
+    response.mimeType.includes("x-mpegurl")
+  ) {
+    return { src: toApiUrl(response.src), type: "application/x-mpegurl" };
+  }
+  if (response.mimeType.includes("webm")) {
+    return { src: toApiUrl(response.src), type: "audio/webm" };
+  }
+  const mp4Source = {
     src: toApiUrl(response.src),
-    type: response.mimeType.includes("webm") ? "audio/webm" : "audio/mp4",
+    type: "audio/mp4",
   };
-  return src as MediaSrc;
+  return mp4Source as MediaSrc;
 }
 
 export function isAudioOnlyUnavailable(error: unknown): boolean {

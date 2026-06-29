@@ -6,6 +6,7 @@ import type { SettingsItem } from "../types/user";
 import { useAuth } from "./use-auth";
 
 const KEY = ["settings"];
+const AUDIO_ONLY_STORAGE_KEY = "typetype-audio-only-playback";
 
 const DEFAULTS: SettingsItem = {
   defaultService: 0,
@@ -40,6 +41,22 @@ const DEFAULTS: SettingsItem = {
   captionStyles: EMPTY_CAPTION_STYLES,
 };
 
+function readAudioOnlyPlayback(): boolean | null {
+  const stored = localStorage.getItem(AUDIO_ONLY_STORAGE_KEY);
+  if (stored === "true") return true;
+  if (stored === "false") return false;
+  return null;
+}
+
+function writeAudioOnlyPlayback(value: boolean): void {
+  localStorage.setItem(AUDIO_ONLY_STORAGE_KEY, String(value));
+}
+
+function withLocalAudioOnly(settings: SettingsItem): SettingsItem {
+  const audioOnlyPlayback = readAudioOnlyPlayback();
+  return audioOnlyPlayback === null ? settings : { ...settings, audioOnlyPlayback };
+}
+
 export function useSettings() {
   const qc = useQueryClient();
   const { authReady, isAuthed } = useAuth();
@@ -64,6 +81,8 @@ export function useSettings() {
     },
     onMutate: async (patch) => {
       await qc.cancelQueries({ queryKey: KEY });
+      if (typeof patch.audioOnlyPlayback === "boolean")
+        writeAudioOnlyPlayback(patch.audioOnlyPlayback);
       const previous = qc.getQueryData<SettingsItem>(KEY);
       qc.setQueryData<SettingsItem>(KEY, { ...DEFAULTS, ...previous, ...patch });
       return { previous, patch };
@@ -78,7 +97,7 @@ export function useSettings() {
     },
   });
 
-  const settings = query.data ? { ...DEFAULTS, ...query.data } : DEFAULTS;
+  const settings = withLocalAudioOnly(query.data ? { ...DEFAULTS, ...query.data } : DEFAULTS);
 
   return { query, update, settings, settingsReady };
 }

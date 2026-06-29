@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { isAudioOnlyUnavailable, toAudioOnlyMediaSrc } from "../lib/api-audio-only";
 import type { MediaSrc } from "../lib/vidstack";
-import type { VideoStream } from "../types/stream";
 import type { SettingsItem } from "../types/user";
 import { useAudioOnlyStream } from "./use-audio-only-stream";
 
@@ -13,13 +12,13 @@ type WatchAudioOnlySource = {
 };
 
 export function useWatchAudioOnlySource(
-  stream: VideoStream,
+  sourceUrl: string,
   settings: SettingsItem,
   isLive: boolean,
 ): WatchAudioOnlySource {
   const enabled = settings.audioOnlyPlayback && !isLive;
   const query = useAudioOnlyStream(
-    stream.id,
+    sourceUrl,
     settings.preferOriginalLanguage,
     settings.defaultAudioLanguage,
     enabled,
