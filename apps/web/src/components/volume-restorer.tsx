@@ -21,9 +21,7 @@ export function VolumeRestorer({
   const volume = useMediaState("volume");
   const muted = useMediaState("muted");
   const canPlay = useMediaState("canPlay");
-  const paused = useMediaState("paused");
   const restoredRef = useRef(false);
-  const resumeOnReturnRef = useRef(false);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
   const mountedRef = useRef(true);
@@ -59,7 +57,6 @@ export function VolumeRestorer({
         .then(() => {
           if (!mountedRef.current) return;
           clearRetry();
-          if (force) resumeOnReturnRef.current = false;
         })
         .catch(() => {
           if (!force) return;
@@ -94,38 +91,6 @@ export function VolumeRestorer({
   useEffect(() => {
     tryPlay(false);
   }, [tryPlay]);
-
-  useEffect(() => {
-    if (!settingsReady) return;
-    const markResumeIntent = () => {
-      resumeOnReturnRef.current = !paused;
-    };
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        markResumeIntent();
-        return;
-      }
-      if (resumeOnReturnRef.current) tryPlay(true);
-    };
-    const onPageHide = () => {
-      markResumeIntent();
-    };
-    const onPageShow = () => {
-      if (resumeOnReturnRef.current) tryPlay(true);
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("pagehide", onPageHide);
-    window.addEventListener("pageshow", onPageShow);
-    window.addEventListener("focus", onPageShow);
-    window.addEventListener("online", onPageShow);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("pagehide", onPageHide);
-      window.removeEventListener("pageshow", onPageShow);
-      window.removeEventListener("focus", onPageShow);
-      window.removeEventListener("online", onPageShow);
-    };
-  }, [settingsReady, paused, tryPlay]);
 
   useEffect(() => {
     mountedRef.current = true;
