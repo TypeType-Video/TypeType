@@ -16,6 +16,8 @@ export type HistoryItem = {
   duration: number;
   progress: number;
   watchedAt: number;
+  publishedAt?: number;
+  viewCount?: number;
 };
 
 export type SubscriptionItem = {

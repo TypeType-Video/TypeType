@@ -84,6 +84,8 @@ function WatchPage() {
       channelUrl: stream.channelUrl ?? "",
       channelAvatar: stream.rawChannelAvatar,
       duration: stream.duration,
+      publishedAt: stream.publishedAt,
+      viewCount: stream.views,
       progress,
     });
   }, [authReady, isAuthed, progressFetch.data?.position, progressFetch.isPending, stream]);
