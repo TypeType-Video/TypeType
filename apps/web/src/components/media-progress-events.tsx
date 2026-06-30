@@ -56,6 +56,7 @@ export function MediaProgressEvents({ onTimeUpdate, onPlay, onPause, onSeeked, o
       };
       const ended = () => {
         update();
+        if (media.loop) return;
         onEndedRef.current?.();
       };
 
