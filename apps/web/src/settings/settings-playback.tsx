@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePlaybackMode } from "../hooks/use-playback-mode";
 import { useSettings } from "../hooks/use-settings";
+import { useSkipPlaylistAutoplayScreen } from "../hooks/use-skip-playlist-autoplay-screen";
 import { PLAYBACK_ROW, PlaybackNumberRow, PlaybackToggleRow } from "./settings-playback-row";
 
 const SECTION_LABEL = "text-xs font-medium text-fg-soft uppercase tracking-wider px-1";
@@ -80,6 +81,8 @@ function QualityDropdown({ value, onChange }: DropdownProps) {
 export function SettingsPlayback() {
   const { settings, update } = useSettings();
   const { playbackMode, setMode } = usePlaybackMode();
+  const { skipPlaylistAutoplayScreen, setSkipPlaylistAutoplayScreen } =
+    useSkipPlaylistAutoplayScreen();
   const compatibilityMode = playbackMode === "ios-legacy-compat";
   const autoplayCountdownSeconds = Math.min(
     60,
@@ -105,6 +108,12 @@ export function SettingsPlayback() {
           onChange={(value) =>
             update.mutate({ autoplayCountdownSeconds: Math.min(60, Math.max(0, value)) })
           }
+        />
+        <PlaybackToggleRow
+          title="Skip playlist autoplay screen"
+          description="Play the next playlist item immediately while keeping the countdown for recommendations"
+          checked={skipPlaylistAutoplayScreen}
+          onClick={() => setSkipPlaylistAutoplayScreen(!skipPlaylistAutoplayScreen)}
         />
         <PlaybackToggleRow
           title="Audio-only playback"

@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { WatchPlaylistItem } from "../types/playlist";
 import type { VideoStream } from "../types/stream";
+import { useSkipPlaylistAutoplayScreen } from "./use-skip-playlist-autoplay-screen";
 
 const DEFAULT_AUTOPLAY_DELAY_SECONDS = 10;
 
@@ -16,6 +17,7 @@ export type AutoplayTarget = {
   title: string;
   thumbnail: string;
   channelName: string;
+  source: "playlist" | "related";
   duration?: number;
   search: WatchSearch;
 };
@@ -50,6 +52,7 @@ export function useWatchEndedNavigation({
   related,
 }: Params) {
   const navigate = useNavigate();
+  const { skipPlaylistAutoplayScreen } = useSkipPlaylistAutoplayScreen();
   const delaySeconds = Math.min(60, Math.max(0, Math.round(countdownSeconds)));
   const delayMs = delaySeconds * 1000;
   const [target, setTarget] = useState<AutoplayTarget | null>(null);
@@ -65,6 +68,7 @@ export function useWatchEndedNavigation({
         title: nextVideo?.title ?? "Next video",
         thumbnail: nextVideo?.thumbnail ?? "",
         channelName: nextVideo?.channelName ?? "",
+        source: "playlist",
         search: { v: nextParam, list, ...(shuffle ? { shuffle } : {}) },
       };
     }
@@ -76,6 +80,7 @@ export function useWatchEndedNavigation({
       title: relatedVideo.title,
       thumbnail: relatedVideo.thumbnail,
       channelName: relatedVideo.channelName,
+      source: "related",
       duration: relatedVideo.duration,
       search: { v: relatedVideo.id },
     };
@@ -130,6 +135,10 @@ export function useWatchEndedNavigation({
     if (!settingsReady || !autoplay) return;
     const next = nextTargetRef.current;
     if (!next || dismissedTargetIdRef.current === next.id) return;
+    if (skipPlaylistAutoplayScreen && next.source === "playlist") {
+      navigate({ to: "/watch", search: next.search });
+      return;
+    }
     if (delayMs <= 0) {
       navigate({ to: "/watch", search: next.search });
       return;
@@ -137,7 +146,7 @@ export function useWatchEndedNavigation({
     setRemainingMs(delayMs);
     setPaused(false);
     setTarget(next);
-  }, [settingsReady, autoplay, delayMs, navigate]);
+  }, [settingsReady, autoplay, skipPlaylistAutoplayScreen, delayMs, navigate]);
 
   return {
     handleEnded,
