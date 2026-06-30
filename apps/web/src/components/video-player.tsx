@@ -11,6 +11,7 @@ import { PlayerSeeker, SeekBridge, SponsorBlockSkipper } from "./player-internal
 import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
+import { SponsorBlockSkipNotice } from "./sponsorblock-skip-notice";
 import { buildSafeSubtitleTracks } from "./subtitle-track-utils";
 import { ChaptersTrack } from "./video-player-core";
 import { useVideoPlayerEvents } from "./video-player-events";
@@ -156,6 +157,7 @@ export function VideoPlayer({
         />
       )}
       {sponsorBlockSegments && <SponsorBlockBar segments={sponsorBlockSegments} />}
+      {sponsorBlockSegments && <SponsorBlockSkipNotice />}
       {showCurrentSponsorBlockSegment && sponsorBlockSegments && (
         <SponsorBlockCurrentSegment
           segments={sponsorBlockSegments}

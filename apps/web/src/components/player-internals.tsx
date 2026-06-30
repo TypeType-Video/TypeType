@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import { isIosDevice } from "../lib/ios-device";
 import { getSponsorBlockEndTime, getSponsorBlockStartTime } from "../lib/sponsorblock-settings";
-import { sponsorBlockSkipTarget } from "../lib/sponsorblock-skip";
+import {
+  emitSponsorBlockSkip,
+  isSponsorBlockEndSkip,
+  sponsorBlockSkipTarget,
+} from "../lib/sponsorblock-skip";
 import { useMediaPlayer, useMediaRemote, useMediaState } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 
@@ -86,6 +90,11 @@ export function SponsorBlockSkipper({
                 ? currentTime <= startTime + 0.5
                 : previousTime < startTime && previousTime <= currentTime;
             if (!crossedStart) break;
+            emitSponsorBlockSkip({
+              category: seg.category,
+              automatic: true,
+              toEnd: isSponsorBlockEndSkip(endTime, duration),
+            });
             remote.seek(sponsorBlockSkipTarget(endTime, duration));
             break;
           }

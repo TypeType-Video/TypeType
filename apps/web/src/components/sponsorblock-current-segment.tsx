@@ -6,6 +6,8 @@ import {
   getSponsorBlockStartTime,
 } from "../lib/sponsorblock-settings";
 import {
+  emitSponsorBlockSkip,
+  isSponsorBlockEndSkip,
   sponsorBlockSkipTarget,
 } from "../lib/sponsorblock-skip";
 import { useMediaPlayer, useMediaRemote } from "../lib/vidstack";
@@ -102,6 +104,11 @@ export function SponsorBlockCurrentSegment({
 
   function skipCurrentSegment() {
     const endTime = getSponsorBlockEndTime(current, duration);
+    emitSponsorBlockSkip({
+      category: current.category,
+      automatic: false,
+      toEnd: isSponsorBlockEndSkip(endTime, duration),
+    });
     remote.seek(sponsorBlockSkipTarget(endTime, duration));
   }
 
