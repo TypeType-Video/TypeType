@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { isIosDevice } from "../lib/ios-device";
 import { getSponsorBlockEndTime, getSponsorBlockStartTime } from "../lib/sponsorblock-settings";
+import { sponsorBlockSkipTarget } from "../lib/sponsorblock-skip";
 import { useMediaPlayer, useMediaRemote, useMediaState } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 
@@ -68,16 +69,6 @@ export function SponsorBlockSkipper({
       media.dispatchEvent(new Event("volumechange", { bubbles: true }));
     }
 
-    function finishAtEnd(media: HTMLMediaElement, duration: number) {
-      remote.seek(duration);
-      window.setTimeout(() => {
-        const currentTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
-        if (!media.ended && currentTime >= duration - 1.5) {
-          media.dispatchEvent(new Event("ended", { bubbles: true }));
-        }
-      }, 150);
-    }
-
     function process(media: HTMLMediaElement) {
       const duration = Number.isFinite(media.duration) ? media.duration : 0;
       const currentTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
@@ -95,11 +86,7 @@ export function SponsorBlockSkipper({
                 ? currentTime <= startTime + 0.5
                 : previousTime < startTime && previousTime <= currentTime;
             if (!crossedStart) break;
-            if (duration > 0 && endTime >= duration - 0.75) {
-              finishAtEnd(media, duration);
-            } else {
-              remote.seek(endTime);
-            }
+            remote.seek(sponsorBlockSkipTarget(endTime, duration));
             break;
           }
           activeMute = `${seg.category}:${seg.startTime}`;
