@@ -61,6 +61,32 @@ Download the stack files without starting Docker:
 curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash -s -- --download-only
 ```
 
+Install and start only the beta stack automatically:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/dev/scripts/install-stack.sh | bash -s -- --beta --yes
+```
+
+The beta installer creates `~/typetype-beta-stack`, downloads `docker-compose.dev.yml`, pulls only the beta images, starts only that Compose stack, and bootstraps Garage.
+
+Beta endpoints:
+
+| Service | URL |
+|---|---|
+| Web app | `http://localhost:18082` |
+| API backend | `http://localhost:18080` |
+| Token service | `http://localhost:18081` |
+| Garage S3 | `http://localhost:3900` |
+
+Update only the beta stack:
+
+```sh
+cd ~/typetype-beta-stack
+docker compose -f docker-compose.dev.yml --env-file .env pull
+docker compose -f docker-compose.dev.yml --env-file .env up -d --force-recreate
+docker compose -f docker-compose.dev.yml --env-file .env ps
+```
+
 ## Screenshots
 
 ![TypeType home](assets/screenshots/01-home-desktop.png)

@@ -6,6 +6,10 @@ REF="main"
 INSTALL_DIR="${HOME}/typetype-stack"
 START_STACK=1
 SOURCE_DIR=""
+BETA_STACK=0
+AUTO_APPROVE=0
+REF_SET=0
+INSTALL_DIR_SET=0
 
 DEFAULT_DOWNLOADER_S3_ACCESS_KEY="SET_ME_ACCESS_KEY"
 DEFAULT_DOWNLOADER_S3_SECRET_KEY="SET_ME_SECRET_KEY"
@@ -27,12 +31,14 @@ Usage:
 Options:
   --ref <git-ref>       Git ref to download (default: main)
   --dir <path>          Install directory (default: ~/typetype-stack)
+  --beta                Install the beta Compose stack only (default ref: dev)
+  --yes                 Start Docker automatically without prompts
   --download-only       Download/update files only, do not start Docker
   --source-dir <path>   Copy files from a local repo path (advanced)
   -h, --help            Show this help
 
 Safety:
-  This installer is intentionally interactive (prompts + confirmations).
+  This installer prompts by default. Use --yes for automatic startup.
 EOF
 }
 
@@ -40,11 +46,21 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --ref)
       REF="$2"
+      REF_SET=1
       shift 2
       ;;
     --dir)
       INSTALL_DIR="$2"
+      INSTALL_DIR_SET=1
       shift 2
+      ;;
+    --beta)
+      BETA_STACK=1
+      shift
+      ;;
+    --yes)
+      AUTO_APPROVE=1
+      shift
       ;;
     --download-only)
       START_STACK=0
@@ -65,6 +81,14 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ ${BETA_STACK} -eq 1 && ${REF_SET} -eq 0 ]]; then
+  REF="dev"
+fi
+
+if [[ ${BETA_STACK} -eq 1 && ${INSTALL_DIR_SET} -eq 0 ]]; then
+  INSTALL_DIR="${HOME}/typetype-beta-stack"
+fi
 
 need_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -292,7 +316,9 @@ fetch_file() {
 
 need_cmd curl
 need_cmd docker
-require_tty
+if [[ ${AUTO_APPROVE} -eq 0 ]]; then
+  require_tty
+fi
 
 if ! docker compose version >/dev/null 2>&1; then
   echo "[install] docker compose is required (Docker Compose v2)." >&2
@@ -311,7 +337,16 @@ mkdir -p "${INSTALL_DIR}"
 
 echo "[install] Installing TypeType stack files into: ${INSTALL_DIR}"
 
-fetch_file "docker-compose.yml" "${INSTALL_DIR}/docker-compose.yml"
+if [[ ${BETA_STACK} -eq 1 ]]; then
+  COMPOSE_SOURCE="docker-compose.dev.yml"
+  COMPOSE_NAME="docker-compose.dev.yml"
+else
+  COMPOSE_SOURCE="docker-compose.yml"
+  COMPOSE_NAME="docker-compose.yml"
+fi
+COMPOSE_FILE="${INSTALL_DIR}/${COMPOSE_NAME}"
+
+fetch_file "${COMPOSE_SOURCE}" "${COMPOSE_FILE}"
 fetch_file "nginx.conf" "${INSTALL_DIR}/nginx.conf"
 fetch_file "garage.toml" "${INSTALL_DIR}/garage.toml"
 fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
@@ -334,10 +369,18 @@ ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
 "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
-HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_SERVER" "8080" "API")"
-HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_TOKEN" "8081" "token")"
-HOST_PORT_WEB_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_WEB" "8082" "frontend")"
-HOST_PORT_GARAGE_S3_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_GARAGE_S3" "3900" "Garage S3")"
+if [[ ${BETA_STACK} -eq 1 ]]; then
+  HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_SERVER_BETA" "18080" "beta API")"
+  HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_TOKEN_BETA" "18081" "beta token")"
+  HOST_PORT_WEB_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_WEB_BETA" "18082" "beta frontend")"
+  HOST_PORT_GARAGE_S3_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_GARAGE_S3_BETA" "3900" "beta Garage S3")"
+  choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_DOWNLOADER_BETA" "19093" "beta downloader" >/dev/null
+else
+  HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_SERVER" "8080" "API")"
+  HOST_PORT_TOKEN_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_TOKEN" "8081" "token")"
+  HOST_PORT_WEB_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_WEB" "8082" "frontend")"
+  HOST_PORT_GARAGE_S3_RESOLVED="$(choose_stack_port "${INSTALL_DIR}/.env" "HOST_PORT_GARAGE_S3" "3900" "Garage S3")"
+fi
 set_env_var "${INSTALL_DIR}/.env" "DOWNLOADER_S3_PUBLIC_ENDPOINT" "http://localhost:${HOST_PORT_GARAGE_S3_RESOLVED}"
 
 current_origins="$(grep '^ALLOWED_ORIGINS=' "${INSTALL_DIR}/.env" | cut -d= -f2- || true)"
@@ -345,12 +388,17 @@ legacy_origins="http://localhost:${HOST_PORT_WEB_RESOLVED},http://localhost:5173
 packaged_origins="http://localhost:8082,http://localhost:5173"
 packaged_current_origins="http://localhost:8082,http://127.0.0.1:8082,http://localhost:5173,http://127.0.0.1:5173"
 generated_origins="http://localhost:${HOST_PORT_WEB_RESOLVED},http://127.0.0.1:${HOST_PORT_WEB_RESOLVED},http://localhost:5173,http://127.0.0.1:5173"
-if [[ -z "${current_origins}" || "${current_origins}" == "${packaged_origins}" || "${current_origins}" == "${packaged_current_origins}" || "${current_origins}" == "${legacy_origins}" ]]; then
+beta_packaged_origins="http://localhost:18082,http://127.0.0.1:18082,http://localhost:5173,http://127.0.0.1:5173"
+if [[ -z "${current_origins}" || "${current_origins}" == "${packaged_origins}" || "${current_origins}" == "${packaged_current_origins}" || "${current_origins}" == "${legacy_origins}" || "${current_origins}" == "${beta_packaged_origins}" ]]; then
   default_origins="${generated_origins}"
 else
   default_origins="${current_origins}"
 fi
-prompt_tty input_origins "ALLOWED_ORIGINS" "${default_origins}"
+if [[ ${AUTO_APPROVE} -eq 1 ]]; then
+  input_origins="${default_origins}"
+else
+  prompt_tty input_origins "ALLOWED_ORIGINS" "${default_origins}"
+fi
 if grep -q '^ALLOWED_ORIGINS=' "${INSTALL_DIR}/.env"; then
   sed -i "s|^ALLOWED_ORIGINS=.*$|ALLOWED_ORIGINS=${input_origins}|" "${INSTALL_DIR}/.env"
 else
@@ -359,31 +407,31 @@ fi
 
 if [[ ${START_STACK} -eq 0 ]]; then
   echo "[install] Download-only complete."
-  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/setup-stack.sh"
+  echo "[install] Next step: cd ${INSTALL_DIR} && docker compose -f ${COMPOSE_NAME} --env-file .env up -d"
   exit 0
 fi
 
-if ! confirm_tty "Proceed with Docker pull + startup in ${INSTALL_DIR}?"; then
+if [[ ${AUTO_APPROVE} -eq 0 ]] && ! confirm_tty "Proceed with Docker pull + startup in ${INSTALL_DIR}?"; then
   echo "[install] Stack files are ready in ${INSTALL_DIR}."
   echo "[install] Docker startup skipped."
-  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/setup-stack.sh"
+  echo "[install] Next step: cd ${INSTALL_DIR} && docker compose -f ${COMPOSE_NAME} --env-file .env up -d"
   exit 0
 fi
 
 echo "[install] Pulling Docker images..."
-docker compose -f "${INSTALL_DIR}/docker-compose.yml" --env-file "${INSTALL_DIR}/.env" pull
+docker compose -f "${COMPOSE_FILE}" --env-file "${INSTALL_DIR}/.env" pull
 
 echo "[install] Starting stack..."
-docker compose -f "${INSTALL_DIR}/docker-compose.yml" --env-file "${INSTALL_DIR}/.env" up -d
+docker compose -f "${COMPOSE_FILE}" --env-file "${INSTALL_DIR}/.env" up -d
 
 echo "[install] Bootstrapping Garage..."
 (
   cd "${INSTALL_DIR}"
-  ./scripts/bootstrap-garage.sh
+  COMPOSE_FILE="${COMPOSE_FILE}" ./scripts/bootstrap-garage.sh
 )
 
 echo "[install] Service status:"
-docker compose -f "${INSTALL_DIR}/docker-compose.yml" --env-file "${INSTALL_DIR}/.env" ps
+docker compose -f "${COMPOSE_FILE}" --env-file "${INSTALL_DIR}/.env" ps
 
 echo
 echo "Done. Open http://localhost:${HOST_PORT_WEB_RESOLVED}"
