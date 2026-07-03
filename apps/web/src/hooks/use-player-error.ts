@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { bilibiliVariantCount } from "../lib/bilibili-manifest";
 import { recordClientEvent } from "../lib/client-debug-log";
 import { sanitizeVideoContext } from "../lib/debug-sanitize";
 import { isIosDevice } from "../lib/ios-device";
 import { detectProvider } from "../lib/provider";
+import {
+  hasLegacyDashPair,
+  hasMultipleAudioLanguages,
+  hasSabrPlayback,
+  legacyProgressiveStreams,
+} from "../lib/stream-delivery";
 import { isSignedHlsManifestUrl, resolveManifestSrc } from "../lib/stream-src";
 import type { MediaSrc } from "../lib/vidstack";
 import type { VideoStream } from "../types/stream";
@@ -13,27 +19,11 @@ type UsePlayerErrorReturn = {
   manifestSrc: MediaSrc;
   playerFailed: boolean;
   qualityFailed: boolean;
+  clearFailed: () => void;
   handleError: () => void;
   reset: () => void;
   retryKey: number;
 };
-
-function normalizeLanguageTag(value: string | null): string {
-  if (value === null || value.length === 0) return "";
-  const [base] = value.toLowerCase().split("-");
-  return base ?? "";
-}
-
-function hasMultipleAudioLanguages(stream: VideoStream): boolean {
-  const languages = new Set<string>();
-  for (const track of stream.audioStreams ?? []) {
-    const language = normalizeLanguageTag(track.audioLocale);
-    if (!language) continue;
-    languages.add(language);
-    if (languages.size > 1) return true;
-  }
-  return false;
-}
 
 export function usePlayerError(
   stream: VideoStream,
@@ -48,17 +38,19 @@ export function usePlayerError(
   const preferServerManifests = instance?.guestAllowed !== false;
   const preferNativeManifest =
     preferServerManifests && !iosDevice && !hasMultipleAudioLanguages(stream);
-  const videoOnlyCount = stream.videoOnlyStreams?.length ?? 0;
+  const legacyDashPair = hasLegacyDashPair(stream);
+  const legacyProgressiveCount = legacyProgressiveStreams(stream).length;
+  const hasLegacyPlaybackFallback = legacyDashPair || legacyProgressiveCount > 0;
+  const sabrEnabled = provider === "youtube" && !isLive && hasSabrPlayback(stream);
   const highQualityEnabled =
     enableHighQualityPlayback &&
     !isLive &&
     !iosDevice &&
     preferServerManifests &&
     !stream.hlsUrl &&
-    videoOnlyCount > 0 &&
+    legacyDashPair &&
     provider === "youtube";
-  const nativeEnabled =
-    preferServerManifests && !isLive && videoOnlyCount > 0 && preferNativeManifest;
+  const nativeEnabled = preferServerManifests && !isLive && legacyDashPair && preferNativeManifest;
   const hlsEnabled = Boolean(stream.hlsUrl && (isLive || isSignedHlsManifestUrl(stream.hlsUrl)));
   const [hlsFailed, setHlsFailed] = useState(false);
   const [highQualityFailed, setHighQualityFailed] = useState(false);
@@ -73,43 +65,26 @@ export function usePlayerError(
       ? bilibiliVariantCount(stream.videoOnlyStreams ?? [], stream.audioStreams ?? [])
       : 0;
 
-  const manifestSrc = useMemo(() => {
-    if (compatibilityFallback) {
-      return resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
-        preferNativeManifest,
-        compatibilityMode: true,
-        enableHighQualityPlayback: highQualityEnabled,
-        highQualityFailed,
-        hlsFailed,
-        allowServerManifests: preferServerManifests,
-        bilibiliVariant,
-      });
-    }
-    return resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
-      preferNativeManifest,
-      enableHighQualityPlayback: highQualityEnabled,
-      highQualityFailed,
-      hlsFailed,
-      allowServerManifests: preferServerManifests,
-      bilibiliVariant,
-    });
-  }, [
-    stream,
-    isLive,
-    nativeFailed,
-    qualityFailed,
+  const manifestSrc = resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
     preferNativeManifest,
-    compatibilityFallback,
-    highQualityEnabled,
+    compatibilityMode: compatibilityFallback,
+    enableHighQualityPlayback: highQualityEnabled,
     highQualityFailed,
     hlsFailed,
-    preferServerManifests,
+    allowServerManifests: preferServerManifests,
     bilibiliVariant,
-  ]);
+  });
 
   const handleError = useCallback(() => {
-    if (hlsEnabled && !hlsFailed) {
+    if (sabrEnabled) {
+      recordClientEvent("player.sabr_failed", { video: debugVideo });
+      setPlayerFailed(true);
+    } else if (hlsEnabled && !hlsFailed) {
       recordClientEvent("player.hls_failed", { video: debugVideo });
+      if (!hasLegacyPlaybackFallback) {
+        setPlayerFailed(true);
+        return;
+      }
       setHlsFailed(true);
       setRetryKey((k) => k + 1);
     } else if (provider === "bilibili" && bilibiliVariant < bilibiliVariants - 1) {
@@ -124,11 +99,11 @@ export function usePlayerError(
       recordClientEvent("player.native_manifest_failed", { video: debugVideo });
       setNativeFailed(true);
       setRetryKey((k) => k + 1);
-    } else if (!qualityFailed) {
+    } else if (legacyDashPair && !qualityFailed) {
       recordClientEvent("player.quality_failed", { video: debugVideo });
       setQualityFailed(true);
       setRetryKey((k) => k + 1);
-    } else if (!isLive && !compatibilityFallback) {
+    } else if (!isLive && hasLegacyPlaybackFallback && !compatibilityFallback) {
       recordClientEvent("player.compatibility_fallback", { video: debugVideo });
       setCompatibilityFallback(true);
       setRetryKey((k) => k + 1);
@@ -140,6 +115,8 @@ export function usePlayerError(
     debugVideo,
     hlsEnabled,
     hlsFailed,
+    sabrEnabled,
+    hasLegacyPlaybackFallback,
     provider,
     bilibiliVariant,
     bilibiliVariants,
@@ -147,6 +124,7 @@ export function usePlayerError(
     highQualityFailed,
     nativeEnabled,
     nativeFailed,
+    legacyDashPair,
     qualityFailed,
     compatibilityFallback,
     isLive,
@@ -163,6 +141,10 @@ export function usePlayerError(
     setRetryKey((k) => k + 1);
   }, []);
 
+  const clearFailed = useCallback(() => {
+    setPlayerFailed(false);
+  }, []);
+
   useEffect(() => {
     if (streamId.length === 0) return;
     setHlsFailed(false);
@@ -175,5 +157,5 @@ export function usePlayerError(
     setRetryKey(0);
   }, [streamId]);
 
-  return { manifestSrc, playerFailed, qualityFailed, handleError, reset, retryKey };
+  return { manifestSrc, playerFailed, qualityFailed, clearFailed, handleError, reset, retryKey };
 }

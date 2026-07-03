@@ -29,6 +29,7 @@ export function useWatchPlayerSourceState(args: Args) {
   const sourceStart = useWatchSourceStartTime({
     streamId: args.streamId,
     sourceKey: args.hasAudioOnlySource ? "audio" : "video",
+    retryKey: args.retryKey,
     startTime: args.startTime,
     positionRef: args.positionRef,
   });
@@ -50,7 +51,7 @@ export function useWatchPlayerSourceState(args: Args) {
     autoplayRef.current = {
       playerKey,
       settingsReady: args.settingsReady,
-      autoplay: args.settingsReady && args.shouldAutoplay(),
+      autoplay: args.retryKey === 0 && args.settingsReady && args.shouldAutoplay(),
     };
   }
   const waitForInitialAudioSource = useWatchInitialAudioSource(args);

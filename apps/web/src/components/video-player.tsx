@@ -1,5 +1,7 @@
 import { isIosDevice } from "../lib/ios-device";
-import { MediaPlayer, MediaProvider, Track } from "../lib/vidstack";
+import { isSabrSessionSource } from "../lib/sabr-source";
+import { SABR_VIDEO_LOADERS } from "../lib/sabr-video-loader";
+import { MediaPlayer, MediaProvider } from "../lib/vidstack";
 import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-patch";
 import { AudioCenterToggle } from "./audio-center-toggle";
 import { AudioOnlyPoster } from "./audio-only-poster";
@@ -9,13 +11,14 @@ import { MediaSessionSync } from "./media-session-sync";
 import { PlayerHotkeys } from "./player-hotkeys";
 import { PlayerSeeker, SeekBridge, SponsorBlockSkipper } from "./player-internals";
 import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
+import { PlayerSourceAttachment } from "./player-source-attachment";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
 import { SponsorBlockSkipNotice } from "./sponsorblock-skip-notice";
-import { buildSafeSubtitleTracks } from "./subtitle-track-utils";
-import { ChaptersTrack } from "./video-player-core";
+import { videoPlayerClassName } from "./video-player-class";
 import { useVideoPlayerEvents } from "./video-player-events";
 import { VideoPlayerLayout } from "./video-player-layout";
+import { VideoPlayerTracks } from "./video-player-tracks";
 import type { VideoPlayerProps } from "./video-player-types";
 import { VolumeRestorer } from "./volume-restorer";
 
@@ -59,16 +62,8 @@ export function VideoPlayer({
   mediaClassName,
 }: VideoPlayerProps) {
   const ios = isIosDevice();
-  const subtitleTracks = buildSafeSubtitleTracks(subtitles);
-  const mediaProps = mediaClassName ? { className: mediaClassName } : undefined;
-  const playerClassName = [
-    "w-full h-full dark",
-    "typetype-player-surface",
-    audioOnly ? "typetype-audio-only-player" : null,
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const playerClassName = videoPlayerClassName(audioOnly, className);
+  const customSource = isSabrSessionSource(src);
   const { handleProviderChange, handleError, handleEnded } = useVideoPlayerEvents({
     src,
     onError,
@@ -93,21 +88,16 @@ export function VideoPlayer({
       onProviderChange={handleProviderChange}
       onError={handleError}
     >
-      <MediaProvider className={mediaClassName ?? "h-full w-full"} mediaProps={mediaProps}>
-        {!audioOnly &&
-          subtitleTracks.map((s) => (
-            <Track
-              key={s.key}
-              id={s.id}
-              kind="subtitles"
-              src={s.src}
-              label={s.label}
-              lang={s.lang}
-              type="vtt"
-            />
-          ))}
-        {!audioOnly && chaptersVtt && <ChaptersTrack src={chaptersVtt} />}
+      <MediaProvider
+        className={mediaClassName ?? "h-full w-full"}
+        loaders={customSource ? SABR_VIDEO_LOADERS : []}
+        mediaProps={mediaClassName ? { className: mediaClassName } : undefined}
+      >
+        {!audioOnly && <VideoPlayerTracks subtitles={subtitles} chaptersVtt={chaptersVtt} />}
       </MediaProvider>
+      {customSource && (
+        <PlayerSourceAttachment src={src} autoplay={autoplay} onError={handleError} />
+      )}
       {audioOnly && <AudioOnlyPoster poster={poster} title={title} />}
       {audioOnly && <AudioCenterToggle />}
       <MediaProgressEvents
@@ -130,7 +120,6 @@ export function VideoPlayer({
         initialVolume={initialVolume}
         initialMuted={initialMuted}
         settingsReady={settingsReady}
-        autoplay={autoplay}
         onVolumeChange={onVolumeChange}
       />
       {captionStyles && onCaptionStylesChange && (

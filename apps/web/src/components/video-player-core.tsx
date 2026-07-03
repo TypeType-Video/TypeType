@@ -3,16 +3,6 @@ import { notifyDashPlayer, setDashPlayer } from "../lib/dash-player-store";
 import type { MediaProviderAdapter } from "../lib/vidstack";
 import { isDASHProvider, Track, useMediaState } from "../lib/vidstack";
 
-function shimDashjsQualityApi(player: dashjs.MediaPlayerClass): void {
-  Reflect.set(
-    player,
-    "setQualityFor",
-    (type: dashjs.MediaType, index: number, forceReplace = false) => {
-      player.setRepresentationForTypeByIndex(type, index, forceReplace);
-    },
-  );
-}
-
 export function ChaptersTrack({ src }: { src: string }) {
   const duration = useMediaState("duration");
   if (!Number.isFinite(duration) || duration <= 0) return null;
@@ -47,6 +37,5 @@ export function onProviderChange(provider: MediaProviderAdapter | null) {
         },
       },
     });
-    shimDashjsQualityApi(player);
   });
 }

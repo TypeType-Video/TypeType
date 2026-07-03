@@ -59,10 +59,12 @@ export function SponsorBlockSkipper({
 }) {
   const player = useMediaPlayer();
   const remote = useMediaRemote();
+  const canPlay = useMediaState("canPlay");
   const activeMuteRef = useRef<string | null>(null);
   const restoreMutedRef = useRef(false);
   const previousTimeRef = useRef<number | null>(null);
   useEffect(() => {
+    if (!canPlay) return;
     const root = player?.el;
     if (!root) return;
     const rootElement = root;
@@ -147,6 +149,6 @@ export function SponsorBlockSkipper({
       observer.disconnect();
       cleanup?.();
     };
-  }, [muteInsteadOfSkip, player, segments, remote]);
+  }, [canPlay, muteInsteadOfSkip, player, segments, remote]);
   return null;
 }

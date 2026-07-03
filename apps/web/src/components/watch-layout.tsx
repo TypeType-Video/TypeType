@@ -34,17 +34,13 @@ type Props = {
   list?: string;
   shuffle?: string;
 };
-
 export function WatchLayout({ stream, startTime, currentParam, navigating, list, shuffle }: Props) {
   const isMobile = useMobile();
   const save = useSaveProgress(stream.id);
   const { settings, update, settingsReady } = useSettings();
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
-  const { manifestSrc, playerFailed, qualityFailed, handleError, reset, retryKey } = usePlayerError(
-    stream,
-    isLive,
-    settings.enableHighQualityPlayback,
-  );
+  const { manifestSrc, playerFailed, qualityFailed, clearFailed, handleError, reset, retryKey } =
+    usePlayerError(stream, isLive, settings.enableHighQualityPlayback);
   const { on: bulletCommentsOn } = useDanmakuStore();
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
   const hideComments = settings.hideComments;
@@ -80,6 +76,7 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
     stream,
     isLive,
     mutate: save.mutate,
+    onPlay: clearFailed,
     onEnded: autoplay.handleEnded,
   });
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(

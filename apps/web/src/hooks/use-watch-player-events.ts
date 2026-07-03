@@ -7,10 +7,11 @@ type Args = {
   stream: VideoStream;
   isLive: boolean;
   mutate: (positionMs: number) => void;
+  onPlay?: () => void;
   onEnded: () => void;
 };
 
-export function useWatchPlayerEvents({ stream, isLive, mutate, onEnded }: Args) {
+export function useWatchPlayerEvents({ stream, isLive, mutate, onPlay, onEnded }: Args) {
   const playingRef = useRef(true);
   const streamIdRef = useRef(stream.id);
   if (streamIdRef.current !== stream.id) {
@@ -32,7 +33,8 @@ export function useWatchPlayerEvents({ stream, isLive, mutate, onEnded }: Args) 
   });
   const handlePlay = useCallback(() => {
     playingRef.current = true;
-  }, []);
+    onPlay?.();
+  }, [onPlay]);
   const handleTrackedPause = useCallback(() => {
     playingRef.current = false;
     sessionReporting.handlePause();

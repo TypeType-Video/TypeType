@@ -4,6 +4,7 @@ import { useRef } from "react";
 type Args = {
   streamId: string;
   sourceKey: string;
+  retryKey: number;
   startTime: number;
   positionRef: MutableRefObject<number>;
 };
@@ -11,7 +12,7 @@ type Args = {
 type SourceState = {
   streamId: string;
   sourceKey: string;
-  requestedStartTime: number;
+  retryKey: number;
   revision: number;
   startTime: number;
 };
@@ -20,17 +21,23 @@ function validPosition(position: number) {
   return Number.isFinite(position) ? Math.max(0, position) : 0;
 }
 
-export function useWatchSourceStartTime({ streamId, sourceKey, startTime, positionRef }: Args) {
+export function useWatchSourceStartTime({
+  streamId,
+  sourceKey,
+  retryKey,
+  startTime,
+  positionRef,
+}: Args) {
   const stateRef = useRef<SourceState | null>(null);
   const requestedStartTime = validPosition(startTime);
   const currentPosition = validPosition(positionRef.current);
   const state = stateRef.current;
 
-  if (!state || state.streamId !== streamId) {
+  if (!state || state.streamId !== streamId || state.retryKey !== retryKey) {
     stateRef.current = {
       streamId,
       sourceKey,
-      requestedStartTime,
+      retryKey,
       revision: 0,
       startTime: requestedStartTime,
     };
@@ -38,15 +45,9 @@ export function useWatchSourceStartTime({ streamId, sourceKey, startTime, positi
     stateRef.current = {
       streamId,
       sourceKey,
-      requestedStartTime,
+      retryKey,
       revision: state.revision + 1,
       startTime: currentPosition > 0 ? currentPosition : requestedStartTime,
-    };
-  } else if (requestedStartTime !== state.requestedStartTime) {
-    stateRef.current = {
-      ...state,
-      requestedStartTime,
-      startTime: requestedStartTime,
     };
   }
 
