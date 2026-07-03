@@ -34,6 +34,10 @@ export default defineConfig(({ mode }) => {
         "/streams/manifest": {
           target: apiTarget,
         },
+        "/sabr": {
+          target: apiTarget,
+          ws: true,
+        },
       },
     },
   };

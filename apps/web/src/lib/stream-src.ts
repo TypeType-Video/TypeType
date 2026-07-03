@@ -1,13 +1,13 @@
 import type { VideoStream } from "../types/stream";
 import { buildBilibiliDashManifest } from "./bilibili-manifest";
-import { buildDashManifest } from "./dash-manifest";
 import { API_BASE as BASE, toApiUrl } from "./env";
 import { buildNicoHlsManifest } from "./nico-hls-manifest";
 import { isCompatibilityPlaybackMode } from "./playback-mode";
 import { detectProvider } from "./provider";
 import { proxyDashManifest } from "./proxy";
-import { pickCompactAudioTracks } from "./stream-audio-compact";
 import { hasCompatibleMp4, pickCompatibleProgressiveSrc } from "./stream-compatibility";
+import { hasLegacyDashPair, resolveSabrSrc } from "./stream-delivery";
+import { resolveLegacyFallbackSrc } from "./stream-fallback-src";
 import type { MediaSrc } from "./vidstack";
 
 type ResolveManifestOptions = {
@@ -38,41 +38,6 @@ export function resolveHlsManifestUrl(stream: VideoStream): string {
   return proxyDashManifest(`${BASE}/streams/hls-manifest?url=${encodeURIComponent(stream.id)}`);
 }
 
-function fallbackSrc(
-  stream: VideoStream,
-  maxHeight: number | undefined,
-  compactAudioTracks: boolean,
-  preferredAudioLanguage: string | undefined,
-  maxCompactAudioTracks: number,
-  allowServerManifests: boolean,
-): MediaSrc {
-  const audioStreams = compactAudioTracks
-    ? pickCompactAudioTracks(
-        stream.audioStreams ?? [],
-        preferredAudioLanguage,
-        maxCompactAudioTracks,
-      )
-    : (stream.audioStreams ?? []);
-
-  if (stream.videoOnlyStreams?.length && stream.audioStreams?.length) {
-    const built = buildDashManifest(
-      stream.videoOnlyStreams,
-      audioStreams,
-      stream.duration,
-      maxHeight,
-    );
-    if (built) return { src: built, type: "application/dash+xml" };
-  }
-  if (!allowServerManifests) {
-    const progressiveSrc = pickCompatibleProgressiveSrc(stream);
-    if (progressiveSrc) return progressiveSrc;
-  }
-  return {
-    src: `${BASE}/streams/manifest?url=${encodeURIComponent(stream.id)}`,
-    type: "application/dash+xml",
-  };
-}
-
 export function resolveManifestSrc(
   stream: VideoStream,
   isLive: boolean,
@@ -89,6 +54,12 @@ export function resolveManifestSrc(
   const provider = detectProvider(stream.id);
   const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox/");
   const safeMaxHeight = qualityFailed ? 720 : 1080;
+  const legacyDashPair = hasLegacyDashPair(stream);
+  const allowLegacyServerManifests = allowServerManifests;
+
+  if (provider === "youtube" && !isLive && !isShort) {
+    return resolveSabrSrc(stream) ?? { src: "", type: "video/mp4" };
+  }
 
   if (stream.hlsUrl && !options?.hlsFailed && (isLive || isSignedHlsManifestUrl(stream.hlsUrl))) {
     return {
@@ -128,8 +99,8 @@ export function resolveManifestSrc(
     provider === "youtube" &&
     options?.enableHighQualityPlayback &&
     !options.highQualityFailed &&
-    allowServerManifests &&
-    stream.videoOnlyStreams?.length &&
+    allowLegacyServerManifests &&
+    legacyDashPair &&
     !compatibilityMode
   ) {
     return {
@@ -140,10 +111,10 @@ export function resolveManifestSrc(
 
   if (
     !isLive &&
-    stream.videoOnlyStreams?.length &&
+    legacyDashPair &&
     !nativeFailed &&
     preferNativeManifest &&
-    allowServerManifests &&
+    allowLegacyServerManifests &&
     !isFirefox &&
     !compatibilityMode
   ) {
@@ -155,19 +126,19 @@ export function resolveManifestSrc(
     };
   }
 
-  if (!hasCompatibleMp4(stream) && allowServerManifests) {
+  if (!hasCompatibleMp4(stream) && allowLegacyServerManifests) {
     return {
       src: proxyDashManifest(`${BASE}/streams/manifest?url=${encodeURIComponent(stream.id)}`),
       type: "application/dash+xml",
     };
   }
 
-  return fallbackSrc(
+  return resolveLegacyFallbackSrc(
     stream,
     safeMaxHeight,
     compactAudioTracks,
     options?.preferredAudioLanguage,
     maxCompactAudioTracks,
-    allowServerManifests,
+    allowLegacyServerManifests,
   );
 }
