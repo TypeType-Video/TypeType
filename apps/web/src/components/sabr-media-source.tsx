@@ -11,6 +11,11 @@ function providerVideo(provider: MediaProviderAdapter | null): HTMLVideoElement 
   return candidate instanceof HTMLVideoElement ? candidate : null;
 }
 
+function mediaTimeMs(media: HTMLVideoElement): number {
+  const timeMs = media.currentTime * 1000;
+  return Number.isFinite(timeMs) ? Math.max(0, Math.round(timeMs)) : 0;
+}
+
 type Props = {
   src: MediaSrc;
   startTime: number;
@@ -34,6 +39,7 @@ export function SabrMediaSource({ src, startTime, autoplay, onError }: Props) {
   const durationMs = config?.durationMs ?? null;
   const videoItag = selectedQuality?.itag ?? config?.videoItag ?? null;
   const onErrorRef = useRef(onError);
+  const resumeRef = useRef<{ configId: string; timeMs: number } | null>(null);
   onErrorRef.current = onError;
 
   useEffect(() => {
@@ -45,15 +51,20 @@ export function SabrMediaSource({ src, startTime, autoplay, onError }: Props) {
   useEffect(() => {
     if (media && !config) onErrorRef.current();
     if (!media || !configId || !descriptorUrl || videoItag === null || durationMs === null) return;
+    const resume = resumeRef.current;
+    const resumeTimeMs = resume?.configId === configId ? resume.timeMs : 0;
     const controller = new SabrMseController({
       media,
       config: { audioItag, descriptorUrl, durationMs, id: configId, qualities: [], videoItag },
-      startTime,
+      startTime: resumeTimeMs > 0 ? resumeTimeMs : startTime,
       autoplay,
       onError: () => onErrorRef.current(),
     });
     controller.start();
-    return () => controller.dispose();
+    return () => {
+      resumeRef.current = { configId, timeMs: mediaTimeMs(media) };
+      controller.dispose();
+    };
   }, [
     audioItag,
     autoplay,
