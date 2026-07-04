@@ -49,7 +49,7 @@ export function toAudioOnlyMediaSrc(response: AudioOnlyResponse): MediaSrc | nul
     return { src: toApiUrl(response.src), type: "audio/webm" };
   }
   if (response.mimeType.includes("audio/mp4")) {
-    return { src: toApiUrl(response.src), type: "audio/mp4" };
+    return toApiUrl(response.src);
   }
   return null;
 }
