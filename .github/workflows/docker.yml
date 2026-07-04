@@ -69,3 +69,53 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-stable:
+    needs: build-and-push
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_SSH_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/typetype_deploy_key
+          printf '%s\n' "$TYPE_TYPE_DEPLOY_SSH_KEY" > ~/.ssh/typetype_deploy_key
+          ssh-keyscan -p "$TYPE_TYPE_DEPLOY_PORT" "$TYPE_TYPE_DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy stable stack
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" "/usr/local/sbin/typetype-update"
+          curl --fail --silent --show-error https://watch.typetype.video/api/health
+
+  deploy-beta:
+    needs: build-and-push
+    if: github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_SSH_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/typetype_deploy_key
+          printf '%s\n' "$TYPE_TYPE_DEPLOY_SSH_KEY" > ~/.ssh/typetype_deploy_key
+          ssh-keyscan -p "$TYPE_TYPE_DEPLOY_PORT" "$TYPE_TYPE_DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy beta stack
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" "/usr/local/sbin/typetype-beta-update"
+          curl --fail --silent --show-error https://beta.typetype.video/api/health
