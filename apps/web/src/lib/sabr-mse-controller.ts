@@ -7,7 +7,11 @@ import {
   wait,
   waitForSourceOpen,
 } from "./sabr-mse-utils";
-import { sabrPlaybackMessage, sabrPlayerTimeMs } from "./sabr-playback-message";
+import {
+  sabrBufferedPumpTimeMs,
+  sabrPlaybackMessage,
+  sabrPlayerTimeMs,
+} from "./sabr-playback-message";
 import { connectSabrSession } from "./sabr-session-connection";
 import { createSabrTrack } from "./sabr-track-state";
 import type { SabrWebSocketClient } from "./sabr-websocket-client";
@@ -100,6 +104,10 @@ export class SabrMseController {
           await wait(400);
           continue;
         }
+        if (!this.video?.queue.idle() || !this.audio?.queue.idle()) {
+          await wait(20);
+          continue;
+        }
         await this.appendSegments(generation);
         if (this.args.autoplay && this.args.media.paused && bufferedAhead(this.args.media) > 1) {
           await this.args.media.play().catch(() => undefined);
@@ -114,7 +122,9 @@ export class SabrMseController {
   private async appendSegments(generation: number): Promise<void> {
     const client = this.client;
     if (!this.video || !this.audio || !client) return;
-    const chunks = await client.request(this.message("pump", generation));
+    const chunks = await client.request(
+      this.message("pump", generation, sabrBufferedPumpTimeMs(this.args.media)),
+    );
     if (!this.active(generation)) return;
     appendChunks(this.video, chunks);
     appendChunks(this.audio, chunks);
