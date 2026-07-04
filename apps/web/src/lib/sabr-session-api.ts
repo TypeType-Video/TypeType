@@ -1,7 +1,7 @@
 import { useAuthStore } from "../stores/auth-store";
 import type { SabrSessionDescriptor } from "../types/sabr";
 import { request } from "./api";
-import { API_BASE } from "./env";
+import { toApiUrl } from "./env";
 
 type RawDescriptor = SabrSessionDescriptor & {
   webSocket?: string;
@@ -22,11 +22,12 @@ function withPlayerTimeMs(url: string, playerTimeMs: number): string {
 
 export function toWebSocketUrl(pathOrUrl: string): string {
   if (pathOrUrl.startsWith("ws://") || pathOrUrl.startsWith("wss://")) return pathOrUrl;
-  const apiUrl = new URL(API_BASE, window.location.origin);
-  const url =
+  const url = new URL(
     pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")
-      ? new URL(pathOrUrl)
-      : new URL(pathOrUrl.replace(/^\//, ""), `${apiUrl.origin}/`);
+      ? pathOrUrl
+      : toApiUrl(pathOrUrl),
+    window.location.origin,
+  );
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   return url.toString();
 }
@@ -48,8 +49,8 @@ export async function fetchSabrSessionDescriptor(
     ...descriptor,
     endpoints: {
       webSocket: descriptor.endpoints?.webSocket ?? descriptor.webSocket ?? "",
-      audioInit: descriptor.endpoints.audioInit,
-      videoInit: descriptor.endpoints.videoInit,
+      audioInit: toApiUrl(descriptor.endpoints.audioInit),
+      videoInit: toApiUrl(descriptor.endpoints.videoInit),
     },
   };
 }
