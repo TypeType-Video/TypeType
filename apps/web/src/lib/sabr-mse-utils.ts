@@ -28,6 +28,17 @@ export function bufferedAhead(media: HTMLMediaElement): number {
   return 0;
 }
 
+export function canReconnectWaiting(
+  media: HTMLMediaElement,
+  video: SabrTrackState | null,
+  audio: SabrTrackState | null,
+  initialSeekTimeSec: number | null,
+): boolean {
+  if (!video?.queue.idle() || !audio?.queue.idle()) return false;
+  if (initialSeekTimeSec !== null) return false;
+  return bufferedAhead(media) <= 0;
+}
+
 function hasBufferedRange(media: HTMLMediaElement, time: number): boolean {
   for (let i = 0; i < media.buffered.length; i += 1) {
     if (time >= media.buffered.start(i) - 0.25 && time <= media.buffered.end(i)) return true;
@@ -35,10 +46,18 @@ function hasBufferedRange(media: HTMLMediaElement, time: number): boolean {
   return false;
 }
 
-export function seekToBufferedRange(media: HTMLMediaElement, time: number): boolean {
+function seekToBufferedRange(media: HTMLMediaElement, time: number): boolean {
   if (!hasBufferedRange(media, time)) return false;
   media.currentTime = time;
   return true;
+}
+
+export function seekToInitialRange(media: HTMLMediaElement, timeSec: number | null): boolean {
+  return timeSec !== null && seekToBufferedRange(media, timeSec);
+}
+
+export function initialSeekPlayerTimeMs(timeSec: number | null): number | undefined {
+  return timeSec === null ? undefined : Math.round(timeSec * 1000);
 }
 
 export function appendChunks(track: SabrTrackState, chunks: SabrMediaChunk[]): void {

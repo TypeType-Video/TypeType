@@ -3,8 +3,10 @@ import { appendSabrInitSegment } from "./sabr-init-segment";
 import {
   appendChunks,
   bufferedAhead,
+  canReconnectWaiting,
+  initialSeekPlayerTimeMs,
   type SabrTrackState,
-  seekToBufferedRange,
+  seekToInitialRange,
   wait,
   waitForSourceOpen,
 } from "./sabr-mse-utils";
@@ -74,7 +76,7 @@ export class SabrMseController {
       this.audio = audio;
       await appendSabrInitSegment(video, descriptor.endpoints.videoInit, isActive);
       await appendSabrInitSegment(audio, descriptor.endpoints.audioInit, isActive);
-      this.initialSeekTimeSec = playerTimeMs > 0 ? playerTimeMs / 1000 : null;
+      this.initialSeekTimeSec = descriptor.startTimeMs > 0 ? descriptor.startTimeMs / 1000 : null;
       this.args.media.addEventListener("seeking", this.handleSeeking);
       this.sendState(generation);
       void this.pump(generation);
@@ -93,11 +95,7 @@ export class SabrMseController {
           await wait(20);
           continue;
         }
-        const initialSeekTimeSec = this.initialSeekTimeSec;
-        if (
-          initialSeekTimeSec !== null &&
-          seekToBufferedRange(this.args.media, initialSeekTimeSec)
-        ) {
+        if (seekToInitialRange(this.args.media, this.initialSeekTimeSec)) {
           this.initialSeekTimeSec = null;
           await wait(20);
           continue;
@@ -120,9 +118,9 @@ export class SabrMseController {
   private async appendSegments(generation: number): Promise<void> {
     const client = this.client;
     if (!this.video || !this.audio || !client) return;
-    const chunks = await client.request(
-      this.message("pump", generation, sabrBufferedPumpTimeMs(this.args.media)),
-    );
+    const playerTimeMs =
+      initialSeekPlayerTimeMs(this.initialSeekTimeSec) ?? sabrBufferedPumpTimeMs(this.args.media);
+    const chunks = await client.request(this.message("pump", generation, playerTimeMs));
     if (!this.active(generation)) return;
     appendChunks(this.video, chunks);
     appendChunks(this.audio, chunks);
@@ -154,16 +152,17 @@ export class SabrMseController {
   }
   private readonly handleMediaError = (): void => this.fail();
   private readonly handleWaiting = (): void => {
-    if (this.disposed || this.failed || !this.video?.queue.idle() || !this.audio?.queue.idle())
+    if (this.disposed || this.failed) return;
+    if (!canReconnectWaiting(this.args.media, this.video, this.audio, this.initialSeekTimeSec))
       return;
-    if (bufferedAhead(this.args.media) > 0) return;
     const now = Date.now();
     if (now - this.lastWaitingReconnectMs < 1000) return;
     this.lastWaitingReconnectMs = now;
     this.handleSeeking();
   };
   private sendState(generation: number): void {
-    this.client?.send(this.message("state", generation));
+    const playerTimeMs = initialSeekPlayerTimeMs(this.initialSeekTimeSec);
+    this.client?.send(this.message("state", generation, playerTimeMs));
   }
   private message(type: "state" | "pump", generation: number, playerTimeMs?: number) {
     if (!this.video || !this.audio) throw new Error("sabr_tracks_missing");
