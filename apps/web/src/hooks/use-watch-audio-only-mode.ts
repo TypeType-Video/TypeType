@@ -17,19 +17,26 @@ export function useWatchAudioOnlyMode({
 }: Args) {
   const initializedParamRef = useRef<string | null>(null);
   const [active, setActive] = useState(false);
+  const [switchPositionMs, setSwitchPositionMs] = useState<number | null>(null);
   const initialized = initializedParamRef.current === currentParam;
 
   useEffect(() => {
     if (!settingsReady || initializedParamRef.current === currentParam) return;
     initializedParamRef.current = currentParam;
     setActive(defaultEnabled);
+    setSwitchPositionMs(null);
   }, [currentParam, defaultEnabled, settingsReady]);
 
   function syncPosition() {
     const positionMs = readPositionMs();
     if (positionMs !== null && Number.isFinite(positionMs)) {
-      positionRef.current = Math.max(0, positionMs);
+      const nextPosition = Math.max(0, positionMs);
+      positionRef.current = nextPosition;
+      setSwitchPositionMs(nextPosition);
+      return nextPosition;
     }
+    setSwitchPositionMs(positionRef.current);
+    return positionRef.current;
   }
 
   function toggle() {
@@ -44,6 +51,7 @@ export function useWatchAudioOnlyMode({
 
   return {
     active: settingsReady && initialized ? active : defaultEnabled,
+    switchPositionMs,
     toggle,
     disable,
   };

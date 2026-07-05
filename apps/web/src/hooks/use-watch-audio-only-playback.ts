@@ -18,6 +18,7 @@ type Args = {
 type WatchAudioOnlyPlayback = {
   src: MediaSrc | null;
   controls: WatchAudioOnlyControls;
+  switchPositionMs: number | null;
   active: boolean;
   loading: boolean;
   enabled: boolean;
@@ -70,6 +71,7 @@ export function useWatchAudioOnlyPlayback({
   return {
     src,
     controls: { active: mode.active, loading: source.loading, onToggle: mode.toggle },
+    switchPositionMs: mode.switchPositionMs,
     active: mode.active,
     loading: source.loading,
     enabled: source.enabled,

@@ -37,63 +37,6 @@ export function PlayerFocuser() {
   return null;
 }
 
-export function PlayerSeeker({ startTime }: { startTime: number }) {
-  const player = useMediaPlayer();
-  const remote = useMediaRemote();
-  const canPlay = useMediaState("canPlay");
-  const seeked = useRef(false);
-  useEffect(() => {
-    if (startTime <= 0 || seeked.current) return;
-    const target = startTime / 1000;
-    const root = player?.el;
-
-    function seekMedia(media: HTMLMediaElement) {
-      if (seeked.current) return;
-      const durationReady = media.readyState > 0 || Number.isFinite(media.duration);
-      if (!durationReady) return;
-      try {
-        media.currentTime = target;
-        remote.seek(target);
-        seeked.current = true;
-      } catch {
-        remote.seek(target);
-      }
-    }
-
-    if (canPlay) remote.seek(target);
-    if (!root) return;
-
-    let cleanup: (() => void) | null = null;
-    function attach() {
-      if (cleanup || !root) return true;
-      const media = root.querySelector<HTMLMediaElement>("video,audio");
-      if (!media) return false;
-      const seek = () => seekMedia(media);
-      media.addEventListener("loadedmetadata", seek);
-      media.addEventListener("durationchange", seek);
-      media.addEventListener("canplay", seek);
-      seek();
-      cleanup = () => {
-        media.removeEventListener("loadedmetadata", seek);
-        media.removeEventListener("durationchange", seek);
-        media.removeEventListener("canplay", seek);
-      };
-      return true;
-    }
-
-    if (attach()) return () => cleanup?.();
-    const observer = new MutationObserver(() => {
-      if (attach()) observer.disconnect();
-    });
-    observer.observe(root, { childList: true, subtree: true });
-    return () => {
-      observer.disconnect();
-      cleanup?.();
-    };
-  }, [canPlay, player, remote, startTime]);
-  return null;
-}
-
 export function SponsorBlockSkipper({
   segments,
   muteInsteadOfSkip,

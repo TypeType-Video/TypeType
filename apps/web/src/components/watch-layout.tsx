@@ -93,7 +93,7 @@ export function WatchLayout({
   const sourceState = useWatchPlayerSourceState({
     streamId: stream.id,
     retryKey,
-    startTime: retryStartTime > 0 ? retryStartTime : startTime,
+    startTime: retryStartTime > 0 ? retryStartTime : (audioOnly.switchPositionMs ?? startTime),
     positionRef: playerEvents.positionRef,
     highQuality: settings.enableHighQualityPlayback,
     hasThumbnails: Boolean(thumbnailVtt),
