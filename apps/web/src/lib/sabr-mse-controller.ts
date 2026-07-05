@@ -130,7 +130,7 @@ export class SabrMseController {
     this.audio.queue.removeBefore(this.args.media.currentTime);
   }
   private readonly handleSeeking = (): void => {
-    if (this.disposed || this.failed) return;
+    if (this.disposed || this.failed || this.initialSeekTimeSec !== null) return;
     this.generation += 1;
     this.video?.queue.clear();
     this.audio?.queue.clear();
