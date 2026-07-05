@@ -49,11 +49,12 @@ export function canReconnectWaiting(
   return bufferedAhead(media) <= 0;
 }
 
-function hasBufferedRange(media: HTMLMediaElement, time: number): boolean {
+function bufferedSeekTime(media: HTMLMediaElement, time: number): number | null {
   for (let i = 0; i < media.buffered.length; i += 1) {
-    if (time >= media.buffered.start(i) - 0.25 && time <= media.buffered.end(i)) return true;
+    const start = media.buffered.start(i);
+    if (time >= start - 0.25 && time <= media.buffered.end(i)) return Math.max(0, start);
   }
-  return false;
+  return null;
 }
 
 function setMediaTime(media: HTMLMediaElement, time: number): boolean {
@@ -66,12 +67,15 @@ function setMediaTime(media: HTMLMediaElement, time: number): boolean {
 }
 
 function seekToBufferedRange(media: HTMLMediaElement, time: number): InitialSeekState {
-  if (!hasBufferedRange(media, time)) {
+  const seekTime = bufferedSeekTime(media, time);
+  if (seekTime === null) {
     setMediaTime(media, time);
     return "missing";
   }
-  if (!setMediaTime(media, time)) return "pending";
-  return Math.abs(media.currentTime - time) < 1.5 && media.readyState >= 2 ? "settled" : "pending";
+  if (!setMediaTime(media, seekTime)) return "pending";
+  return Math.abs(media.currentTime - seekTime) < 0.5 && media.readyState >= 2
+    ? "settled"
+    : "pending";
 }
 
 export function seekToInitialRange(
