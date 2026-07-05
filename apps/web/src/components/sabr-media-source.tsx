@@ -40,6 +40,7 @@ export function SabrMediaSource({ src, startTime, autoplay, onError }: Props) {
   const videoItag = selectedQuality?.itag ?? config?.videoItag ?? null;
   const onErrorRef = useRef(onError);
   const resumeRef = useRef<{ configId: string; timeMs: number } | null>(null);
+  const startRef = useRef<{ configId: string; timeMs: number } | null>(null);
   onErrorRef.current = onError;
 
   useEffect(() => {
@@ -51,12 +52,18 @@ export function SabrMediaSource({ src, startTime, autoplay, onError }: Props) {
   useEffect(() => {
     if (media && !config) onErrorRef.current();
     if (!media || !configId || !descriptorUrl || videoItag === null || durationMs === null) return;
+    const requestedStartTimeMs = Math.max(0, Math.round(startTime));
+    const heldStart = startRef.current;
+    if (!heldStart || heldStart.configId !== configId || requestedStartTimeMs > heldStart.timeMs) {
+      startRef.current = { configId, timeMs: requestedStartTimeMs };
+    }
     const resume = resumeRef.current;
     const resumeTimeMs = resume?.configId === configId ? resume.timeMs : 0;
+    const heldStartTimeMs = startRef.current?.configId === configId ? startRef.current.timeMs : 0;
     const controller = new SabrMseController({
       media,
       config: { audioItag, descriptorUrl, durationMs, id: configId, qualities: [], videoItag },
-      startTime: resumeTimeMs > 0 ? resumeTimeMs : startTime,
+      startTime: resumeTimeMs > 0 ? resumeTimeMs : heldStartTimeMs,
       autoplay,
       onError: () => onErrorRef.current(),
     });
