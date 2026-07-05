@@ -4,6 +4,7 @@ import {
   appendChunks,
   bufferedAhead,
   type SabrTrackState,
+  seekToBufferedRange,
   wait,
   waitForSourceOpen,
 } from "./sabr-mse-utils";
@@ -30,11 +31,9 @@ export class SabrMseController {
   private failed = false;
   private requestId = 0;
   private lastWaitingReconnectMs = 0;
-  private readonly args: SabrMseControllerArgs;
+  private initialSeekTimeSec: number | null = null;
 
-  constructor(args: SabrMseControllerArgs) {
-    this.args = args;
-  }
+  constructor(private readonly args: SabrMseControllerArgs) {}
   start(): void {
     this.args.media.src = this.objectUrl;
     this.args.media.addEventListener("waiting", this.handleWaiting);
@@ -60,11 +59,12 @@ export class SabrMseController {
       if (typeof MediaSource === "undefined") throw new Error("mse_unavailable");
       await waitForSourceOpen(this.mediaSource);
       if (!this.active(generation)) return;
+      const isActive = () => this.active(generation);
       const playerTimeMs = sabrInitialPlayerTimeMs(this.args.media, this.args.startTime);
       const { descriptor, client } = await connectActiveSabrSession(
         this.args.config.descriptorUrl,
         playerTimeMs,
-        () => this.active(generation),
+        isActive,
       );
       this.client = client;
       this.mediaSource.duration = descriptor.durationMs / 1000;
@@ -72,13 +72,9 @@ export class SabrMseController {
       const audio = createSabrTrack(this.mediaSource, descriptor.audio);
       this.video = video;
       this.audio = audio;
-      await appendSabrInitSegment(video, descriptor.endpoints.videoInit, () =>
-        this.active(generation),
-      );
-      await appendSabrInitSegment(audio, descriptor.endpoints.audioInit, () =>
-        this.active(generation),
-      );
-      if (playerTimeMs > 0) this.args.media.currentTime = playerTimeMs / 1000;
+      await appendSabrInitSegment(video, descriptor.endpoints.videoInit, isActive);
+      await appendSabrInitSegment(audio, descriptor.endpoints.audioInit, isActive);
+      this.initialSeekTimeSec = playerTimeMs > 0 ? playerTimeMs / 1000 : null;
       this.args.media.addEventListener("seeking", this.handleSeeking);
       this.sendState(generation);
       void this.pump(generation);
@@ -94,6 +90,15 @@ export class SabrMseController {
           continue;
         }
         if (!this.video?.queue.idle() || !this.audio?.queue.idle()) {
+          await wait(20);
+          continue;
+        }
+        const initialSeekTimeSec = this.initialSeekTimeSec;
+        if (
+          initialSeekTimeSec !== null &&
+          seekToBufferedRange(this.args.media, initialSeekTimeSec)
+        ) {
+          this.initialSeekTimeSec = null;
           await wait(20);
           continue;
         }
