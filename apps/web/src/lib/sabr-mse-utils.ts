@@ -56,12 +56,21 @@ function hasBufferedRange(media: HTMLMediaElement, time: number): boolean {
   return false;
 }
 
+function setMediaTime(media: HTMLMediaElement, time: number): boolean {
+  try {
+    media.currentTime = time;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function seekToBufferedRange(media: HTMLMediaElement, time: number): InitialSeekState {
   if (!hasBufferedRange(media, time)) {
-    media.currentTime = time;
+    setMediaTime(media, time);
     return "missing";
   }
-  media.fastSeek(time);
+  if (!setMediaTime(media, time)) return "pending";
   return Math.abs(media.currentTime - time) < 1.5 && media.readyState >= 2 ? "settled" : "pending";
 }
 
