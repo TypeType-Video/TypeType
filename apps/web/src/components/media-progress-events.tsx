@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { recordClientEvent } from "../lib/client-debug-log";
 import { useMediaPlayer } from "../lib/vidstack";
 
 type Props = {
@@ -67,8 +68,30 @@ export function MediaProgressEvents({
       };
       const ended = () => {
         update();
+        recordClientEvent("media.ended", {
+          currentMs: toPositionMs(media),
+          durationMs: Number.isFinite(media.duration) ? Math.round(media.duration * 1000) : null,
+          tag: media.tagName,
+        });
         if (media.loop) return;
         onEndedRef.current?.();
+      };
+      const stalled = () => {
+        recordClientEvent("media.stalled", {
+          currentMs: toPositionMs(media),
+          readyState: media.readyState,
+          networkState: media.networkState,
+          tag: media.tagName,
+        });
+      };
+      const error = () => {
+        recordClientEvent("media.error", {
+          currentMs: toPositionMs(media),
+          code: media.error?.code ?? null,
+          readyState: media.readyState,
+          networkState: media.networkState,
+          tag: media.tagName,
+        });
       };
 
       media.addEventListener("timeupdate", update);
@@ -77,6 +100,8 @@ export function MediaProgressEvents({
       media.addEventListener("seeking", seeking);
       media.addEventListener("seeked", seeked);
       media.addEventListener("ended", ended);
+      media.addEventListener("stalled", stalled);
+      media.addEventListener("error", error);
       onPositionReaderChangeRef.current?.(readPosition);
       cleanup = () => {
         onPositionReaderChangeRef.current?.(null);
@@ -86,6 +111,8 @@ export function MediaProgressEvents({
         media.removeEventListener("seeking", seeking);
         media.removeEventListener("seeked", seeked);
         media.removeEventListener("ended", ended);
+        media.removeEventListener("stalled", stalled);
+        media.removeEventListener("error", error);
       };
       return true;
     }
