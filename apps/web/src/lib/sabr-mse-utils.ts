@@ -50,8 +50,8 @@ function hasBufferedRange(media: HTMLMediaElement, time: number): boolean {
 
 function seekToBufferedRange(media: HTMLMediaElement, time: number): boolean {
   if (!hasBufferedRange(media, time)) return false;
-  media.currentTime = time;
-  return Math.abs(media.currentTime - time) < 0.5 && media.readyState >= 2;
+  media.fastSeek(time);
+  return Math.abs(media.currentTime - time) < 1.5 && media.readyState >= 2;
 }
 
 export function seekToInitialRange(media: HTMLMediaElement, timeSec: number | null): boolean {
