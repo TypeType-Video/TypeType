@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useBulletComments } from "../hooks/use-bullet-comments";
 import { useMobile } from "../hooks/use-mobile";
 import { usePlayerError } from "../hooks/use-player-error";
@@ -49,10 +49,23 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
   const playlist = useWatchPlaylist(list, shuffle, currentParam);
   const { data: bulletComments } = useBulletComments(stream.id, isNicoNico && !hideComments);
   const originalLocale = getOriginalAudioLocale(stream);
+  const audioOnlyFailureKey = `${currentParam}:${settings.audioOnlyPlayback}`;
+  const [audioOnlyFailedKey, setAudioOnlyFailedKey] = useState<string | null>(null);
+  const audioOnlyRuntimeFailed = audioOnlyFailedKey === audioOnlyFailureKey;
   const audioOnly = useWatchAudioOnlySource(toWatchSourceUrl(currentParam), settings, isLive);
+  const audioOnlySrc = audioOnlyRuntimeFailed ? null : audioOnly.src;
   const cinemaMode = useWatchLayoutStore((state) => state.cinemaMode);
   const seekRef = useRef<((seconds: number) => void) | null>(null);
   const { toast, setToast } = useWatchToast(audioOnly.unavailable);
+  function handleStageError() {
+    if (audioOnlySrc) {
+      setAudioOnlyFailedKey(audioOnlyFailureKey);
+      update.mutate({ audioOnlyPlayback: false });
+      setToast("Audio only unavailable");
+      return;
+    }
+    handlePlayerError();
+  }
   const handleVolumeChange = useVolumeSync(update.mutate);
   const { thumbnailVtt, chaptersVtt } = useWatchVttAssets(
     stream,
@@ -95,7 +108,7 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
     hasChapters: Boolean(chaptersVtt),
     audioOnlyEnabled: audioOnly.enabled,
     audioOnlyLoading: audioOnly.loading,
-    hasAudioOnlySource: Boolean(audioOnly.src),
+    hasAudioOnlySource: Boolean(audioOnlySrc),
     settingsReady,
     navigating,
     shouldAutoplay: playerEvents.shouldAutoplay,
@@ -127,8 +140,8 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
         classes={classes}
         stream={stream}
         settings={settings}
-        manifestSrc={audioOnly.src ?? manifestSrc}
-        audioOnly={Boolean(audioOnly.src)}
+        manifestSrc={audioOnlySrc ?? manifestSrc}
+        audioOnly={Boolean(audioOnlySrc)}
         playerKey={sourceState.playerKey}
         startTime={sourceState.startTime}
         isLive={isLive}
@@ -160,7 +173,7 @@ export function WatchLayout({ stream, startTime, currentParam, navigating, list,
         onAutoplayPauseToggle={autoplay.togglePause}
         onPreviousVideo={playlist.playPrevious}
         onNextVideo={playlist.playNext}
-        onError={handlePlayerError}
+        onError={handleStageError}
         onReset={reset}
       />
       <WatchSecondaryContent
