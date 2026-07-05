@@ -1,4 +1,4 @@
-import { type MutableRefObject, useState } from "react";
+import { type MutableRefObject, useEffect, useState } from "react";
 import type { MediaSrc } from "../lib/vidstack";
 import { toWatchSourceUrl } from "../lib/watch-url";
 import type { SettingsItem } from "../types/user";
@@ -59,6 +59,11 @@ export function useWatchAudioOnlyPlayback({
   );
   const runtimeFailed = failedKey === failureKey;
   const src = runtimeFailed ? null : source.src;
+
+  useEffect(() => {
+    if (!source.unavailable || !mode.active) return;
+    mode.disable();
+  }, [mode, source.unavailable]);
 
   function fail() {
     if (!src) return false;
