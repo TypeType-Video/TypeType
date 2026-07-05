@@ -12,11 +12,10 @@ type Args = {
 };
 
 export function useWatchPlayerEvents({ stream, isLive, mutate, onPlay, onEnded }: Args) {
-  const playingRef = useRef(true);
+  const playingRef = useRef(false);
   const streamIdRef = useRef(stream.id);
   if (streamIdRef.current !== stream.id) {
     streamIdRef.current = stream.id;
-    playingRef.current = true;
   }
   const { positionRef, handleTimeUpdate, handlePause, handleSeeked } = useWatchProgressPersistence({
     durationSec: stream.duration,
