@@ -142,7 +142,7 @@ export class SabrMseController {
     try {
       const { client } = await connectActiveSabrSession(
         this.args.config.descriptorUrl,
-        sabrPlayerTimeMs(this.args.media),
+        initialSeekPlayerTimeMs(this.initialSeekTimeSec) ?? sabrPlayerTimeMs(this.args.media),
         () => this.active(generation),
       );
       this.client = client;
