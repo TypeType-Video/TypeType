@@ -1,12 +1,11 @@
 import { useRef, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
-import { useSettings } from "../hooks/use-settings";
 import { useShareUrl } from "../hooks/use-share-url";
-import { useWatchAudioOnlySource } from "../hooks/use-watch-audio-only-source";
+import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
 import { detectProvider } from "../lib/provider";
 import { goto } from "../lib/route-redirect";
-import { toPublicWatchParam, toPublicWatchUrl, toWatchSourceUrl } from "../lib/watch-url";
+import { toPublicWatchUrl } from "../lib/watch-url";
 import type { VideoStream } from "../types/stream";
 import { DanmakuControls } from "./danmaku-controls";
 import { DownloadSheet } from "./download-sheet";
@@ -26,10 +25,10 @@ import { WatchMoreActions } from "./watch-more-actions";
 
 type Props = {
   stream: VideoStream;
+  audioOnly: WatchAudioOnlyControls;
 };
-export function WatchActions({ stream }: Props) {
+export function WatchActions({ stream, audioOnly }: Props) {
   const { copied, share } = useShareUrl();
-  const { settings, update } = useSettings();
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -46,12 +45,7 @@ export function WatchActions({ stream }: Props) {
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
   const audioOnlyAvailable = !isLive && !isNicoNico;
-  const audioOnlySource = useWatchAudioOnlySource(
-    toWatchSourceUrl(toPublicWatchParam(stream.id)),
-    settings,
-    !audioOnlyAvailable,
-  );
-  const audioOnlyDisabled = update.isPending || !authReady || audioOnlySource.loading;
+  const audioOnlyDisabled = !authReady || audioOnly.loading;
 
   function handleSaved(label: string) {
     setToastLabel(label);
@@ -101,13 +95,13 @@ export function WatchActions({ stream }: Props) {
       </WatchActionButton>
       {audioOnlyAvailable && (
         <WatchActionButton
-          onClick={() => update.mutate({ audioOnlyPlayback: !settings.audioOnlyPlayback })}
+          onClick={audioOnly.onToggle}
           disabled={audioOnlyDisabled}
-          pressed={settings.audioOnlyPlayback}
-          active={settings.audioOnlyPlayback}
+          pressed={audioOnly.active}
+          active={audioOnly.active}
         >
           <HeadphonesIcon />
-          {audioOnlySource.loading ? "Loading audio..." : "Audio only"}
+          {audioOnly.loading ? "Loading audio..." : "Audio only"}
         </WatchActionButton>
       )}
       <WatchActionButton onClick={() => share(toPublicWatchUrl(stream.id, window.location.origin))}>

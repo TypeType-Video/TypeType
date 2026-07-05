@@ -1,4 +1,5 @@
 import type { MutableRefObject, ReactNode } from "react";
+import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
 import type { AutoplayState } from "../hooks/use-watch-ended-navigation";
 import type { MediaSrc } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
@@ -37,6 +38,7 @@ type Props = {
   hideComments: boolean;
   mobilePanel: ReactNode;
   seekRef: MutableRefObject<((seconds: number) => void) | null>;
+  audioOnlyControls: WatchAudioOnlyControls;
   onCaptionStylesChange: (styles: CaptionStyles) => void;
   onVolumeChange: (volume: number, muted: boolean) => void;
   onTimeUpdate: (positionMs: number) => void;
@@ -47,6 +49,7 @@ type Props = {
   onAutoplayPlayNow: () => void;
   onAutoplayCancel: () => void;
   onAutoplayPauseToggle: () => void;
+  onPositionReaderChange: (reader: (() => number | null) | null) => void;
   onPreviousVideo?: () => void;
   onNextVideo?: () => void;
   onError: () => void;
@@ -78,6 +81,7 @@ export function WatchStage({
   hideComments,
   mobilePanel,
   seekRef,
+  audioOnlyControls,
   onCaptionStylesChange,
   onVolumeChange,
   onTimeUpdate,
@@ -88,6 +92,7 @@ export function WatchStage({
   onAutoplayPlayNow,
   onAutoplayCancel,
   onAutoplayPauseToggle,
+  onPositionReaderChange,
   onPreviousVideo,
   onNextVideo,
   onError,
@@ -153,6 +158,7 @@ export function WatchStage({
               onPause={onPause}
               onSeeked={onSeeked}
               onError={onError}
+              onPositionReaderChange={onPositionReaderChange}
               onEnded={onEnded}
               onPreviousVideo={onPreviousVideo}
               onNextVideo={onNextVideo}
@@ -172,6 +178,7 @@ export function WatchStage({
           stream={stream}
           showComments={!hideComments}
           onSeekTimestamp={(seconds) => seekRef.current?.(seconds)}
+          audioOnly={audioOnlyControls}
         />
       )}
     </div>

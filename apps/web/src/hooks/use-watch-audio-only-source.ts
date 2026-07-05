@@ -15,8 +15,9 @@ export function useWatchAudioOnlySource(
   sourceUrl: string,
   settings: SettingsItem,
   isLive: boolean,
+  active = settings.audioOnlyPlayback,
 ): WatchAudioOnlySource {
-  const enabled = settings.audioOnlyPlayback && !isLive;
+  const enabled = active && !isLive;
   const query = useAudioOnlyStream(
     sourceUrl,
     settings.preferOriginalLanguage,

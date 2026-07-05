@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useBulletComments } from "../hooks/use-bullet-comments";
 import { useMobile } from "../hooks/use-mobile";
 import { usePlayerError } from "../hooks/use-player-error";
@@ -6,7 +6,7 @@ import { usePlayerErrorResume } from "../hooks/use-player-error-resume";
 import { useSaveProgress } from "../hooks/use-progress";
 import { useSettings } from "../hooks/use-settings";
 import { useVolumeSync } from "../hooks/use-volume-sync";
-import { useWatchAudioOnlySource } from "../hooks/use-watch-audio-only-source";
+import { useWatchAudioOnlyPlayback } from "../hooks/use-watch-audio-only-playback";
 import { useWatchEndedNavigation } from "../hooks/use-watch-ended-navigation";
 import { useWatchVttAssets } from "../hooks/use-watch-layout-assets";
 import { useWatchPlayerEvents } from "../hooks/use-watch-player-events";
@@ -16,7 +16,6 @@ import { useWatchSponsorBlock } from "../hooks/use-watch-sponsorblock";
 import { useWatchToast } from "../hooks/use-watch-toast";
 import { getOriginalAudioLocale } from "../lib/audio-track";
 import { detectProvider } from "../lib/provider";
-import { toWatchSourceUrl } from "../lib/watch-url";
 import { useDanmakuStore } from "../stores/danmaku-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
 import { Toast } from "./toast";
@@ -47,25 +46,9 @@ export function WatchLayout({
   const relatedStreams = settings.hideRelatedVideos ? [] : (stream.related ?? []);
   const playlist = useWatchPlaylist(list, shuffle, currentParam);
   const { data: bulletComments } = useBulletComments(stream.id, isNicoNico && !hideComments);
-  const originalLocale = getOriginalAudioLocale(stream);
-  const audioOnlyFailureKey = `${currentParam}:${settings.audioOnlyPlayback}`;
-  const [audioOnlyFailedKey, setAudioOnlyFailedKey] = useState<string | null>(null);
-  const audioOnlyRuntimeFailed = audioOnlyFailedKey === audioOnlyFailureKey;
-  const audioOnly = useWatchAudioOnlySource(toWatchSourceUrl(currentParam), settings, isLive);
-  const audioOnlySrc = audioOnlyRuntimeFailed ? null : audioOnly.src;
   const cinemaMode = useWatchLayoutStore((state) => state.cinemaMode);
   const seekRef = useRef<((seconds: number) => void) | null>(null);
-  const { toast, setToast } = useWatchToast(audioOnly.unavailable);
-  function handleStageError() {
-    if (audioOnlySrc) {
-      clearFailed();
-      setAudioOnlyFailedKey(audioOnlyFailureKey);
-      update.mutate({ audioOnlyPlayback: false });
-      setToast("Audio only unavailable");
-      return;
-    }
-    handlePlayerError();
-  }
+  const positionReaderRef = useRef<(() => number | null) | null>(null);
   const handleVolumeChange = useVolumeSync(update.mutate);
   const { thumbnailVtt, chaptersVtt } = useWatchVttAssets(
     stream,
@@ -84,7 +67,6 @@ export function WatchLayout({
     shuffle,
     related: stream.related,
   });
-
   const playerEvents = useWatchPlayerEvents({
     stream,
     isLive,
@@ -92,6 +74,16 @@ export function WatchLayout({
     onPlay: clearFailed,
     onEnded: autoplay.handleEnded,
   });
+  const audioOnly = useWatchAudioOnlyPlayback({
+    currentParam,
+    settings,
+    settingsReady,
+    isLive,
+    positionRef: playerEvents.positionRef,
+    readPositionMs: () => positionReaderRef.current?.() ?? null,
+    clearFailed,
+  });
+  const { toast, setToast } = useWatchToast(audioOnly.unavailable);
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
     stream.id,
     stream.duration,
@@ -108,11 +100,15 @@ export function WatchLayout({
     hasChapters: Boolean(chaptersVtt),
     audioOnlyEnabled: audioOnly.enabled,
     audioOnlyLoading: audioOnly.loading,
-    hasAudioOnlySource: Boolean(audioOnlySrc),
+    hasAudioOnlySource: Boolean(audioOnly.src),
     settingsReady,
     navigating,
     shouldAutoplay: playerEvents.shouldAutoplay,
   });
+  function handleStageError() {
+    if (!audioOnly.fail()) return handlePlayerError();
+    setToast("Audio only unavailable");
+  }
 
   const overlay = (
     <WatchPlayerOverlay
@@ -125,10 +121,9 @@ export function WatchLayout({
       settings={settings}
       qualityFailed={qualityFailed}
       onOriginalLanguageUnavailable={() => setToast("Original audio unavailable")}
-      originalAudioLocale={originalLocale}
+      originalAudioLocale={getOriginalAudioLocale(stream)}
     />
   );
-
   const classes = getWatchLayoutClasses(
     cinemaMode,
     Boolean(!isMobile && (playlist.panel || relatedStreams.length > 0)),
@@ -140,15 +135,15 @@ export function WatchLayout({
         classes={classes}
         stream={stream}
         settings={settings}
-        manifestSrc={audioOnlySrc ?? manifestSrc}
-        audioOnly={Boolean(audioOnlySrc)}
+        manifestSrc={audioOnly.src ?? manifestSrc}
+        audioOnly={Boolean(audioOnly.src)}
         playerKey={sourceState.playerKey}
         startTime={sourceState.startTime}
         isLive={isLive}
         settingsReady={settingsReady}
         autoplay={sourceState.autoplay}
         navigating={navigating || sourceState.waitForInitialAudioSource}
-        originalLocale={originalLocale}
+        originalLocale={getOriginalAudioLocale(stream)}
         overlay={overlay}
         autoplayState={autoplay.autoplayState}
         sponsorBlockSegments={sponsor.segments}
@@ -161,6 +156,7 @@ export function WatchLayout({
         hideComments={hideComments}
         mobilePanel={isMobile ? playlist.panel : null}
         seekRef={seekRef}
+        audioOnlyControls={audioOnly.controls}
         onCaptionStylesChange={(captionStyles) => update.mutate({ captionStyles })}
         onVolumeChange={handleVolumeChange}
         onTimeUpdate={playerEvents.handleTimeUpdate}
@@ -171,6 +167,7 @@ export function WatchLayout({
         onAutoplayPlayNow={autoplay.playNow}
         onAutoplayCancel={autoplay.cancel}
         onAutoplayPauseToggle={autoplay.togglePause}
+        onPositionReaderChange={(reader) => (positionReaderRef.current = reader)}
         onPreviousVideo={playlist.playPrevious}
         onNextVideo={playlist.playNext}
         onError={handleStageError}
@@ -183,6 +180,7 @@ export function WatchLayout({
         showComments={!hideComments}
         playlistPanel={isMobile ? null : playlist.panel}
         onSeekTimestamp={(seconds) => seekRef.current?.(seconds)}
+        audioOnly={audioOnly.controls}
       />
       <Toast message={toast} />
     </div>

@@ -42,7 +42,7 @@ export function AudioOnlyPoster({ poster, title }: Props) {
   }, []);
 
   const titleClassName = [
-    "typetype-audio-poster-title line-clamp-3 max-w-xl text-balance font-semibold text-lg leading-tight text-white drop-shadow-2xl sm:line-clamp-4 sm:text-3xl lg:text-5xl",
+    "typetype-audio-poster-title line-clamp-2 max-w-lg text-balance font-semibold text-base leading-tight text-white drop-shadow-2xl sm:text-2xl lg:text-3xl",
     shouldMarquee ? "typetype-audio-poster-title-marquee" : null,
   ]
     .filter(Boolean)
@@ -70,12 +70,12 @@ export function AudioOnlyPoster({ poster, title }: Props) {
           />
           <div className="typetype-audio-poster-tint absolute inset-0" />
           <AudioOnlyVisualizer />
-          <div className="absolute inset-0 flex items-center justify-center px-5 pt-5 pb-20 sm:px-10 sm:pt-8 sm:pb-28">
-            <div className="relative flex w-full max-w-4xl items-center justify-start gap-4 text-left sm:gap-9">
+          <div className="absolute inset-0 flex items-center justify-center px-5 pt-5 pb-20 sm:px-10 sm:pt-8 sm:pb-24">
+            <div className="relative flex w-full max-w-3xl items-center justify-start gap-4 text-left sm:gap-7">
               <img
                 src={image}
                 alt={title ?? "Audio only"}
-                className="h-24 w-24 shrink-0 rounded-2xl object-cover shadow-[0_28px_90px_rgb(0_0_0/0.62)] ring-1 ring-white/15 sm:h-60 sm:w-60 sm:rounded-3xl md:h-72 md:w-72"
+                className="h-20 w-20 shrink-0 rounded-2xl object-cover shadow-[0_22px_70px_rgb(0_0_0/0.58)] ring-1 ring-white/15 sm:h-40 sm:w-40 sm:rounded-3xl md:h-48 md:w-48"
               />
               <div className="flex min-w-0 flex-1 flex-col gap-5">
                 <div ref={titleRef} className={titleClassName}>

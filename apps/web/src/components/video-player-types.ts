@@ -34,6 +34,7 @@ export type VideoPlayerProps = {
   onSeeked?: () => void;
   onError?: () => void;
   onSeekReady?: (seek: (seconds: number) => void) => void;
+  onPositionReaderChange?: (reader: (() => number | null) | null) => void;
   onEnded?: () => void;
   onPreviousVideo?: () => void;
   onNextVideo?: () => void;

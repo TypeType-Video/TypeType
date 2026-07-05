@@ -1,3 +1,4 @@
+import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
 import type { VideoStream } from "../types/stream";
 import { WatchActions } from "./watch-actions";
 import { WatchComments } from "./watch-comments";
@@ -8,13 +9,14 @@ type Props = {
   stream: VideoStream;
   showComments?: boolean;
   onSeekTimestamp?: (seconds: number) => void;
+  audioOnly: WatchAudioOnlyControls;
 };
 
-export function WatchMeta({ stream, showComments = true, onSeekTimestamp }: Props) {
+export function WatchMeta({ stream, showComments = true, onSeekTimestamp, audioOnly }: Props) {
   return (
     <>
       <WatchInfo stream={stream} />
-      <WatchActions stream={stream} />
+      <WatchActions stream={stream} audioOnly={audioOnly} />
       {stream.description && (
         <WatchDescription
           description={stream.description}

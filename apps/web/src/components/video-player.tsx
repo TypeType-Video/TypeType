@@ -55,6 +55,7 @@ export function VideoPlayer({
   onSeeked,
   onError,
   onSeekReady,
+  onPositionReaderChange,
   onEnded,
   onPreviousVideo,
   onNextVideo,
@@ -111,6 +112,7 @@ export function VideoPlayer({
         onPause={onPause}
         onSeeked={onSeeked}
         onEnded={handleEnded}
+        onPositionReaderChange={onPositionReaderChange}
       />
       {overlay}
       <VideoPlayerLayout
