@@ -79,7 +79,6 @@ export function MediaProgressEvents({
       media.addEventListener("ended", ended);
       onPositionReaderChangeRef.current?.(readPosition);
       cleanup = () => {
-        update();
         onPositionReaderChangeRef.current?.(null);
         media.removeEventListener("timeupdate", update);
         media.removeEventListener("play", play);
