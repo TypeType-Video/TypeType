@@ -1,7 +1,7 @@
 import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
-import { request } from "./api";
+import { ApiError, request } from "./api";
 import { toApiUrl } from "./env";
 import { optionalBearer } from "./optional-bearer";
 import type { MediaSrc } from "./vidstack";
@@ -60,12 +60,18 @@ function pickAudio(stream: VideoStream): AudioStreamItem | null {
   return audios.find((item) => isSabrCandidate(item) && item.codec === "mp4a.40.2") ?? null;
 }
 
-function manifestUrl(sessionUrl: string, audio: AudioStreamItem | null): string | null {
+function directDashManifestUrl(
+  sessionUrl: string,
+  video: VideoStreamItem,
+  audio: AudioStreamItem | null,
+): string | null {
   try {
     const url = new URL(sessionUrl, "https://typetype.invalid");
     url.pathname = url.pathname.replace("/sabr/session/", "/sabr/manifest/");
-    url.searchParams.set("format", "hls");
+    url.searchParams.set("format", "dash");
+    url.searchParams.set("videoItag", String(video.itag));
     if (audio) url.searchParams.set("audioItag", String(audio.itag));
+    url.searchParams.delete("session");
     url.searchParams.delete("playerTimeMs");
     return toApiUrl(`${url.pathname}${url.search}`);
   } catch {
@@ -73,11 +79,10 @@ function manifestUrl(sessionUrl: string, audio: AudioStreamItem | null): string 
   }
 }
 
-function descriptorSrc(descriptor: SabrSessionDescriptor): MediaSrc | null {
-  if (descriptor.transport !== "http-segments") return null;
-  if (descriptor.protocol !== "typetype-sabr-http-v1") return null;
-  if (!descriptor.endpoints?.dash) return null;
-  return { src: toApiUrl(descriptor.endpoints.dash), type: "application/dash+xml" };
+function isHttpSabrDescriptor(descriptor: SabrSessionDescriptor): boolean {
+  if (descriptor.transport !== "http-segments") return false;
+  if (descriptor.protocol !== "typetype-sabr-http-v1") return false;
+  return Boolean(descriptor.endpoints?.dash);
 }
 
 async function waitForManifestReady(src: MediaSrc): Promise<MediaSrc> {
@@ -88,14 +93,14 @@ async function waitForManifestReady(src: MediaSrc): Promise<MediaSrc> {
     if (response.ok || response.status !== 422) return src;
     await sleep(delay);
   }
-  return src;
+  throw new ApiError("SABR manifest is not ready", 422);
 }
 
 export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {
   const video = playableVideos(stream)[0] ?? null;
   if (!video?.sabrSessionUrl) return null;
-  const src = manifestUrl(video.sabrSessionUrl, pickAudio(stream));
-  return src ? { src, type: "application/x-mpegurl" } : null;
+  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream));
+  return src ? { src, type: "application/dash+xml" } : null;
 }
 
 export async function resolveSabrHttpSessionSrc(
@@ -109,8 +114,9 @@ export async function resolveSabrHttpSessionSrc(
     toApiUrl(video.sabrSessionUrl),
     optionalBearer(),
   );
-  const src = descriptorSrc(descriptor);
-  return src ? waitForManifestReady(src) : null;
+  if (!isHttpSabrDescriptor(descriptor)) return null;
+  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream));
+  return src ? waitForManifestReady({ src, type: "application/dash+xml" }) : null;
 }
 
 export function hasSabrSession(stream: VideoStream): boolean {
