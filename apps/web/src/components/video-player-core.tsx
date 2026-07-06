@@ -2,6 +2,9 @@ import * as dashjs from "dashjs";
 import { notifyDashPlayer, setDashPlayer } from "../lib/dash-player-store";
 import type { MediaProviderAdapter } from "../lib/vidstack";
 import { isDASHProvider, Track, useMediaState } from "../lib/vidstack";
+import { useAuthStore } from "../stores/auth-store";
+
+type DashRequestInterceptor = Parameters<dashjs.MediaPlayerClass["addRequestInterceptor"]>[0];
 
 export function ChaptersTrack({ src }: { src: string }) {
   const duration = useMediaState("duration");
@@ -17,7 +20,17 @@ export function onProviderChange(provider: MediaProviderAdapter | null) {
   }
   provider.library = dashjs.MediaPlayer;
   provider.onInstance((player) => {
+    const addAuthHeader: DashRequestInterceptor = (request) => {
+      const token = useAuthStore.getState().token;
+      if (!token) return request;
+      request.headers = {
+        ...request.headers,
+        Authorization: `Bearer ${token}`,
+      };
+      return request;
+    };
     setDashPlayer(player);
+    player.addRequestInterceptor(addAuthHeader);
     const onDashUpdate = () => notifyDashPlayer();
     player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onDashUpdate);
     player.on(dashjs.MediaPlayer.events.TRACK_CHANGE_RENDERED, onDashUpdate);
@@ -26,11 +39,13 @@ export function onProviderChange(provider: MediaProviderAdapter | null) {
       streaming: {
         cmcd: { enabled: false },
         retryAttempts: {
+          MPD: 5,
           MediaSegment: 3,
           InitializationSegment: 3,
           IndexSegment: 3,
         },
         retryIntervals: {
+          MPD: 500,
           MediaSegment: 500,
           InitializationSegment: 500,
           IndexSegment: 500,

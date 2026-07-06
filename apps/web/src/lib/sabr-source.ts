@@ -57,14 +57,6 @@ function manifestUrl(sessionUrl: string, audio: AudioStreamItem | null): string 
 function descriptorSrc(descriptor: SabrSessionDescriptor): MediaSrc | null {
   if (descriptor.transport !== "http-segments") return null;
   if (descriptor.protocol !== "typetype-sabr-http-v1") return null;
-  const firefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox/");
-  const endpoint = firefox ? descriptor.endpoints?.dash : descriptor.endpoints?.hls;
-  if (endpoint) {
-    return {
-      src: toApiUrl(endpoint),
-      type: firefox ? "application/dash+xml" : "application/x-mpegurl",
-    };
-  }
   if (!descriptor.endpoints?.dash) return null;
   return { src: toApiUrl(descriptor.endpoints.dash), type: "application/dash+xml" };
 }
