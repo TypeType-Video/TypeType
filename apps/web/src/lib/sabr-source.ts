@@ -1,21 +1,12 @@
 import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
-import { ApiError, request } from "./api";
+import { ApiError } from "./api";
 import { toApiUrl } from "./env";
 import { optionalBearer } from "./optional-bearer";
 import type { MediaSrc } from "./vidstack";
 
 type SabrCandidate = VideoStreamItem | AudioStreamItem;
-type SabrSessionDescriptor = {
-  protocol?: string;
-  transport?: string;
-  endpoints?: {
-    dash?: string;
-    hls?: string;
-  };
-};
-
 const MANIFEST_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2500] as const;
 
 function isSabrCandidate(item: SabrCandidate): boolean {
@@ -79,12 +70,6 @@ function directDashManifestUrl(
   }
 }
 
-function isHttpSabrDescriptor(descriptor: SabrSessionDescriptor): boolean {
-  if (descriptor.transport !== "http-segments") return false;
-  if (descriptor.protocol !== "typetype-sabr-http-v1") return false;
-  return Boolean(descriptor.endpoints?.dash);
-}
-
 async function waitForManifestReady(src: MediaSrc): Promise<MediaSrc> {
   const url = mediaSrcValue(src);
   if (!url) return src;
@@ -110,11 +95,6 @@ export async function resolveSabrHttpSessionSrc(
   const videos = playableVideos(stream);
   const video = videos.find((item) => item.itag === selectedItag) ?? videos[0] ?? null;
   if (!video?.sabrSessionUrl) return null;
-  const descriptor = await request<SabrSessionDescriptor>(
-    toApiUrl(video.sabrSessionUrl),
-    optionalBearer(),
-  );
-  if (!isHttpSabrDescriptor(descriptor)) return null;
   const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream));
   return src ? waitForManifestReady({ src, type: "application/dash+xml" }) : null;
 }
