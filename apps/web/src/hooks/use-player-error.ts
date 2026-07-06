@@ -14,9 +14,11 @@ import { isSignedHlsManifestUrl, resolveManifestSrc } from "../lib/stream-src";
 import type { MediaSrc } from "../lib/vidstack";
 import type { VideoStream } from "../types/stream";
 import { useInstance } from "./use-instance";
+import { useSabrManifestSrc } from "./use-sabr-manifest-src";
 
 type UsePlayerErrorReturn = {
   manifestSrc: MediaSrc;
+  manifestLoading: boolean;
   playerFailed: boolean;
   qualityFailed: boolean;
   clearFailed: () => void;
@@ -52,6 +54,7 @@ export function usePlayerError(
     provider === "youtube";
   const nativeEnabled = preferServerManifests && !isLive && legacyDashPair && preferNativeManifest;
   const hlsEnabled = Boolean(stream.hlsUrl && (isLive || isSignedHlsManifestUrl(stream.hlsUrl)));
+  const sabrManifest = useSabrManifestSrc(stream, sabrEnabled);
   const [hlsFailed, setHlsFailed] = useState(false);
   const [highQualityFailed, setHighQualityFailed] = useState(false);
   const [nativeFailed, setNativeFailed] = useState(false);
@@ -65,15 +68,17 @@ export function usePlayerError(
       ? bilibiliVariantCount(stream.videoOnlyStreams ?? [], stream.audioStreams ?? [])
       : 0;
 
-  const manifestSrc = resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
-    preferNativeManifest,
-    compatibilityMode: compatibilityFallback,
-    enableHighQualityPlayback: highQualityEnabled,
-    highQualityFailed,
-    hlsFailed,
-    allowServerManifests: preferServerManifests,
-    bilibiliVariant,
-  });
+  const manifestSrc =
+    sabrManifest.src ??
+    resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
+      preferNativeManifest,
+      compatibilityMode: compatibilityFallback,
+      enableHighQualityPlayback: highQualityEnabled,
+      highQualityFailed,
+      hlsFailed,
+      allowServerManifests: preferServerManifests,
+      bilibiliVariant,
+    });
 
   const handleError = useCallback(() => {
     if (sabrEnabled) {
@@ -157,5 +162,14 @@ export function usePlayerError(
     setRetryKey(0);
   }, [streamId]);
 
-  return { manifestSrc, playerFailed, qualityFailed, clearFailed, handleError, reset, retryKey };
+  return {
+    manifestSrc,
+    manifestLoading: sabrManifest.loading,
+    playerFailed,
+    qualityFailed,
+    clearFailed,
+    handleError,
+    reset,
+    retryKey,
+  };
 }
