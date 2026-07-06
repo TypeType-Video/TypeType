@@ -51,12 +51,13 @@ export function QualitySelector() {
   const selectSabrQuality = useSabrQualityStore((state) => state.selectQuality);
 
   if (sabrStreamId && sabrOptions.length > 1) {
+    const streamId = sabrStreamId;
     const selected =
       sabrOptions.find((option) => option.itag === sabrSelectedItag) ?? sabrOptions[0];
     function onSabrChange(value: string) {
       const itag = Number(value);
       if (!Number.isInteger(itag)) return;
-      selectSabrQuality(sabrStreamId, itag);
+      selectSabrQuality(streamId, itag);
       menuRef.current?.close();
     }
     return (
