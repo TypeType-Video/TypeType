@@ -278,22 +278,6 @@ else:
 PY
 }
 
-is_arm64_host() {
-  case "$(uname -m)" in
-    aarch64|arm64) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-compose_command_hint() {
-  local command="$1"
-  local args="-f ${COMPOSE_NAME}"
-  if [[ ${USE_ARM64_OVERRIDE} -eq 1 ]]; then
-    args="${args} -f docker-compose.arm64.yml"
-  fi
-  printf 'docker compose %s --env-file .env %s' "${args}" "${command}"
-}
-
 choose_stack_port() {
   local env_file="$1"
   local key="$2"
@@ -361,11 +345,8 @@ else
   COMPOSE_NAME="docker-compose.yml"
 fi
 COMPOSE_FILE="${INSTALL_DIR}/${COMPOSE_NAME}"
-ARM64_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.arm64.yml"
-USE_ARM64_OVERRIDE=0
 
 fetch_file "${COMPOSE_SOURCE}" "${COMPOSE_FILE}"
-fetch_file "docker-compose.arm64.yml" "${ARM64_COMPOSE_FILE}"
 fetch_file "nginx.conf" "${INSTALL_DIR}/nginx.conf"
 fetch_file "garage.toml" "${INSTALL_DIR}/garage.toml"
 fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
@@ -378,15 +359,6 @@ chmod +x "${INSTALL_DIR}/scripts/install-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 chmod +x "${INSTALL_DIR}/scripts/setup-stack.sh"
-
-COMPOSE_ARGS=(-f "${COMPOSE_FILE}")
-COMPOSE_OVERRIDE_FILE=""
-if is_arm64_host; then
-  USE_ARM64_OVERRIDE=1
-  COMPOSE_OVERRIDE_FILE="${ARM64_COMPOSE_FILE}"
-  COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
-  echo "[install] ARM64 host detected, using Redis cache override."
-fi
 
 if [[ ! -f "${INSTALL_DIR}/.env" ]]; then
   cp "${INSTALL_DIR}/.env.example" "${INSTALL_DIR}/.env"
@@ -435,31 +407,31 @@ fi
 
 if [[ ${START_STACK} -eq 0 ]]; then
   echo "[install] Download-only complete."
-  echo "[install] Next step: cd ${INSTALL_DIR} && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && docker compose -f ${COMPOSE_NAME} --env-file .env up -d"
   exit 0
 fi
 
 if [[ ${AUTO_APPROVE} -eq 0 ]] && ! confirm_tty "Proceed with Docker pull + startup in ${INSTALL_DIR}?"; then
   echo "[install] Stack files are ready in ${INSTALL_DIR}."
   echo "[install] Docker startup skipped."
-  echo "[install] Next step: cd ${INSTALL_DIR} && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && docker compose -f ${COMPOSE_NAME} --env-file .env up -d"
   exit 0
 fi
 
 echo "[install] Pulling Docker images..."
-docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" pull
+docker compose -f "${COMPOSE_FILE}" --env-file "${INSTALL_DIR}/.env" pull
 
 echo "[install] Starting stack..."
-docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" up -d
+docker compose -f "${COMPOSE_FILE}" --env-file "${INSTALL_DIR}/.env" up -d
 
 echo "[install] Bootstrapping Garage..."
 (
   cd "${INSTALL_DIR}"
-  COMPOSE_FILE="${COMPOSE_FILE}" COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" ./scripts/bootstrap-garage.sh
+  COMPOSE_FILE="${COMPOSE_FILE}" ./scripts/bootstrap-garage.sh
 )
 
 echo "[install] Service status:"
-docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" ps
+docker compose -f "${COMPOSE_FILE}" --env-file "${INSTALL_DIR}/.env" ps
 
 echo
 echo "Done. Open http://localhost:${HOST_PORT_WEB_RESOLVED}"

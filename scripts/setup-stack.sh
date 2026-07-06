@@ -151,13 +151,6 @@ else:
 PY
 }
 
-is_arm64_host() {
-  case "$(uname -m)" in
-    aarch64|arm64) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 choose_stack_port() {
   local env_file="$1"
   local key="$2"
@@ -265,14 +258,6 @@ fi
 
 cd "${ROOT_DIR}"
 
-COMPOSE_ARGS=(-f "${ROOT_DIR}/docker-compose.yml")
-COMPOSE_OVERRIDE_FILE=""
-if is_arm64_host && [[ -f "${ROOT_DIR}/docker-compose.arm64.yml" ]]; then
-  COMPOSE_OVERRIDE_FILE="${ROOT_DIR}/docker-compose.arm64.yml"
-  COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
-  echo "[setup] ARM64 host detected, using Redis cache override."
-fi
-
 ensure_youtube_remote_login_env "${ENV_FILE}"
 "${ROOT_DIR}/scripts/bootstrap-env.sh"
 
@@ -292,16 +277,16 @@ fi
 
 echo
 echo "[setup] Pulling images..."
-docker compose "${COMPOSE_ARGS[@]}" pull
+docker compose pull
 
 echo "[setup] Starting services..."
-docker compose "${COMPOSE_ARGS[@]}" up -d
+docker compose up -d
 
 echo "[setup] Bootstrapping Garage for downloader..."
-COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml" COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" "${ROOT_DIR}/scripts/bootstrap-garage.sh"
+"${ROOT_DIR}/scripts/bootstrap-garage.sh"
 
 echo "[setup] Current service status:"
-docker compose "${COMPOSE_ARGS[@]}" ps
+docker compose ps
 
 echo
 echo "Done. Open http://localhost:${HOST_PORT_WEB_RESOLVED}"

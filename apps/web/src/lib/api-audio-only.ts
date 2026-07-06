@@ -36,13 +36,13 @@ export function fetchAudioOnlyStream(
 }
 
 export function toAudioOnlyMediaSrc(response: AudioOnlyResponse): MediaSrc | null {
-  if (response.kind === "hls" || response.mimeType.includes("mpegurl")) {
-    return { src: toApiUrl(response.src), type: "application/x-mpegurl" };
-  }
-  if (response.kind === "dash" || response.mimeType.includes("dash+xml")) {
-    return { src: toApiUrl(response.src), type: "application/dash+xml" };
-  }
   if (response.kind !== undefined && response.kind !== "progressive") {
+    return null;
+  }
+  if (response.mimeType.includes("mpegurl") || response.mimeType.includes("x-mpegurl")) {
+    return null;
+  }
+  if (response.mimeType.includes("dash+xml")) {
     return null;
   }
   if (response.mimeType.includes("webm")) {

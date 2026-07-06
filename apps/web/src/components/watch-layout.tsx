@@ -37,7 +37,8 @@ export function WatchLayout({
   const save = useSaveProgress(stream.id);
   const { settings, update, settingsReady } = useSettings();
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
-  const player = usePlayerError(stream, isLive, settings.enableHighQualityPlayback);
+  const { manifestSrc, playerFailed, qualityFailed, clearFailed, handleError, reset, retryKey } =
+    usePlayerError(stream, isLive, settings.enableHighQualityPlayback);
   const { on: bulletCommentsOn } = useDanmakuStore();
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
   const hideComments = settings.hideComments;
@@ -70,7 +71,7 @@ export function WatchLayout({
     stream,
     isLive,
     mutate: save.mutate,
-    onPlay: player.clearFailed,
+    onPlay: clearFailed,
     onEnded: autoplay.handleEnded,
   });
   const audioOnly = useWatchAudioOnlyPlayback({
@@ -80,18 +81,18 @@ export function WatchLayout({
     isLive,
     positionRef: playerEvents.positionRef,
     readPositionMs: () => positionReaderRef.current?.() ?? null,
-    clearFailed: player.clearFailed,
+    clearFailed,
   });
   const { toast, setToast } = useWatchToast(audioOnly.unavailable);
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
     stream.id,
     stream.duration,
     playerEvents.positionRef,
-    player.handleError,
+    handleError,
   );
   const sourceState = useWatchPlayerSourceState({
     streamId: stream.id,
-    retryKey: player.retryKey,
+    retryKey,
     startTime: retryStartTime > 0 ? retryStartTime : (audioOnly.switchPositionMs ?? startTime),
     positionRef: playerEvents.positionRef,
     highQuality: settings.enableHighQualityPlayback,
@@ -118,7 +119,7 @@ export function WatchLayout({
       positionRef={playerEvents.positionRef}
       stream={stream}
       settings={settings}
-      qualityFailed={player.qualityFailed}
+      qualityFailed={qualityFailed}
       onOriginalLanguageUnavailable={() => setToast("Original audio unavailable")}
       originalAudioLocale={getOriginalAudioLocale(stream)}
     />
@@ -134,14 +135,14 @@ export function WatchLayout({
         classes={classes}
         stream={stream}
         settings={settings}
-        manifestSrc={audioOnly.src ?? player.manifestSrc}
+        manifestSrc={audioOnly.src ?? manifestSrc}
         audioOnly={Boolean(audioOnly.src)}
         playerKey={sourceState.playerKey}
         startTime={sourceState.startTime}
         isLive={isLive}
         settingsReady={settingsReady}
         autoplay={sourceState.autoplay}
-        navigating={navigating || sourceState.waitForInitialAudioSource || player.manifestLoading}
+        navigating={navigating || sourceState.waitForInitialAudioSource}
         originalLocale={getOriginalAudioLocale(stream)}
         overlay={overlay}
         autoplayState={autoplay.autoplayState}
@@ -150,7 +151,7 @@ export function WatchLayout({
         manualSkipSegments={sponsor.manualSkipSegments}
         thumbnailVtt={thumbnailVtt}
         chaptersVtt={chaptersVtt}
-        playerFailed={player.playerFailed}
+        playerFailed={playerFailed}
         cinemaMode={cinemaMode}
         hideComments={hideComments}
         mobilePanel={isMobile ? playlist.panel : null}
@@ -170,7 +171,7 @@ export function WatchLayout({
         onPreviousVideo={playlist.playPrevious}
         onNextVideo={playlist.playNext}
         onError={handleStageError}
-        onReset={player.reset}
+        onReset={reset}
       />
       <WatchSecondaryContent
         cinemaMode={cinemaMode}

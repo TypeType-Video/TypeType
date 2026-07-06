@@ -18,7 +18,6 @@ services:
       DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-typetype}}
       DATABASE_USER: ${DATABASE_USER:-${POSTGRES_USER:-typetype}}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
-      DRAGONFLY_URL: ${DRAGONFLY_URL:-redis://dragonfly:6379}
       DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-false}
       YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://typetype-token:8081

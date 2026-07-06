@@ -1,7 +1,11 @@
 export type {
+  MediaContext,
   MediaProviderAdapter,
   MediaSrc,
+  MediaType,
   MenuInstance,
+  Src,
+  VideoProvider,
   VideoQualityOption,
 } from "@vidstack/react";
 export {
@@ -15,9 +19,11 @@ export {
   Track,
   useAudioOptions,
   useMediaPlayer,
+  useMediaProvider,
   useMediaRemote,
   useMediaState,
   useVideoQualityOptions,
+  VideoProviderLoader,
   VolumeSlider,
 } from "@vidstack/react";
 export {
