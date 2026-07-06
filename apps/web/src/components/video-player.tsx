@@ -1,6 +1,4 @@
 import { isIosDevice } from "../lib/ios-device";
-import { isSabrSessionSource } from "../lib/sabr-source";
-import { SABR_VIDEO_LOADERS } from "../lib/sabr-video-loader";
 import { MediaPlayer, MediaProvider } from "../lib/vidstack";
 import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-patch";
 import { AudioCenterToggle } from "./audio-center-toggle";
@@ -12,7 +10,6 @@ import { PlayerHotkeys } from "./player-hotkeys";
 import { SeekBridge, SponsorBlockSkipper } from "./player-internals";
 import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
 import { PlayerSeeker } from "./player-seeker";
-import { PlayerSourceAttachment } from "./player-source-attachment";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
 import { SponsorBlockSkipNotice } from "./sponsorblock-skip-notice";
@@ -65,7 +62,6 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const ios = isIosDevice();
   const playerClassName = videoPlayerClassName(audioOnly, className);
-  const customSource = isSabrSessionSource(src);
   const { handleProviderChange, handleError, handleEnded } = useVideoPlayerEvents({
     src,
     onError,
@@ -88,23 +84,14 @@ export function VideoPlayer({
       title={title}
       poster={poster}
       onProviderChange={handleProviderChange}
-      onError={customSource ? undefined : handleError}
+      onError={handleError}
     >
       <MediaProvider
         className={mediaClassName ?? "h-full w-full"}
-        loaders={customSource ? SABR_VIDEO_LOADERS : []}
         mediaProps={mediaClassName ? { className: mediaClassName } : undefined}
       >
         {!audioOnly && <VideoPlayerTracks subtitles={subtitles} chaptersVtt={chaptersVtt} />}
       </MediaProvider>
-      {customSource && (
-        <PlayerSourceAttachment
-          src={src}
-          startTime={startTime}
-          autoplay={autoplay}
-          onError={handleError}
-        />
-      )}
       {audioOnly && <AudioOnlyPoster poster={poster} title={title} />}
       {audioOnly && <AudioCenterToggle />}
       <MediaProgressEvents
@@ -123,7 +110,7 @@ export function VideoPlayer({
         onPreviousVideo={onPreviousVideo}
         onNextVideo={onNextVideo}
       />
-      {!customSource && <PlayerSeeker startTime={startTime} />}
+      <PlayerSeeker startTime={startTime} />
       <VolumeRestorer
         initialVolume={initialVolume}
         initialMuted={initialMuted}

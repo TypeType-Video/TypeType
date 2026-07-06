@@ -30,7 +30,7 @@ Install and start the stack with one command:
 curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash
 ```
 
-The installer creates `~/typetype-stack`, generates local downloader and YouTube remote login secrets, selects available ports when defaults are busy, starts the services, and bootstraps Garage.
+The installer creates `~/typetype-stack`, generates local downloader and YouTube remote login secrets, selects available ports when defaults are busy, starts the services, and bootstraps Garage. On `arm64`/`aarch64` hosts, including Raspberry Pi 4, it automatically adds the ARM64 Compose override that uses `redis:7-alpine` as the Redis-compatible cache service instead of Dragonfly.
 
 After install:
 
@@ -85,6 +85,13 @@ cd ~/typetype-beta-stack
 docker compose -f docker-compose.dev.yml --env-file .env pull
 docker compose -f docker-compose.dev.yml --env-file .env up -d --force-recreate
 docker compose -f docker-compose.dev.yml --env-file .env ps
+```
+
+On ARM64 hosts, include the override when running Compose manually:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml --env-file .env up -d
+docker compose -f docker-compose.dev.yml -f docker-compose.arm64.yml --env-file .env up -d
 ```
 
 ## Screenshots
