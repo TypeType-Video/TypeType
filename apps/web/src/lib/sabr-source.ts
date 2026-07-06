@@ -15,8 +15,20 @@ type SabrSessionDescriptor = {
   };
 };
 
+const MANIFEST_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2500] as const;
+
 function isSabrCandidate(item: SabrCandidate): boolean {
   return item.deliveryMethod === "sabr" && Boolean(item.sabrSessionUrl?.trim());
+}
+
+function mediaSrcValue(src: MediaSrc): string {
+  if (typeof src === "string") return src;
+  if (!("src" in src)) return "";
+  return typeof src.src === "string" ? src.src : "";
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function playableVideos(stream: VideoStream): VideoStreamItem[] {
@@ -57,6 +69,17 @@ function descriptorSrc(descriptor: SabrSessionDescriptor): MediaSrc | null {
   return { src: toApiUrl(descriptor.endpoints.dash), type: "application/dash+xml" };
 }
 
+async function waitForManifestReady(src: MediaSrc): Promise<MediaSrc> {
+  const url = mediaSrcValue(src);
+  if (!url) return src;
+  for (const delay of MANIFEST_RETRY_DELAYS_MS) {
+    const response = await fetch(url, optionalBearer({ cache: "no-store" }));
+    if (response.ok || response.status !== 422) return src;
+    await sleep(delay);
+  }
+  return src;
+}
+
 export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {
   const video = playableVideos(stream)[0] ?? null;
   if (!video?.sabrSessionUrl) return null;
@@ -71,7 +94,8 @@ export async function resolveSabrHttpSessionSrc(stream: VideoStream): Promise<Me
     toApiUrl(video.sabrSessionUrl),
     optionalBearer(),
   );
-  return descriptorSrc(descriptor);
+  const src = descriptorSrc(descriptor);
+  return src ? waitForManifestReady(src) : null;
 }
 
 export function hasSabrSession(stream: VideoStream): boolean {
