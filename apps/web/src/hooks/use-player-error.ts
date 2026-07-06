@@ -23,8 +23,10 @@ type UsePlayerErrorReturn = {
   qualityFailed: boolean;
   clearFailed: () => void;
   handleError: () => void;
+  handleSeeking: (positionMs: number) => void;
   reset: () => void;
   retryKey: number;
+  seekStartTime: number | null;
 };
 
 export function usePlayerError(
@@ -54,7 +56,8 @@ export function usePlayerError(
     provider === "youtube";
   const nativeEnabled = preferServerManifests && !isLive && legacyDashPair && preferNativeManifest;
   const hlsEnabled = Boolean(stream.hlsUrl && (isLive || isSignedHlsManifestUrl(stream.hlsUrl)));
-  const sabrManifest = useSabrManifestSrc(stream, sabrEnabled);
+  const [sabrSeekMs, setSabrSeekMs] = useState<number | null>(null);
+  const sabrManifest = useSabrManifestSrc(stream, sabrEnabled, sabrSeekMs);
   const [hlsFailed, setHlsFailed] = useState(false);
   const [highQualityFailed, setHighQualityFailed] = useState(false);
   const [nativeFailed, setNativeFailed] = useState(false);
@@ -144,6 +147,7 @@ export function usePlayerError(
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
+    setSabrSeekMs(null);
     setRetryKey((k) => k + 1);
   }, []);
 
@@ -151,6 +155,13 @@ export function usePlayerError(
     setPlayerFailed(false);
   }, []);
 
+  const handleSeeking = useCallback(
+    (positionMs: number) => {
+      if (!sabrEnabled || !Number.isFinite(positionMs) || positionMs <= 0) return;
+      setSabrSeekMs(Math.max(0, Math.round(positionMs)));
+    },
+    [sabrEnabled],
+  );
   useEffect(() => {
     if (streamId.length === 0) return;
     setHlsFailed(false);
@@ -160,6 +171,7 @@ export function usePlayerError(
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
+    setSabrSeekMs(null);
     setRetryKey(0);
   }, [streamId]);
 
@@ -170,7 +182,9 @@ export function usePlayerError(
     qualityFailed,
     clearFailed,
     handleError,
+    handleSeeking,
     reset,
     retryKey,
+    seekStartTime: sabrSeekMs,
   };
 }

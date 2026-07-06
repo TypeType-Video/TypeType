@@ -50,6 +50,7 @@ export function VideoPlayer({
   onTimeUpdate,
   onPlay,
   onPause,
+  onSeeking,
   onSeeked,
   onError,
   onSeekReady,
@@ -98,6 +99,7 @@ export function VideoPlayer({
         onTimeUpdate={onTimeUpdate}
         onPlay={onPlay}
         onPause={onPause}
+        onSeeking={onSeeking}
         onSeeked={onSeeked}
         onEnded={handleEnded}
         onPositionReaderChange={onPositionReaderChange}

@@ -137,7 +137,7 @@ export function WatchLayout({
         manifestSrc={audioOnly.src ?? player.manifestSrc}
         audioOnly={Boolean(audioOnly.src)}
         playerKey={sourceState.playerKey}
-        startTime={sourceState.startTime}
+        startTime={player.seekStartTime ?? sourceState.startTime}
         isLive={isLive}
         settingsReady={settingsReady}
         autoplay={sourceState.autoplay}
@@ -161,6 +161,7 @@ export function WatchLayout({
         onTimeUpdate={playerEvents.handleTimeUpdate}
         onPlay={playerEvents.handlePlay}
         onPause={playerEvents.handlePause}
+        onSeeking={audioOnly.src ? () => undefined : player.handleSeeking}
         onSeeked={playerEvents.handleSeeked}
         onEnded={playerEvents.handleEnded}
         onAutoplayPlayNow={autoplay.playNow}

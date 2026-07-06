@@ -44,6 +44,7 @@ type Props = {
   onTimeUpdate: (positionMs: number) => void;
   onPlay: () => void;
   onPause: () => void;
+  onSeeking: (positionMs: number) => void;
   onSeeked: () => void;
   onEnded: () => void;
   onAutoplayPlayNow: () => void;
@@ -87,6 +88,7 @@ export function WatchStage({
   onTimeUpdate,
   onPlay,
   onPause,
+  onSeeking,
   onSeeked,
   onEnded,
   onAutoplayPlayNow,
@@ -156,6 +158,7 @@ export function WatchStage({
               onTimeUpdate={onTimeUpdate}
               onPlay={onPlay}
               onPause={onPause}
+              onSeeking={onSeeking}
               onSeeked={onSeeked}
               onError={onError}
               onPositionReaderChange={onPositionReaderChange}

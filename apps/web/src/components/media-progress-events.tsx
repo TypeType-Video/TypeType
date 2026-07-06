@@ -6,6 +6,7 @@ type Props = {
   onTimeUpdate?: (positionMs: number) => void;
   onPlay?: () => void;
   onPause?: () => void;
+  onSeeking?: (positionMs: number) => void;
   onSeeked?: () => void;
   onEnded?: () => void;
   onPositionReaderChange?: (reader: (() => number | null) | null) => void;
@@ -19,6 +20,7 @@ export function MediaProgressEvents({
   onTimeUpdate,
   onPlay,
   onPause,
+  onSeeking,
   onSeeked,
   onEnded,
   onPositionReaderChange,
@@ -27,6 +29,7 @@ export function MediaProgressEvents({
   const onTimeUpdateRef = useRef(onTimeUpdate);
   const onPlayRef = useRef(onPlay);
   const onPauseRef = useRef(onPause);
+  const onSeekingRef = useRef(onSeeking);
   const onSeekedRef = useRef(onSeeked);
   const onEndedRef = useRef(onEnded);
   const onPositionReaderChangeRef = useRef(onPositionReaderChange);
@@ -34,6 +37,7 @@ export function MediaProgressEvents({
   onTimeUpdateRef.current = onTimeUpdate;
   onPlayRef.current = onPlay;
   onPauseRef.current = onPause;
+  onSeekingRef.current = onSeeking;
   onSeekedRef.current = onSeeked;
   onEndedRef.current = onEnded;
   onPositionReaderChangeRef.current = onPositionReaderChange;
@@ -65,6 +69,7 @@ export function MediaProgressEvents({
       };
       const seeking = () => {
         update();
+        onSeekingRef.current?.(toPositionMs(media));
       };
       const ended = () => {
         update();

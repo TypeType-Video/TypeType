@@ -64,6 +64,7 @@ function directDashManifestUrl(
   sessionUrl: string,
   video: VideoStreamItem,
   audio: AudioStreamItem | null,
+  playerTimeMs: number | null,
 ): string | null {
   try {
     const url = new URL(sessionUrl, "https://typetype.invalid");
@@ -75,8 +76,8 @@ function directDashManifestUrl(
       const audioTrackId = searchParam(audio.sabrSessionUrl, "audioTrackId");
       if (audioTrackId) url.searchParams.set("audioTrackId", audioTrackId);
     }
+    if (playerTimeMs !== null) url.searchParams.set("playerTimeMs", String(playerTimeMs));
     url.searchParams.delete("session");
-    url.searchParams.delete("playerTimeMs");
     return toApiUrl(`${url.pathname}${url.search}`);
   } catch {
     return null;
@@ -97,18 +98,19 @@ async function waitForManifestReady(src: MediaSrc): Promise<MediaSrc> {
 export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {
   const video = playableVideos(stream)[0] ?? null;
   if (!video?.sabrSessionUrl) return null;
-  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream));
+  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream), null);
   return src ? { src, type: "application/dash+xml" } : null;
 }
 
 export async function resolveSabrHttpSessionSrc(
   stream: VideoStream,
   selectedItag: number | null,
+  playerTimeMs: number | null,
 ): Promise<MediaSrc | null> {
   const videos = playableVideos(stream);
   const video = videos.find((item) => item.itag === selectedItag) ?? videos[0] ?? null;
   if (!video?.sabrSessionUrl) return null;
-  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream));
+  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream), playerTimeMs);
   return src ? waitForManifestReady({ src, type: "application/dash+xml" }) : null;
 }
 
