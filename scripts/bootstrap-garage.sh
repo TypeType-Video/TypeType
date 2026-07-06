@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${COMPOSE_FILE:-${ROOT_DIR}/docker-compose.yml}"
+COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE:-}"
 ENV_FILE="${ROOT_DIR}/.env"
 
 PLACEHOLDER_ACCESS_KEY="SET_ME_ACCESS_KEY"
@@ -116,8 +117,13 @@ export DOWNLOADER_S3_ACCESS_KEY="${KEY_ID}"
 export DOWNLOADER_S3_SECRET_KEY="${SECRET_KEY}"
 export GARAGE_RPC_SECRET="${RPC_SECRET}"
 
+COMPOSE_ARGS=(-f "${COMPOSE_FILE}")
+if [[ -n "${COMPOSE_OVERRIDE_FILE}" ]]; then
+  COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
+fi
+
 compose() {
-  docker compose -f "${COMPOSE_FILE}" "$@"
+  docker compose "${COMPOSE_ARGS[@]}" "$@"
 }
 
 garage_exec() {
