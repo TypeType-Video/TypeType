@@ -1,13 +1,26 @@
 import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
+import { ApiError } from "./api";
 import { toApiUrl } from "./env";
+import { optionalBearer } from "./optional-bearer";
 import type { MediaSrc } from "./vidstack";
 
 type SabrCandidate = VideoStreamItem | AudioStreamItem;
+const MANIFEST_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2500] as const;
 
 function isSabrCandidate(item: SabrCandidate): boolean {
   return item.deliveryMethod === "sabr" && Boolean(item.sabrSessionUrl?.trim());
+}
+
+function mediaSrcValue(src: MediaSrc): string {
+  if (typeof src === "string") return src;
+  if (!("src" in src)) return "";
+  return typeof src.src === "string" ? src.src : "";
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function playableVideos(stream: VideoStream): VideoStreamItem[] {
@@ -71,6 +84,17 @@ function directDashManifestUrl(
   }
 }
 
+async function waitForManifestReady(src: MediaSrc): Promise<MediaSrc> {
+  const url = mediaSrcValue(src);
+  if (!url) return src;
+  for (const delay of MANIFEST_RETRY_DELAYS_MS) {
+    const response = await fetch(url, optionalBearer({ cache: "no-store" }));
+    if (response.ok || response.status !== 422) return src;
+    await sleep(delay);
+  }
+  throw new ApiError("SABR manifest is not ready", 422);
+}
+
 export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {
   const video = playableVideos(stream)[0] ?? null;
   if (!video?.sabrSessionUrl) return null;
@@ -87,7 +111,7 @@ export async function resolveSabrHttpSessionSrc(
   const video = videos.find((item) => item.itag === selectedItag) ?? videos[0] ?? null;
   if (!video?.sabrSessionUrl) return null;
   const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream), playerTimeMs);
-  return src ? { src, type: "application/dash+xml" } : null;
+  return src ? waitForManifestReady({ src, type: "application/dash+xml" }) : null;
 }
 
 export function hasSabrSession(stream: VideoStream): boolean {
