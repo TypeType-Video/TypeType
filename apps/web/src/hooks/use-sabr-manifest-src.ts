@@ -28,10 +28,12 @@ export function useSabrManifestSrc(
     state.streamId === stream.id ? state.selectedItag : null,
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
+  const defaultItag = sabrQualityOptions(stream)[0]?.itag ?? null;
+  const effectiveItag = selectedItag ?? defaultItag;
   const lastSrcRef = useRef<MediaSrc | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const lastSrcKeyRef = useRef<string | null>(null);
-  const srcKey = `${stream.id}:${selectedItag ?? "auto"}:${authScope}`;
+  const srcKey = `${stream.id}:${effectiveItag ?? "auto"}:${authScope}`;
   if (lastSrcKeyRef.current !== srcKey) {
     lastSrcRef.current = null;
     sessionIdRef.current = null;
@@ -43,11 +45,11 @@ export function useSabrManifestSrc(
     setOptions(stream.id, options, options[0]?.itag ?? null);
   }, [enabled, setOptions, stream]);
   const query = useQuery({
-    queryKey: ["sabr-manifest", stream.id, selectedItag, authScope, playerTimeMs],
+    queryKey: ["sabr-manifest", stream.id, effectiveItag, authScope, playerTimeMs],
     queryFn: async (): Promise<SabrPlaybackState | null> => {
       const playback = await resolveSabrPlaybackSrc(
         stream,
-        selectedItag,
+        effectiveItag,
         playerTimeMs,
         sessionIdRef.current,
       );
