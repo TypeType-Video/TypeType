@@ -123,7 +123,7 @@ export function WatchStage({
           <div className="flex aspect-video w-full items-center justify-center bg-black">
             <PageSpinner fullScreen={false} />
           </div>
-        ) : settingsReady ? (
+        ) : (
           <WatchPlayerCrossfade
             audioOnly={audioOnly}
             poster={stream.thumbnail}
@@ -171,8 +171,6 @@ export function WatchStage({
             />
             {playerFailed && <PlayerError onRetry={onReset} />}
           </WatchPlayerCrossfade>
-        ) : (
-          <div className="aspect-video w-full bg-black" />
         )}
       </div>
       {mobilePanel ? <div className="mt-4">{mobilePanel}</div> : null}

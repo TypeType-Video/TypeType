@@ -2,7 +2,7 @@ import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
 import { ApiError } from "./api";
-import { toApiUrl } from "./env";
+import { toAbsoluteApiUrl } from "./env";
 import { optionalBearer } from "./optional-bearer";
 import type { MediaSrc } from "./vidstack";
 
@@ -78,7 +78,7 @@ function directDashManifestUrl(
     }
     if (playerTimeMs !== null) url.searchParams.set("playerTimeMs", String(playerTimeMs));
     url.searchParams.delete("session");
-    return toApiUrl(`${url.pathname}${url.search}`);
+    return toAbsoluteApiUrl(`${url.pathname}${url.search}`);
   } catch {
     return null;
   }

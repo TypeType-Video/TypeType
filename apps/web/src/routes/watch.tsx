@@ -46,8 +46,9 @@ function WatchPage() {
   const { data: instance } = useInstance();
   const { settings, settingsReady } = useSettings();
   const useAuthenticatedStream =
-    isAuthed && (settings.accessMode === "allow_list" || instance?.guestAllowed === false);
-  const streamEnabled = authReady && (!isAuthed || settingsReady);
+    isAuthed &&
+    (!settingsReady || settings.accessMode === "allow_list" || instance?.guestAllowed === false);
+  const streamEnabled = authReady;
   const {
     data: stream,
     isLoading,
@@ -71,7 +72,6 @@ function WatchPage() {
 
   useEffect(() => {
     if (!stream) return;
-    if (authReady && isAuthed && progressFetch.isPending) return;
     if (historyAddedForRef.current === stream.id) return;
     const historyPositionMs = progressFetch.data?.position ?? (stream.startPosition ?? 0) * 1000;
     const progress = Math.max(0, Math.round(historyPositionMs / 1000));
@@ -88,11 +88,10 @@ function WatchPage() {
       viewCount: stream.views,
       progress,
     });
-  }, [authReady, isAuthed, progressFetch.data?.position, progressFetch.isPending, stream]);
+  }, [progressFetch.data?.position, stream]);
 
   if (isLoading && !stream) return <PlayerOnlyLoader />;
   if (!authReady) return <PlayerOnlyLoader />;
-  if (isAuthed && progressFetch.isPending) return <PlayerOnlyLoader />;
 
   if (isError || !stream) {
     const genericExtractorError =
