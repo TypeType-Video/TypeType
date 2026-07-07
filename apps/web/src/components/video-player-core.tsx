@@ -6,6 +6,9 @@ import { useAuthStore } from "../stores/auth-store";
 
 type DashRequestInterceptor = Parameters<dashjs.MediaPlayerClass["addRequestInterceptor"]>[0];
 
+const DASH_TOP_QUALITY_BUFFER_SECONDS = 24;
+const DASH_BACK_BUFFER_SECONDS = 30;
+
 export function ChaptersTrack({ src }: { src: string }) {
   const duration = useMediaState("duration");
   if (!Number.isFinite(duration) || duration <= 0) return null;
@@ -37,6 +40,11 @@ export function onProviderChange(provider: MediaProviderAdapter | null) {
     player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, onDashUpdate);
     player.updateSettings({
       streaming: {
+        buffer: {
+          bufferTimeAtTopQuality: DASH_TOP_QUALITY_BUFFER_SECONDS,
+          bufferTimeAtTopQualityLongForm: DASH_TOP_QUALITY_BUFFER_SECONDS,
+          bufferToKeep: DASH_BACK_BUFFER_SECONDS,
+        },
         cmcd: { enabled: false },
         retryAttempts: {
           MPD: 5,
