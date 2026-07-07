@@ -1,4 +1,5 @@
 import { type MutableRefObject, useRef } from "react";
+import type { MediaSrc } from "../lib/vidstack";
 import { buildWatchPlayerKey } from "../lib/watch-player-key";
 import { useWatchInitialAudioSource } from "./use-watch-initial-audio-source";
 import { useWatchSourceStartTime } from "./use-watch-source-start-time";
@@ -7,6 +8,7 @@ type Args = {
   streamId: string;
   retryKey: number;
   startTime: number;
+  manifestSrc: MediaSrc;
   positionRef: MutableRefObject<number>;
   highQuality: boolean;
   hasThumbnails: boolean;
@@ -18,6 +20,13 @@ type Args = {
   navigating: boolean;
   shouldAutoplay: () => boolean;
 };
+
+function sourceIdentity(src: MediaSrc): string {
+  if (typeof src === "string") return src;
+  if (Array.isArray(src)) return String(src.length);
+  if (src && typeof src === "object" && "src" in src && typeof src.src === "string") return src.src;
+  return "unknown";
+}
 
 type AutoplayState = {
   playerKey: string;
@@ -36,7 +45,7 @@ export function useWatchPlayerSourceState(args: Args) {
   const playerKey = buildWatchPlayerKey({
     streamId: args.streamId,
     retryKey: args.retryKey,
-    sourceKey: sourceStart.keyPart,
+    sourceKey: `${sourceStart.keyPart}:${sourceIdentity(args.manifestSrc)}`,
     highQuality: args.highQuality,
     hasThumbnails: args.hasThumbnails,
     hasChapters: args.hasChapters,

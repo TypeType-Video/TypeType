@@ -82,6 +82,7 @@ export function WatchLayout({
     readPositionMs: () => positionReaderRef.current?.() ?? null,
     clearFailed: player.clearFailed,
   });
+  const manifestSrc = audioOnly.src ?? player.manifestSrc;
   const { toast, setToast } = useWatchToast(audioOnly.unavailable);
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
     stream.id,
@@ -93,6 +94,7 @@ export function WatchLayout({
     streamId: stream.id,
     retryKey: player.retryKey,
     startTime: retryStartTime > 0 ? retryStartTime : (audioOnly.switchPositionMs ?? startTime),
+    manifestSrc,
     positionRef: playerEvents.positionRef,
     highQuality: settings.enableHighQualityPlayback,
     hasThumbnails: Boolean(thumbnailVtt),
@@ -134,7 +136,7 @@ export function WatchLayout({
         classes={classes}
         stream={stream}
         settings={settings}
-        manifestSrc={audioOnly.src ?? player.manifestSrc}
+        manifestSrc={manifestSrc}
         audioOnly={Boolean(audioOnly.src)}
         playerKey={sourceState.playerKey}
         startTime={player.seekStartTime ?? sourceState.startTime}
