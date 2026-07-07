@@ -10,6 +10,7 @@ import type { VideoStream } from "../types/stream";
 type SabrManifestSrc = {
   src: MediaSrc | null;
   loading: boolean;
+  failed: boolean;
 };
 
 export function useSabrManifestSrc(
@@ -23,6 +24,12 @@ export function useSabrManifestSrc(
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
   const lastSrcRef = useRef<MediaSrc | null>(null);
+  const lastSrcKeyRef = useRef<string | null>(null);
+  const srcKey = `${stream.id}:${authScope}`;
+  if (lastSrcKeyRef.current !== srcKey) {
+    lastSrcRef.current = null;
+    lastSrcKeyRef.current = srcKey;
+  }
   useEffect(() => {
     if (!enabled) return;
     const options = sabrQualityOptions(stream);
@@ -40,5 +47,6 @@ export function useSabrManifestSrc(
   return {
     src: query.data ?? lastSrcRef.current,
     loading: enabled && !lastSrcRef.current && query.fetchStatus !== "idle",
+    failed: enabled && (query.isError || (query.isSuccess && !query.data && !lastSrcRef.current)),
   };
 }

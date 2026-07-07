@@ -80,6 +80,7 @@ export function usePlayerError(
     allowServerManifests: preferServerManifests,
     bilibiliVariant,
   });
+  const sabrWaiting = sabrEnabled && !sabrManifest.src && !sabrManifest.failed;
   const manifestSrc = sabrEnabled
     ? (sabrManifest.src ?? { src: "", type: "video/mp4" })
     : fallbackSrc;
@@ -177,8 +178,8 @@ export function usePlayerError(
 
   return {
     manifestSrc,
-    manifestLoading: sabrManifest.loading,
-    playerFailed,
+    manifestLoading: sabrManifest.loading || sabrWaiting,
+    playerFailed: playerFailed || sabrManifest.failed,
     qualityFailed,
     clearFailed,
     handleError,

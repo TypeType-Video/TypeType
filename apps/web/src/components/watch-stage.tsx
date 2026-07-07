@@ -123,6 +123,10 @@ export function WatchStage({
           <div className="flex aspect-video w-full items-center justify-center bg-black">
             <PageSpinner fullScreen={false} />
           </div>
+        ) : playerFailed ? (
+          <div className="flex aspect-video w-full items-center justify-center bg-black">
+            <PlayerError onRetry={onReset} />
+          </div>
         ) : (
           <WatchPlayerCrossfade
             audioOnly={audioOnly}
@@ -169,7 +173,6 @@ export function WatchStage({
               className={classes.playerClassName}
               mediaClassName={classes.mediaClassName}
             />
-            {playerFailed && <PlayerError onRetry={onReset} />}
           </WatchPlayerCrossfade>
         )}
       </div>
