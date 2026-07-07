@@ -14,6 +14,7 @@ type SabrPlaybackResponse = {
   sessionId: string;
   videoId: string;
   manifestUrl: string | null;
+  generation: number | null;
   videoItag: number;
   audioItag: number;
   audioTrackId: string | null;
@@ -63,6 +64,7 @@ function parsePlaybackResponse(value: unknown): SabrPlaybackResponse {
     sessionId,
     videoId,
     manifestUrl: typeof body.manifestUrl === "string" ? body.manifestUrl : null,
+    generation: numberField(body.generation),
     videoItag,
     audioItag,
     audioTrackId: typeof body.audioTrackId === "string" ? body.audioTrackId : null,
@@ -80,7 +82,7 @@ function toSource(response: SabrPlaybackResponse): SabrPlaybackSource {
   return {
     sessionId: response.sessionId,
     src: {
-      src: toAbsoluteApiUrl(manifestPath(response)),
+      src: manifestSrc(response),
       type: "application/dash+xml",
     },
   };
@@ -92,6 +94,12 @@ function manifestPath(response: SabrPlaybackResponse): string {
   );
 }
 
+function manifestSrc(response: SabrPlaybackResponse): string {
+  const url = new URL(toAbsoluteApiUrl(manifestPath(response)));
+  if (response.generation !== null) url.searchParams.set("generation", String(response.generation));
+  return url.href;
+}
+
 async function readRetryAfter(response: Response): Promise<number> {
   const body = await response.json().catch(() => null);
   if (!body || typeof body !== "object" || !("retryAfterMs" in body)) return 750;
@@ -100,7 +108,7 @@ async function readRetryAfter(response: Response): Promise<number> {
 }
 
 async function waitForManifest(response: SabrPlaybackResponse): Promise<SabrPlaybackSource> {
-  const src = toAbsoluteApiUrl(manifestPath(response));
+  const src = manifestSrc(response);
   for (let attempt = 0; attempt < MAX_READY_POLLS; attempt++) {
     const manifest = await fetch(src, optionalBearer({ cache: "no-store" }));
     if (manifest.ok)
