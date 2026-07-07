@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { ApiError } from "../lib/api";
-import { resolveSabrHttpSessionSrc, sabrQualityOptions } from "../lib/sabr-source";
+import { resolveSabrPlaybackSrc, sabrQualityOptions } from "../lib/sabr-source";
 import type { MediaSrc } from "../lib/vidstack";
 import { useAuthStore } from "../stores/auth-store";
 import { useSabrQualityStore } from "../stores/sabr-quality-store";
 import type { VideoStream } from "../types/stream";
+
+type SabrPlaybackState = {
+  sessionId: string;
+  src: MediaSrc;
+};
 
 type SabrManifestSrc = {
   src: MediaSrc | null;
@@ -24,10 +29,12 @@ export function useSabrManifestSrc(
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
   const lastSrcRef = useRef<MediaSrc | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const lastSrcKeyRef = useRef<string | null>(null);
-  const srcKey = `${stream.id}:${authScope}`;
+  const srcKey = `${stream.id}:${selectedItag ?? "auto"}:${authScope}`;
   if (lastSrcKeyRef.current !== srcKey) {
     lastSrcRef.current = null;
+    sessionIdRef.current = null;
     lastSrcKeyRef.current = srcKey;
   }
   useEffect(() => {
@@ -37,16 +44,28 @@ export function useSabrManifestSrc(
   }, [enabled, setOptions, stream]);
   const query = useQuery({
     queryKey: ["sabr-manifest", stream.id, selectedItag, authScope, playerTimeMs],
-    queryFn: () => resolveSabrHttpSessionSrc(stream, selectedItag, playerTimeMs),
+    queryFn: async (): Promise<SabrPlaybackState | null> => {
+      const playback = await resolveSabrPlaybackSrc(
+        stream,
+        selectedItag,
+        playerTimeMs,
+        sessionIdRef.current,
+      );
+      if (!playback) return null;
+      sessionIdRef.current = playback.sessionId;
+      return playback;
+    },
     enabled,
     staleTime: 3 * 60 * 1000,
-    retry: (count, error) => error instanceof ApiError && error.status === 422 && count < 5,
+    retry: (count, error) =>
+      error instanceof ApiError && (error.status === 202 || error.status === 422) && count < 5,
     retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 4000),
   });
-  if (query.data) lastSrcRef.current = query.data;
+  if (query.data) lastSrcRef.current = query.data.src;
+  const fetching = query.fetchStatus !== "idle";
   return {
-    src: query.data ?? lastSrcRef.current,
-    loading: enabled && !lastSrcRef.current && query.fetchStatus !== "idle",
+    src: query.data?.src ?? lastSrcRef.current,
+    loading: enabled && fetching && (!lastSrcRef.current || playerTimeMs !== null),
     failed: enabled && (query.isError || (query.isSuccess && !query.data && !lastSrcRef.current)),
   };
 }

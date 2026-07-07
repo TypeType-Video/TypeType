@@ -84,7 +84,6 @@ export function usePlayerError(
   const manifestSrc = sabrEnabled
     ? (sabrManifest.src ?? { src: "", type: "video/mp4" })
     : fallbackSrc;
-
   const handleError = useCallback(() => {
     if (sabrEnabled) {
       recordClientEvent("player.sabr_failed", { video: debugVideo });

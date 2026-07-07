@@ -1,26 +1,18 @@
 import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
-import { ApiError } from "./api";
-import { toAbsoluteApiUrl } from "./env";
-import { optionalBearer } from "./optional-bearer";
+import { createSabrPlayback, type SabrPlaybackSource, seekSabrPlayback } from "./api-sabr-playback";
 import type { MediaSrc } from "./vidstack";
 
 type SabrCandidate = VideoStreamItem | AudioStreamItem;
-const MANIFEST_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2500] as const;
+type SabrSelection = {
+  videoId: string;
+  video: VideoStreamItem;
+  audio: AudioStreamItem;
+};
 
 function isSabrCandidate(item: SabrCandidate): boolean {
   return item.deliveryMethod === "sabr" && Boolean(item.sabrSessionUrl?.trim());
-}
-
-function mediaSrcValue(src: MediaSrc): string {
-  if (typeof src === "string") return src;
-  if (!("src" in src)) return "";
-  return typeof src.src === "string" ? src.src : "";
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function playableVideos(stream: VideoStream): VideoStreamItem[] {
@@ -48,7 +40,9 @@ export function sabrQualityOptions(stream: VideoStream): SabrQualityOption[] {
 
 function pickAudio(stream: VideoStream): AudioStreamItem | null {
   const audios = stream.audioStreams ?? [];
-  return audios.find((item) => isSabrCandidate(item) && item.codec === "mp4a.40.2") ?? null;
+  const candidates = audios.filter((item) => isSabrCandidate(item) && item.codec === "mp4a.40.2");
+  const preferredTrackId = stream.preferredDefaultAudioTrackId ?? stream.originalAudioTrackId;
+  return candidates.find((item) => item.audioTrackId === preferredTrackId) ?? candidates[0] ?? null;
 }
 
 function searchParam(source: string | null | undefined, name: string): string | null {
@@ -60,58 +54,55 @@ function searchParam(source: string | null | undefined, name: string): string | 
   }
 }
 
-function directDashManifestUrl(
-  sessionUrl: string,
-  video: VideoStreamItem,
-  audio: AudioStreamItem | null,
-  playerTimeMs: number | null,
-): string | null {
+function videoIdFromSessionUrl(sessionUrl: string): string | null {
   try {
     const url = new URL(sessionUrl, "https://typetype.invalid");
-    url.pathname = url.pathname.replace("/sabr/session/", "/sabr/manifest/");
-    url.searchParams.set("format", "dash");
-    url.searchParams.set("videoItag", String(video.itag));
-    if (audio) {
-      url.searchParams.set("audioItag", String(audio.itag));
-      const audioTrackId = searchParam(audio.sabrSessionUrl, "audioTrackId");
-      if (audioTrackId) url.searchParams.set("audioTrackId", audioTrackId);
-    }
-    if (playerTimeMs !== null) url.searchParams.set("playerTimeMs", String(playerTimeMs));
-    url.searchParams.delete("session");
-    return toAbsoluteApiUrl(`${url.pathname}${url.search}`);
+    const prefix = "/sabr/session/";
+    return url.pathname.startsWith(prefix) ? url.pathname.slice(prefix.length) : null;
   } catch {
     return null;
   }
 }
 
-async function waitForManifestReady(src: MediaSrc): Promise<MediaSrc> {
-  const url = mediaSrcValue(src);
-  if (!url) return src;
-  for (const delay of MANIFEST_RETRY_DELAYS_MS) {
-    const response = await fetch(url, optionalBearer({ cache: "no-store" }));
-    if (response.ok || response.status !== 422) return src;
-    await sleep(delay);
-  }
-  throw new ApiError("SABR manifest is not ready", 422);
+function selectSabr(stream: VideoStream, selectedItag: number | null): SabrSelection | null {
+  const videos = playableVideos(stream);
+  const video = videos.find((item) => item.itag === selectedItag) ?? videos[0] ?? null;
+  const audio = pickAudio(stream);
+  if (!video?.sabrSessionUrl || !audio) return null;
+  const videoId = videoIdFromSessionUrl(video.sabrSessionUrl);
+  if (!videoId) return null;
+  return { videoId, video, audio };
 }
 
-export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {
-  const video = playableVideos(stream)[0] ?? null;
-  if (!video?.sabrSessionUrl) return null;
-  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream), null);
-  return src ? { src, type: "application/dash+xml" } : null;
+function playbackStartMs(playerTimeMs: number | null): number {
+  if (playerTimeMs === null || !Number.isFinite(playerTimeMs)) return 0;
+  return Math.max(0, Math.round(playerTimeMs));
 }
 
-export async function resolveSabrHttpSessionSrc(
+export async function resolveSabrPlaybackSrc(
   stream: VideoStream,
   selectedItag: number | null,
   playerTimeMs: number | null,
-): Promise<MediaSrc | null> {
-  const videos = playableVideos(stream);
-  const video = videos.find((item) => item.itag === selectedItag) ?? videos[0] ?? null;
-  if (!video?.sabrSessionUrl) return null;
-  const src = directDashManifestUrl(video.sabrSessionUrl, video, pickAudio(stream), playerTimeMs);
-  return src ? waitForManifestReady({ src, type: "application/dash+xml" }) : null;
+  sessionId: string | null,
+): Promise<SabrPlaybackSource | null> {
+  const selection = selectSabr(stream, selectedItag);
+  if (!selection) return null;
+  const startTimeMs = playbackStartMs(playerTimeMs);
+  if (sessionId && playerTimeMs !== null) {
+    return seekSabrPlayback(sessionId, startTimeMs);
+  }
+  const audioTrackId = searchParam(selection.audio.sabrSessionUrl, "audioTrackId");
+  return createSabrPlayback({
+    videoId: selection.videoId,
+    videoItag: selection.video.itag,
+    audioItag: selection.audio.itag,
+    audioTrackId,
+    startTimeMs,
+  });
+}
+
+export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {
+  return selectSabr(stream, null) ? { src: "", type: "video/mp4" } : null;
 }
 
 export function hasSabrSession(stream: VideoStream): boolean {
