@@ -38,12 +38,18 @@ class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
   async load(ctx: MediaContext): Promise<VideoProvider> {
     const provider = await this.videoLoader.load(ctx);
     provider.loadSource = async () => undefined;
-    provider.play = () => getSabrVidstackControls(provider.video)?.play() ?? Promise.resolve();
+    provider.play = () => getSabrVidstackControls(provider.video)?.play() ?? provider.video.play();
     provider.pause = () => {
-      getSabrVidstackControls(provider.video)?.pause();
+      const controls = getSabrVidstackControls(provider.video);
+      if (controls) controls.pause();
+      else provider.video.pause();
       return Promise.resolve();
     };
-    provider.setCurrentTime = (time) => getSabrVidstackControls(provider.video)?.seek(time);
+    provider.setCurrentTime = (time) => {
+      const controls = getSabrVidstackControls(provider.video);
+      if (controls) controls.seek(time);
+      else provider.video.currentTime = time;
+    };
     return provider;
   }
 }
