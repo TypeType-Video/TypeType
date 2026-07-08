@@ -112,7 +112,6 @@ export class TypeTypeMsePlayer {
     const signal = this.operation.signal;
     const targetMs = Math.max(0, Math.round(positionMs));
     this.deps.loop.stop();
-    this.video.currentTime = targetMs / 1000;
     this.setState("seeking");
     this.emitter.emit({ type: "seek", positionMs: targetMs });
     const response = await this.deps.playback.seek(
@@ -121,8 +120,8 @@ export class TypeTypeMsePlayer {
       quality,
       signal,
     );
-    await this.switchSession(response, targetMs, revision, signal, quality);
-    if (quality) emitQuality(this.emitter, quality);
+    const session = await this.switchSession(response, targetMs, revision, signal, quality);
+    if (quality) emitQuality(this.emitter, session);
   }
 
   private async switchSession(
@@ -131,7 +130,7 @@ export class TypeTypeMsePlayer {
     revision: number,
     signal: AbortSignal,
     quality?: TypeTypeMseQuality,
-  ): Promise<void> {
+  ): Promise<LoadedSession> {
     const session = await loadPlayerSession({
       deps: this.deps,
       config: this.config,
@@ -142,12 +141,13 @@ export class TypeTypeMsePlayer {
       startTimeMs,
       signal,
     });
-    if (!this.isCurrent(revision)) return;
+    if (!this.isCurrent(revision)) throw new DOMException("Operation aborted", "AbortError");
     this.session = session;
     await this.deps.loop.fillOnce();
     this.deps.loop.start();
-    emitManifest(this.emitter, response, session);
+    emitManifest(this.emitter, session.response, session);
     this.setState("ready");
+    return session;
   }
 
   private setState(state: TypeTypeMseState): void {

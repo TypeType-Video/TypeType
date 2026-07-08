@@ -2,7 +2,7 @@ import type { BufferPolicy } from "./buffer-policy";
 import type { PlaybackManifest } from "./manifest";
 import { MediaSourceController } from "./media-source-controller";
 import type { PlaybackClient, PlaybackResponse } from "./playback-client";
-import type { PlaybackWindowRequest } from "./playback-window";
+import type { PlaybackWindowRecoveryAction, PlaybackWindowRequest } from "./playback-window";
 import type { SegmentScheduler } from "./segment-scheduler";
 
 export type LoadedSession = {
@@ -14,10 +14,10 @@ export type LoadedSession = {
 };
 
 type LoadSessionArgs = {
-  playback: PlaybackClient;
-  media: MediaSourceController;
-  scheduler: SegmentScheduler;
-  video: HTMLVideoElement;
+  playback: Pick<PlaybackClient, "window">;
+  media: Pick<MediaSourceController, "attach">;
+  scheduler: Pick<SegmentScheduler, "appendInit" | "reset">;
+  video: { currentTime: number };
   response: PlaybackResponse;
   videoItag: number;
   audioItag: number;
@@ -26,6 +26,31 @@ type LoadSessionArgs = {
   policy: BufferPolicy;
   signal: AbortSignal;
 };
+
+export class PlaybackWindowTerminalError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PlaybackWindowTerminalError";
+  }
+}
+
+export class PlaybackWindowRecoveryError extends PlaybackWindowTerminalError {
+  constructor(
+    message: string,
+    readonly recoveryAction: PlaybackWindowRecoveryAction,
+    readonly retryVideoItags: number[],
+  ) {
+    super(message);
+    this.name = "PlaybackWindowRecoveryError";
+  }
+}
+
+export class PlaybackWindowTimeoutError extends Error {
+  constructor() {
+    super("Playback window was not ready in time");
+    this.name = "PlaybackWindowTimeoutError";
+  }
+}
 
 export async function loadPlaybackSession(args: LoadSessionArgs): Promise<LoadedSession> {
   const request = playbackWindowRequest(args, args.startTimeMs);
@@ -93,7 +118,7 @@ async function waitForWindow(
 ) {
   const window = await pollWindow(args, sessionId, request);
   if (window) return window;
-  throw new Error("Playback window was not ready in time");
+  throw new PlaybackWindowTimeoutError();
 }
 
 async function pollWindow(
@@ -104,7 +129,16 @@ async function pollWindow(
   for (let attempt = 0; attempt < args.policy.manifestPollLimit; attempt += 1) {
     if (args.signal.aborted) throw new DOMException("Operation aborted", "AbortError");
     const window = await args.playback.window(sessionId, request, args.signal);
-    if (window.terminalError) throw new Error(window.terminalError);
+    if (window.terminalError) {
+      if (window.recoveryAction && window.retryVideoItags.length > 0) {
+        throw new PlaybackWindowRecoveryError(
+          window.terminalError,
+          window.recoveryAction,
+          window.retryVideoItags,
+        );
+      }
+      throw new PlaybackWindowTerminalError(window.terminalError);
+    }
     if (window.ready && window.manifest) return window;
     await new Promise((resolve) => setTimeout(resolve, window.retryAfterMs ?? 500));
   }

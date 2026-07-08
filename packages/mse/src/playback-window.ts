@@ -11,12 +11,16 @@ export type PlaybackWindowRequest = {
   backBufferMs: number;
 };
 
+export type PlaybackWindowRecoveryAction = "retry_fresh_session_lower_video_itag";
+
 export type PlaybackWindow = {
   sessionId: string;
   generation: number | null;
   ready: boolean;
   retryAfterMs: number | null;
   terminalError: string | null;
+  recoveryAction: PlaybackWindowRecoveryAction | null;
+  retryVideoItags: number[];
   manifest: PlaybackManifest | null;
 };
 
@@ -42,6 +46,17 @@ function numberField(value: object, key: string): number | null {
 function arrayField(value: object, key: string): unknown[] {
   const result = field(value, key);
   return Array.isArray(result) ? result : [];
+}
+
+function recoveryActionField(value: object): PlaybackWindowRecoveryAction | null {
+  const result = field(value, "recoveryAction");
+  return result === "retry_fresh_session_lower_video_itag" ? result : null;
+}
+
+function integerArrayField(value: object, key: string): number[] {
+  return arrayField(value, key).filter(
+    (item): item is number => typeof item === "number" && Number.isInteger(item) && item > 0,
+  );
 }
 
 function resolveUrl(baseUrl: string, url: string): string {
@@ -89,6 +104,8 @@ export function parsePlaybackWindow(value: unknown, baseUrl: string): PlaybackWi
     ready: field(value, "ready") === true,
     retryAfterMs: numberField(value, "retryAfterMs"),
     terminalError: stringField(value, "terminalError"),
+    recoveryAction: recoveryActionField(value),
+    retryVideoItags: integerArrayField(value, "retryVideoItags"),
     manifest: parseManifest(manifestValue, baseUrl),
   };
 }
