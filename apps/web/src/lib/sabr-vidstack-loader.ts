@@ -1,13 +1,14 @@
 import {
   type MediaContext,
   type MediaProviderLoader,
+  type MediaSrc,
   type MediaType,
   type Src,
   type VideoProvider,
   VideoProviderLoader,
 } from "./vidstack";
 
-const SABR_BLOB_TYPE = "application/x-typetype-sabr";
+export const SABR_BLOB_TYPE = "application/x-typetype-sabr";
 
 class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
   private readonly videoLoader = new VideoProviderLoader();
@@ -42,6 +43,6 @@ class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
 
 export const SABR_VIDEO_PROVIDER_LOADERS = [SabrVideoProviderLoader];
 
-export function sabrMediaSrc(videoId: string) {
-  return { src: new Blob([videoId], { type: SABR_BLOB_TYPE }), type: "video/object" as const };
+export function sabrMediaSrc(videoId: string): MediaSrc {
+  return { src: new Blob([videoId], { type: SABR_BLOB_TYPE }), type: "video/object" };
 }
