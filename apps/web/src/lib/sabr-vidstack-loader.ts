@@ -7,7 +7,7 @@ import {
   VideoProviderLoader,
 } from "./vidstack";
 
-const SABR_SRC_PREFIX = "typetype-sabr:";
+const SABR_BLOB_TYPE = "application/x-typetype-sabr";
 
 class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
   private readonly videoLoader = new VideoProviderLoader();
@@ -24,7 +24,9 @@ class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
   }
 
   canPlay(src: Src): boolean {
-    return typeof src.src === "string" && src.src.startsWith(SABR_SRC_PREFIX);
+    return (
+      src.type === "video/object" && src.src instanceof Blob && src.src.type === SABR_BLOB_TYPE
+    );
   }
 
   mediaType(): MediaType {
@@ -40,6 +42,6 @@ class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
 
 export const SABR_VIDEO_PROVIDER_LOADERS = [SabrVideoProviderLoader];
 
-export function sabrMediaSrc(videoId: string): string {
-  return `${SABR_SRC_PREFIX}${videoId}`;
+export function sabrMediaSrc(videoId: string) {
+  return { src: new Blob([videoId], { type: SABR_BLOB_TYPE }), type: "video/object" as const };
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { isIosDevice } from "../lib/ios-device";
 import { SABR_VIDEO_PROVIDER_LOADERS, sabrMediaSrc } from "../lib/sabr-vidstack-loader";
 import type { MediaProviderAdapter } from "../lib/vidstack";
@@ -69,7 +69,11 @@ export function VideoPlayer({
   const ios = isIosDevice();
   const playerClassName = videoPlayerClassName(audioOnly, className);
   const [sabrProvider, setSabrProvider] = useState<MediaProviderAdapter | null>(null);
-  const activeSrc = sabrConfig ? sabrMediaSrc(sabrConfig.videoId) : src;
+  const sabrSrc = useMemo(
+    () => (sabrConfig ? sabrMediaSrc(sabrConfig.videoId) : null),
+    [sabrConfig],
+  );
+  const activeSrc = sabrSrc ?? src;
   const { handleProviderChange, handleError, handleEnded } = useVideoPlayerEvents({
     src: activeSrc,
     onError,
