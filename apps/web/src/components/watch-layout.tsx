@@ -4,6 +4,7 @@ import { useMobile } from "../hooks/use-mobile";
 import { usePlayerError } from "../hooks/use-player-error";
 import { usePlayerErrorResume } from "../hooks/use-player-error-resume";
 import { useSaveProgress } from "../hooks/use-progress";
+import { useSabrPlaybackConfig } from "../hooks/use-sabr-playback-config";
 import { useSettings } from "../hooks/use-settings";
 import { useVolumeSync } from "../hooks/use-volume-sync";
 import { useWatchAudioOnlyPlayback } from "../hooks/use-watch-audio-only-playback";
@@ -20,8 +21,8 @@ import { useDanmakuStore } from "../stores/danmaku-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
 import { Toast } from "./toast";
 import { getWatchLayoutClasses } from "./watch-layout-classes";
+import { WatchLayoutPlayerOverlay } from "./watch-layout-player-overlay";
 import type { WatchLayoutProps } from "./watch-layout-types";
-import { WatchPlayerOverlay } from "./watch-player-overlay";
 import { WatchSecondaryContent } from "./watch-secondary-content";
 import { WatchStage } from "./watch-stage";
 
@@ -82,6 +83,7 @@ export function WatchLayout({
     readPositionMs: () => positionReaderRef.current?.() ?? null,
     clearFailed: player.clearFailed,
   });
+  const sabrConfig = useSabrPlaybackConfig(stream, player.sabrEnabled && !audioOnly.src);
   const manifestSrc = audioOnly.src ?? player.manifestSrc;
   const { toast, setToast } = useWatchToast(audioOnly.unavailable);
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
@@ -110,9 +112,8 @@ export function WatchLayout({
     if (!audioOnly.fail()) return handlePlayerError();
     setToast("Audio only unavailable");
   }
-
   const overlay = (
-    <WatchPlayerOverlay
+    <WatchLayoutPlayerOverlay
       isNicoNico={isNicoNico}
       hideComments={hideComments}
       bulletCommentsOn={bulletCommentsOn}
@@ -122,14 +123,12 @@ export function WatchLayout({
       settings={settings}
       qualityFailed={player.qualityFailed}
       onOriginalLanguageUnavailable={() => setToast("Original audio unavailable")}
-      originalAudioLocale={getOriginalAudioLocale(stream)}
     />
   );
   const classes = getWatchLayoutClasses(
     cinemaMode,
     Boolean(!isMobile && (playlist.panel || relatedStreams.length > 0)),
   );
-
   return (
     <div className={classes.containerClass}>
       <WatchStage
@@ -137,6 +136,7 @@ export function WatchLayout({
         stream={stream}
         settings={settings}
         manifestSrc={manifestSrc}
+        sabrConfig={sabrConfig}
         audioOnly={Boolean(audioOnly.src)}
         playerKey={sourceState.playerKey}
         startTime={player.seekStartTime ?? sourceState.startTime}

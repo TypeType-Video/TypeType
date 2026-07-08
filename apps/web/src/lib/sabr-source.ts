@@ -1,7 +1,6 @@
 import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
-import { createSabrPlayback, type SabrPlaybackSource, seekSabrPlayback } from "./api-sabr-playback";
 import type { MediaSrc } from "./vidstack";
 
 type SabrCandidate = VideoStreamItem | AudioStreamItem;
@@ -9,6 +8,14 @@ type SabrSelection = {
   videoId: string;
   video: VideoStreamItem;
   audio: AudioStreamItem;
+};
+
+export type SabrPlaybackConfig = {
+  key: string;
+  videoId: string;
+  videoItag: number;
+  audioItag: number;
+  audioTrackId: string | null;
 };
 
 function isSabrCandidate(item: SabrCandidate): boolean {
@@ -74,31 +81,20 @@ function selectSabr(stream: VideoStream, selectedItag: number | null): SabrSelec
   return { videoId, video, audio };
 }
 
-function playbackStartMs(playerTimeMs: number | null): number {
-  if (playerTimeMs === null || !Number.isFinite(playerTimeMs)) return 0;
-  return Math.max(0, Math.round(playerTimeMs));
-}
-
-export async function resolveSabrPlaybackSrc(
+export function resolveSabrPlaybackConfig(
   stream: VideoStream,
   selectedItag: number | null,
-  playerTimeMs: number | null,
-  sessionId: string | null,
-): Promise<SabrPlaybackSource | null> {
+): SabrPlaybackConfig | null {
   const selection = selectSabr(stream, selectedItag);
   if (!selection) return null;
-  const startTimeMs = playbackStartMs(playerTimeMs);
-  if (sessionId && playerTimeMs !== null) {
-    return seekSabrPlayback(sessionId, startTimeMs);
-  }
   const audioTrackId = searchParam(selection.audio.sabrSessionUrl, "audioTrackId");
-  return createSabrPlayback({
+  return {
+    key: `${selection.videoId}:${selection.video.itag}:${selection.audio.itag}:${audioTrackId ?? "main"}`,
     videoId: selection.videoId,
     videoItag: selection.video.itag,
     audioItag: selection.audio.itag,
     audioTrackId,
-    startTimeMs,
-  });
+  };
 }
 
 export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {

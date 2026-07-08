@@ -16,6 +16,7 @@
       "dependencies": {
         "@tanstack/react-query": "^5.101.2",
         "@tanstack/react-router": "^1.170.16",
+        "@typetype/mse": "workspace:*",
         "@vidstack/react": "1.12.13",
         "dashjs": "^5.2.0",
         "lucide-react": "^1.22.0",
@@ -35,6 +36,14 @@
         "tailwindcss": "^4.3.2",
         "typescript": "~6.0.3",
         "vite": "^8.1.0",
+      },
+    },
+    "packages/mse": {
+      "name": "@typetype/mse",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@biomejs/biome": "^2.5.1",
+        "typescript": "~6.0.3",
       },
     },
   },
@@ -308,6 +317,8 @@
     "@types/react": ["@types/react@19.2.17", "", { "dependencies": { "csstype": "^3.2.2" } }, "sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw=="],
 
     "@types/react-dom": ["@types/react-dom@19.2.3", "", { "peerDependencies": { "@types/react": "^19.2.0" } }, "sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ=="],
+
+    "@typetype/mse": ["@typetype/mse@workspace:packages/mse"],
 
     "@typetype/web": ["@typetype/web@workspace:apps/web"],
 

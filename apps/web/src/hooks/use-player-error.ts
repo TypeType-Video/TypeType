@@ -14,11 +14,11 @@ import { isSignedHlsManifestUrl, resolveManifestSrc } from "../lib/stream-src";
 import type { MediaSrc } from "../lib/vidstack";
 import type { VideoStream } from "../types/stream";
 import { useInstance } from "./use-instance";
-import { useSabrManifestSrc } from "./use-sabr-manifest-src";
 
 type UsePlayerErrorReturn = {
   manifestSrc: MediaSrc;
   manifestLoading: boolean;
+  sabrEnabled: boolean;
   playerFailed: boolean;
   qualityFailed: boolean;
   clearFailed: () => void;
@@ -57,7 +57,6 @@ export function usePlayerError(
   const nativeEnabled = preferServerManifests && !isLive && legacyDashPair && preferNativeManifest;
   const hlsEnabled = Boolean(stream.hlsUrl && (isLive || isSignedHlsManifestUrl(stream.hlsUrl)));
   const [sabrSeekMs, setSabrSeekMs] = useState<number | null>(null);
-  const sabrManifest = useSabrManifestSrc(stream, sabrEnabled, sabrSeekMs);
   const [hlsFailed, setHlsFailed] = useState(false);
   const [highQualityFailed, setHighQualityFailed] = useState(false);
   const [nativeFailed, setNativeFailed] = useState(false);
@@ -80,10 +79,7 @@ export function usePlayerError(
     allowServerManifests: preferServerManifests,
     bilibiliVariant,
   });
-  const sabrWaiting = sabrEnabled && !sabrManifest.src && !sabrManifest.failed;
-  const manifestSrc = sabrEnabled
-    ? (sabrManifest.src ?? { src: "", type: "video/mp4" })
-    : fallbackSrc;
+  const manifestSrc = sabrEnabled ? { src: "", type: "video/mp4" } : fallbackSrc;
   const handleError = useCallback(() => {
     if (sabrEnabled) {
       recordClientEvent("player.sabr_failed", { video: debugVideo });
@@ -177,8 +173,9 @@ export function usePlayerError(
 
   return {
     manifestSrc,
-    manifestLoading: sabrManifest.loading || sabrWaiting,
-    playerFailed: playerFailed || sabrManifest.failed,
+    manifestLoading: false,
+    sabrEnabled,
+    playerFailed,
     qualityFailed,
     clearFailed,
     handleError,

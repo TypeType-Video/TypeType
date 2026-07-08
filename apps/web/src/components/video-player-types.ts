@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import type { SabrPlaybackConfig } from "../lib/sabr-source";
 import type { MediaSrc } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem, SubtitleItem } from "../types/api";
 import type { CaptionStyles } from "../types/user";
 
 export type VideoPlayerProps = {
   src: MediaSrc;
+  sabrConfig?: SabrPlaybackConfig | null;
   title?: string;
   poster?: string;
   streamType?: "on-demand" | "live";

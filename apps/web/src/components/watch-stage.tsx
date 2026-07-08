@@ -1,6 +1,7 @@
 import type { MutableRefObject, ReactNode } from "react";
 import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
 import type { AutoplayState } from "../hooks/use-watch-ended-navigation";
+import type { SabrPlaybackConfig } from "../lib/sabr-source";
 import type { MediaSrc } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
@@ -8,16 +9,16 @@ import type { CaptionStyles, SettingsItem } from "../types/user";
 import { AutoplayCountdownOverlay } from "./autoplay-countdown-overlay";
 import { PageSpinner } from "./page-spinner";
 import { PlayerError } from "./player-error";
-import { VideoPlayer } from "./video-player";
 import type { WatchLayoutClasses } from "./watch-layout-classes";
 import { WatchMeta } from "./watch-meta";
-import { WatchPlayerCrossfade } from "./watch-player-crossfade";
+import { WatchStagePlayer } from "./watch-stage-player";
 
 type Props = {
   classes: WatchLayoutClasses;
   stream: VideoStream;
   settings: SettingsItem;
   manifestSrc: MediaSrc;
+  sabrConfig: SabrPlaybackConfig | null;
   audioOnly: boolean;
   playerKey: string;
   startTime: number;
@@ -62,6 +63,7 @@ export function WatchStage({
   stream,
   settings,
   manifestSrc,
+  sabrConfig,
   audioOnly,
   playerKey,
   startTime,
@@ -128,52 +130,42 @@ export function WatchStage({
             <PlayerError onRetry={onReset} />
           </div>
         ) : (
-          <WatchPlayerCrossfade
+          <WatchStagePlayer
             audioOnly={audioOnly}
+            streamTitle={stream.title}
             poster={stream.thumbnail}
-            title={stream.title}
-          >
-            <VideoPlayer
-              key={playerKey}
-              src={manifestSrc}
-              audioOnly={audioOnly}
-              title={stream.title}
-              poster={stream.thumbnail}
-              streamType={isLive ? "live" : "on-demand"}
-              startTime={startTime}
-              subtitles={stream.subtitles}
-              sponsorBlockSegments={sponsorBlockSegments}
-              autoSkipSponsorBlock={Boolean(autoSkipSegments)}
-              autoSkipSponsorBlockSegments={autoSkipSegments}
-              manualSkipSponsorBlockSegments={manualSkipSegments}
-              muteSponsorBlockInsteadOfSkip={settings.sponsorBlockMuteInsteadOfSkip}
-              showCurrentSponsorBlockSegment={settings.sponsorBlockShowCurrentSegment}
-              thumbnailVtt={thumbnailVtt}
-              chaptersVtt={chaptersVtt}
-              initialVolume={settings.volume}
-              initialMuted={settings.muted}
-              settingsReady={settingsReady}
-              autoplay={autoplay}
-              originalAudioLocale={originalLocale}
-              overlay={playerOverlay}
-              captionStyles={settings.captionStyles}
-              onCaptionStylesChange={onCaptionStylesChange}
-              onVolumeChange={onVolumeChange}
-              onTimeUpdate={onTimeUpdate}
-              onPlay={onPlay}
-              onPause={onPause}
-              onSeeking={onSeeking}
-              onSeeked={onSeeked}
-              onError={onError}
-              onPositionReaderChange={onPositionReaderChange}
-              onEnded={onEnded}
-              onPreviousVideo={onPreviousVideo}
-              onNextVideo={onNextVideo}
-              onSeekReady={(seek) => (seekRef.current = seek)}
-              className={classes.playerClassName}
-              mediaClassName={classes.mediaClassName}
-            />
-          </WatchPlayerCrossfade>
+            playerKey={playerKey}
+            manifestSrc={manifestSrc}
+            sabrConfig={sabrConfig}
+            isLive={isLive}
+            startTime={startTime}
+            subtitles={stream.subtitles}
+            sponsorBlockSegments={sponsorBlockSegments}
+            autoSkipSegments={autoSkipSegments}
+            manualSkipSegments={manualSkipSegments}
+            settings={settings}
+            settingsReady={settingsReady}
+            autoplay={autoplay}
+            originalLocale={originalLocale}
+            overlay={playerOverlay}
+            seekRef={seekRef}
+            thumbnailVtt={thumbnailVtt}
+            chaptersVtt={chaptersVtt}
+            playerClassName={classes.playerClassName}
+            mediaClassName={classes.mediaClassName}
+            onCaptionStylesChange={onCaptionStylesChange}
+            onVolumeChange={onVolumeChange}
+            onTimeUpdate={onTimeUpdate}
+            onPlay={onPlay}
+            onPause={onPause}
+            onSeeking={onSeeking}
+            onSeeked={onSeeked}
+            onError={onError}
+            onPositionReaderChange={onPositionReaderChange}
+            onEnded={onEnded}
+            onPreviousVideo={onPreviousVideo}
+            onNextVideo={onNextVideo}
+          />
         )}
       </div>
       {mobilePanel ? <div className="mt-4">{mobilePanel}</div> : null}

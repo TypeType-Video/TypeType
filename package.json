@@ -20,6 +20,7 @@
     "sherif": "sherif"
   },
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ]
 }

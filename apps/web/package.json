@@ -11,6 +11,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.16",
+    "@typetype/mse": "workspace:*",
     "@vidstack/react": "1.12.13",
     "dashjs": "^5.2.0",
     "lucide-react": "^1.22.0",

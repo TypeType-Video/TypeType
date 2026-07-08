@@ -10,6 +10,7 @@ import { PlayerHotkeys } from "./player-hotkeys";
 import { SeekBridge, SponsorBlockSkipper } from "./player-internals";
 import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
 import { PlayerSeeker } from "./player-seeker";
+import { SabrMsePlayer } from "./sabr-mse-player";
 import { SponsorBlockBar } from "./sponsorblock-bar";
 import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
 import { SponsorBlockSkipNotice } from "./sponsorblock-skip-notice";
@@ -24,6 +25,7 @@ patchVidstackProviderLoaders();
 
 export function VideoPlayer({
   src,
+  sabrConfig,
   title,
   poster,
   streamType = "on-demand",
@@ -68,6 +70,33 @@ export function VideoPlayer({
     onError,
     onEnded,
   });
+
+  if (sabrConfig) {
+    return (
+      <SabrMsePlayer
+        config={sabrConfig}
+        title={title ?? ""}
+        poster={poster}
+        startTime={startTime}
+        autoplay={autoplay}
+        className={playerClassName}
+        mediaClassName={mediaClassName}
+        initialVolume={initialVolume}
+        initialMuted={initialMuted}
+        settingsReady={settingsReady}
+        onVolumeChange={onVolumeChange}
+        onTimeUpdate={onTimeUpdate ?? (() => undefined)}
+        onPlay={onPlay ?? (() => undefined)}
+        onPause={onPause ?? (() => undefined)}
+        onSeeking={onSeeking ?? (() => undefined)}
+        onSeeked={onSeeked ?? (() => undefined)}
+        onEnded={onEnded ?? (() => undefined)}
+        onError={onError ?? (() => undefined)}
+        onSeekReady={onSeekReady ?? (() => undefined)}
+        onPositionReaderChange={onPositionReaderChange ?? (() => undefined)}
+      />
+    );
+  }
 
   return (
     <MediaPlayer
