@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { isIosDevice } from "../lib/ios-device";
-import { MediaPlayer, MediaProvider } from "../lib/vidstack";
+import { SABR_VIDEO_PROVIDER_LOADERS, sabrMediaSrc } from "../lib/sabr-vidstack-loader";
+import type { AnyMediaProvider } from "../lib/vidstack";
+import { isVideoProvider, MediaPlayer, MediaProvider } from "../lib/vidstack";
 import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-patch";
 import { AudioCenterToggle } from "./audio-center-toggle";
 import { AudioOnlyPoster } from "./audio-only-poster";
@@ -65,43 +68,23 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const ios = isIosDevice();
   const playerClassName = videoPlayerClassName(audioOnly, className);
+  const [sabrProvider, setSabrProvider] = useState<AnyMediaProvider | null>(null);
+  const activeSrc = sabrConfig ? sabrMediaSrc(sabrConfig.videoId) : src;
   const { handleProviderChange, handleError, handleEnded } = useVideoPlayerEvents({
-    src,
+    src: activeSrc,
     onError,
     onEnded,
   });
 
-  if (sabrConfig) {
-    return (
-      <SabrMsePlayer
-        config={sabrConfig}
-        title={title ?? ""}
-        poster={poster}
-        startTime={startTime}
-        autoplay={autoplay}
-        className={playerClassName}
-        mediaClassName={mediaClassName}
-        initialVolume={initialVolume}
-        initialMuted={initialMuted}
-        settingsReady={settingsReady}
-        onVolumeChange={onVolumeChange}
-        onTimeUpdate={onTimeUpdate ?? (() => undefined)}
-        onPlay={onPlay ?? (() => undefined)}
-        onPause={onPause ?? (() => undefined)}
-        onSeeking={onSeeking ?? (() => undefined)}
-        onSeeked={onSeeked ?? (() => undefined)}
-        onEnded={onEnded ?? (() => undefined)}
-        onError={onError ?? (() => undefined)}
-        onSeekReady={onSeekReady ?? (() => undefined)}
-        onPositionReaderChange={onPositionReaderChange ?? (() => undefined)}
-      />
-    );
+  function handlePlayerProviderChange(provider: AnyMediaProvider | null) {
+    handleProviderChange(provider);
+    setSabrProvider(sabrConfig && isVideoProvider(provider) ? provider : null);
   }
 
   return (
     <MediaPlayer
       className={playerClassName}
-      src={src}
+      src={activeSrc}
       viewType={audioOnly ? "audio" : "video"}
       streamType={streamType}
       logLevel="warn"
@@ -113,15 +96,31 @@ export function VideoPlayer({
       storage={null}
       title={title}
       poster={poster}
-      onProviderChange={handleProviderChange}
+      onProviderChange={handlePlayerProviderChange}
       onError={handleError}
     >
       <MediaProvider
+        loaders={sabrConfig ? SABR_VIDEO_PROVIDER_LOADERS : undefined}
         className={mediaClassName ?? "h-full w-full"}
         mediaProps={mediaClassName ? { className: mediaClassName } : undefined}
       >
         {!audioOnly && <VideoPlayerTracks subtitles={subtitles} chaptersVtt={chaptersVtt} />}
       </MediaProvider>
+      {sabrConfig && (
+        <SabrMsePlayer
+          config={sabrConfig}
+          video={isVideoProvider(sabrProvider) ? sabrProvider.video : null}
+          startTime={startTime}
+          autoplay={autoplay}
+          initialVolume={initialVolume}
+          initialMuted={initialMuted}
+          settingsReady={settingsReady}
+          onVolumeChange={onVolumeChange}
+          onError={onError ?? (() => undefined)}
+          onSeekReady={onSeekReady ?? (() => undefined)}
+          onPositionReaderChange={onPositionReaderChange ?? (() => undefined)}
+        />
+      )}
       {audioOnly && <AudioOnlyPoster poster={poster} title={title} />}
       {audioOnly && <AudioCenterToggle />}
       <MediaProgressEvents

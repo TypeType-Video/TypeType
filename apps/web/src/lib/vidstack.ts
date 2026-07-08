@@ -1,11 +1,17 @@
 export type {
+  AnyMediaProvider,
+  MediaContext,
   MediaProviderAdapter,
+  MediaProviderLoader,
   MediaSrc,
+  MediaType,
   MenuInstance,
+  Src,
   VideoQualityOption,
 } from "@vidstack/react";
 export {
   isDASHProvider,
+  isVideoProvider,
   MediaPlayer,
   MediaProvider,
   Menu,
@@ -18,6 +24,7 @@ export {
   useMediaRemote,
   useMediaState,
   useVideoQualityOptions,
+  VideoProvider,
   VolumeSlider,
 } from "@vidstack/react";
 export {
