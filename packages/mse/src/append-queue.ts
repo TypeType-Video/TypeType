@@ -43,7 +43,11 @@ export class AppendQueue {
 
   destroy(): void {
     this.disposed = true;
-    this.clear();
+    const error = new DOMException("Operation aborted", "AbortError");
+    this.current?.reject(error);
+    for (const item of this.queue.splice(0)) item.reject(error);
+    this.current = null;
+    if (this.sourceBuffer.updating) this.sourceBuffer.abort();
     this.sourceBuffer.removeEventListener("updateend", this.handleUpdateEnd);
     this.sourceBuffer.removeEventListener("error", this.handleError);
   }

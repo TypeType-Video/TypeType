@@ -22,11 +22,21 @@ function positionMs(video: HTMLVideoElement): number {
   return Math.max(0, Math.round(video.currentTime * 1000));
 }
 
-function runSeek(player: TypeTypeMsePlayer | null, position: number, flag: { current: boolean }) {
+function runSeek(
+  player: TypeTypeMsePlayer | null,
+  position: number,
+  flag: { current: boolean },
+  onError: () => void,
+) {
   flag.current = true;
-  void player?.seek(position).finally(() => {
-    flag.current = false;
-  });
+  void player
+    ?.seek(position)
+    .catch((error: unknown) => {
+      if (!isAbortError(error)) onError();
+    })
+    .finally(() => {
+      flag.current = false;
+    });
 }
 
 function isAbortError(error: unknown): boolean {
@@ -85,7 +95,7 @@ export function SabrMsePlayer({
     const volumeChange = () => onVolumeChange?.(video.volume, video.muted);
     const seeking = () => {
       const next = positionMs(video);
-      if (!seekingRef.current) runSeek(engine, next, seekingRef);
+      if (!seekingRef.current) runSeek(engine, next, seekingRef, handlersRef.current.onError);
     };
     video.addEventListener("volumechange", volumeChange);
     video.addEventListener("seeking", seeking);
@@ -98,7 +108,12 @@ export function SabrMsePlayer({
         if (!isAbortError(error)) handlersRef.current.onError();
       });
     handlersRef.current.onSeekReady((seconds) =>
-      runSeek(engine, Math.max(0, Math.round(seconds * 1000)), seekingRef),
+      runSeek(
+        engine,
+        Math.max(0, Math.round(seconds * 1000)),
+        seekingRef,
+        handlersRef.current.onError,
+      ),
     );
     handlersRef.current.onPositionReaderChange(() => positionMs(video));
     return () => {
@@ -116,9 +131,14 @@ export function SabrMsePlayer({
     if (!previous || previous.videoItag === quality.videoItag) return;
     qualityRef.current = quality;
     seekingRef.current = true;
-    void engineRef.current?.setQuality(quality).finally(() => {
-      seekingRef.current = false;
-    });
+    void engineRef.current
+      ?.setQuality(quality)
+      .catch((error: unknown) => {
+        if (!isAbortError(error)) handlersRef.current.onError();
+      })
+      .finally(() => {
+        seekingRef.current = false;
+      });
   }, [config.audioItag, config.videoItag]);
   return null;
 }
