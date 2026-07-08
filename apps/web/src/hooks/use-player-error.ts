@@ -58,7 +58,6 @@ export function usePlayerError(
     provider === "youtube";
   const nativeEnabled = preferServerManifests && !isLive && legacyDashPair && preferNativeManifest;
   const hlsEnabled = Boolean(stream.hlsUrl && (isLive || isSignedHlsManifestUrl(stream.hlsUrl)));
-  const [sabrSeekMs, setSabrSeekMs] = useState<number | null>(null);
   const [hlsFailed, setHlsFailed] = useState(false);
   const [highQualityFailed, setHighQualityFailed] = useState(false);
   const [nativeFailed, setNativeFailed] = useState(false);
@@ -145,7 +144,6 @@ export function usePlayerError(
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
-    setSabrSeekMs(null);
     setRetryKey((k) => k + 1);
   }, []);
 
@@ -153,13 +151,7 @@ export function usePlayerError(
     setPlayerFailed(false);
   }, []);
 
-  const handleSeeking = useCallback(
-    (positionMs: number) => {
-      if (!sabrEnabled || !Number.isFinite(positionMs) || positionMs <= 0) return;
-      setSabrSeekMs(Math.max(0, Math.round(positionMs)));
-    },
-    [sabrEnabled],
-  );
+  const handleSeeking = useCallback(() => undefined, []);
   useEffect(() => {
     if (streamId.length === 0) return;
     setHlsFailed(false);
@@ -169,7 +161,6 @@ export function usePlayerError(
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
-    setSabrSeekMs(null);
     setRetryKey(0);
   }, [streamId]);
 
@@ -184,6 +175,6 @@ export function usePlayerError(
     handleSeeking,
     reset,
     retryKey,
-    seekStartTime: sabrSeekMs,
+    seekStartTime: null,
   };
 }
