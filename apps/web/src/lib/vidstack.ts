@@ -23,7 +23,7 @@ export {
   useMediaRemote,
   useMediaState,
   useVideoQualityOptions,
-  VideoProvider,
+  VideoProviderLoader,
   VolumeSlider,
 } from "@vidstack/react";
 export {

@@ -3,18 +3,23 @@ import {
   type MediaProviderLoader,
   type MediaType,
   type Src,
-  VideoProvider,
+  type VideoProvider,
+  VideoProviderLoader,
 } from "./vidstack";
 
 const SABR_SRC_PREFIX = "typetype-sabr:";
 
-class SabrVideoProvider extends VideoProvider {
-  override async loadSource(): Promise<void> {}
-}
-
-class SabrVideoProviderLoader implements MediaProviderLoader<SabrVideoProvider> {
+class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
+  private readonly videoLoader = new VideoProviderLoader();
   readonly name = "typetype-sabr";
-  target: HTMLElement | null = null;
+
+  get target(): HTMLElement | null {
+    return this.videoLoader.target;
+  }
+
+  set target(target: HTMLElement | null) {
+    this.videoLoader.target = target;
+  }
 
   canPlay(src: Src): boolean {
     return typeof src.src === "string" && src.src.startsWith(SABR_SRC_PREFIX);
@@ -24,11 +29,10 @@ class SabrVideoProviderLoader implements MediaProviderLoader<SabrVideoProvider> 
     return "video";
   }
 
-  async load(ctx: MediaContext): Promise<SabrVideoProvider> {
-    if (!(this.target instanceof HTMLVideoElement)) {
-      throw new Error("SABR provider requires a video element");
-    }
-    return new SabrVideoProvider(this.target, ctx);
+  async load(ctx: MediaContext): Promise<VideoProvider> {
+    const provider = await this.videoLoader.load(ctx);
+    provider.loadSource = async () => undefined;
+    return provider;
   }
 }
 
