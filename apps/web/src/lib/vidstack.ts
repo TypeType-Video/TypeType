@@ -6,6 +6,7 @@ export type {
   MediaType,
   MenuInstance,
   Src,
+  VideoProvider,
   VideoQualityOption,
 } from "@vidstack/react";
 export {

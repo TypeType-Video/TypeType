@@ -11,14 +11,16 @@ const SABR_SRC_PREFIX = "typetype-sabr:";
 
 class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
   private readonly videoLoader = new VideoProviderLoader();
+  private currentTarget: HTMLElement | null = null;
   readonly name = "typetype-sabr";
 
   get target(): HTMLElement | null {
-    return this.videoLoader.target;
+    return this.currentTarget;
   }
 
   set target(target: HTMLElement | null) {
-    this.videoLoader.target = target;
+    this.currentTarget = target;
+    if (target instanceof HTMLVideoElement) this.videoLoader.target = target;
   }
 
   canPlay(src: Src): boolean {
