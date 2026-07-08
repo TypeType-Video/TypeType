@@ -103,7 +103,7 @@ export function SabrMsePlayer({
       videoItag: config.videoItag,
       audioItag: config.audioItag,
       audioTrackId: config.audioTrackId,
-      startTimeMs: Math.max(0, Math.round(startTime * 1000)),
+      startTimeMs: Math.max(0, Math.round(startTime)),
       headers,
     });
     engineRef.current = engine;
