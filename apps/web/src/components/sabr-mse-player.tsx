@@ -62,6 +62,7 @@ export function SabrMsePlayer({
   const token = useAuthStore((state) => state.token);
   const engineRef = useRef<TypeTypeMsePlayer | null>(null);
   const qualityRef = useRef<TypeTypeMseQuality | null>(null);
+  const pendingPlayRef = useRef(false);
   const seekingRef = useRef(false);
   const handlersRef = useRef({
     onError,
@@ -101,8 +102,14 @@ export function SabrMsePlayer({
     video.addEventListener("volumechange", volumeChange);
     video.addEventListener("seeking", seeking);
     const unregisterControls = registerSabrVidstackControls(video, {
-      play: () => engine.play(),
-      pause: () => engine.pause(),
+      play: () => {
+        pendingPlayRef.current = true;
+        return engine.play();
+      },
+      pause: () => {
+        pendingPlayRef.current = false;
+        return engine.pause();
+      },
       seek: (seconds) =>
         runSeek(
           engine,
@@ -115,7 +122,7 @@ export function SabrMsePlayer({
     void engine
       .load()
       .then(() => {
-        if (autoplay) void engine.play().catch(() => undefined);
+        if (autoplay || pendingPlayRef.current) void engine.play().catch(() => undefined);
       })
       .catch((error: unknown) => {
         if (!isAbortError(error)) handlersRef.current.onError();
@@ -139,6 +146,7 @@ export function SabrMsePlayer({
       video.removeEventListener("seeking", seeking);
       engine.destroy();
       engineRef.current = null;
+      pendingPlayRef.current = false;
       handlersRef.current.onPositionReaderChange(null);
     };
   }, [autoplay, config, onVolumeChange, startTime, token, video]);
