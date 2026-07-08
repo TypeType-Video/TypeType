@@ -2,6 +2,7 @@ import { TypeTypeMsePlayer, type TypeTypeMseQuality } from "@typetype/mse";
 import { useEffect, useRef } from "react";
 import { toAbsoluteApiUrl } from "../lib/env";
 import type { SabrPlaybackConfig } from "../lib/sabr-source";
+import { registerSabrVidstackControls } from "../lib/sabr-vidstack-bridge";
 import { useAuthStore } from "../stores/auth-store";
 
 type Props = {
@@ -99,6 +100,17 @@ export function SabrMsePlayer({
     };
     video.addEventListener("volumechange", volumeChange);
     video.addEventListener("seeking", seeking);
+    const unregisterControls = registerSabrVidstackControls(video, {
+      play: () => engine.play(),
+      pause: () => engine.pause(),
+      seek: (seconds) =>
+        runSeek(
+          engine,
+          Math.max(0, Math.round(seconds * 1000)),
+          seekingRef,
+          handlersRef.current.onError,
+        ),
+    });
     void engine
       .load()
       .then(() => {
@@ -118,6 +130,7 @@ export function SabrMsePlayer({
     handlersRef.current.onPositionReaderChange(() => positionMs(video));
     return () => {
       offError();
+      unregisterControls();
       video.removeEventListener("volumechange", volumeChange);
       video.removeEventListener("seeking", seeking);
       engine.destroy();

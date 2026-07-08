@@ -1,3 +1,4 @@
+import { getSabrVidstackControls } from "./sabr-vidstack-bridge";
 import {
   type MediaContext,
   type MediaProviderLoader,
@@ -37,6 +38,12 @@ class SabrVideoProviderLoader implements MediaProviderLoader<VideoProvider> {
   async load(ctx: MediaContext): Promise<VideoProvider> {
     const provider = await this.videoLoader.load(ctx);
     provider.loadSource = async () => undefined;
+    provider.play = () => getSabrVidstackControls(provider.video)?.play() ?? Promise.resolve();
+    provider.pause = () => {
+      getSabrVidstackControls(provider.video)?.pause();
+      return Promise.resolve();
+    };
+    provider.setCurrentTime = (time) => getSabrVidstackControls(provider.video)?.seek(time);
     return provider;
   }
 }
