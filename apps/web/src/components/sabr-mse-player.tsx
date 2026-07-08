@@ -111,6 +111,7 @@ export function SabrMsePlayer({
           handlersRef.current.onError,
         ),
     });
+    seekingRef.current = true;
     void engine
       .load()
       .then(() => {
@@ -118,6 +119,9 @@ export function SabrMsePlayer({
       })
       .catch((error: unknown) => {
         if (!isAbortError(error)) handlersRef.current.onError();
+      })
+      .finally(() => {
+        seekingRef.current = false;
       });
     handlersRef.current.onSeekReady((seconds) =>
       runSeek(
