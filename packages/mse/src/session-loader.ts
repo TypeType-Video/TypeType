@@ -61,12 +61,12 @@ export async function refreshPlaybackWindow(
   signal: AbortSignal,
 ): Promise<void> {
   const request = playbackWindowRequest({ ...session, policy }, playerTimeMs);
-  const window = await waitForWindow(
+  const window = await pollWindow(
     { playback, policy, signal },
     session.response.sessionId,
     request,
   );
-  if (!window.manifest) throw new Error("Playback window is not ready");
+  if (!window?.manifest) return;
   session.response = { ...session.response, generation: window.generation };
   session.manifest = window.manifest;
 }
@@ -91,6 +91,16 @@ async function waitForWindow(
   sessionId: string,
   request: PlaybackWindowRequest,
 ) {
+  const window = await pollWindow(args, sessionId, request);
+  if (window) return window;
+  throw new Error("Playback window was not ready in time");
+}
+
+async function pollWindow(
+  args: Pick<LoadSessionArgs, "playback" | "policy" | "signal">,
+  sessionId: string,
+  request: PlaybackWindowRequest,
+) {
   for (let attempt = 0; attempt < args.policy.manifestPollLimit; attempt += 1) {
     if (args.signal.aborted) throw new DOMException("Operation aborted", "AbortError");
     const window = await args.playback.window(sessionId, request, args.signal);
@@ -98,5 +108,5 @@ async function waitForWindow(
     if (window.ready && window.manifest) return window;
     await new Promise((resolve) => setTimeout(resolve, window.retryAfterMs ?? 500));
   }
-  throw new Error("Playback window was not ready in time");
+  return null;
 }
