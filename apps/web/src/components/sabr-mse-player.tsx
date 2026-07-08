@@ -104,10 +104,12 @@ export function SabrMsePlayer({
     const unregisterControls = registerSabrVidstackControls(video, {
       play: () => {
         pendingPlayRef.current = true;
+        video.autoplay = true;
         return engine.play();
       },
       pause: () => {
         pendingPlayRef.current = false;
+        video.autoplay = false;
         return engine.pause();
       },
       seek: (seconds) =>
@@ -147,6 +149,7 @@ export function SabrMsePlayer({
       engine.destroy();
       engineRef.current = null;
       pendingPlayRef.current = false;
+      video.autoplay = false;
       handlersRef.current.onPositionReaderChange(null);
     };
   }, [autoplay, config, onVolumeChange, startTime, token, video]);
