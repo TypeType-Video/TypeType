@@ -2,6 +2,12 @@ import { AppendQueue } from "./append-queue";
 import type { ManifestTrack, PlaybackManifest } from "./manifest";
 import type { TrackKind } from "./types";
 
+export type MediaBufferedRange = {
+  kind: TrackKind;
+  startMs: number;
+  endMs: number;
+};
+
 export class MediaSourceController {
   private objectUrl: string | null = null;
   private audioQueue: AppendQueue | null = null;
@@ -54,6 +60,13 @@ export class MediaSourceController {
     this.videoQueue?.clear();
   }
 
+  bufferedRanges(): MediaBufferedRange[] {
+    return [
+      ...this.queueRanges("audio", this.audioQueue),
+      ...this.queueRanges("video", this.videoQueue),
+    ];
+  }
+
   detach(): void {
     this.audioQueue?.destroy();
     this.videoQueue?.destroy();
@@ -69,5 +82,19 @@ export class MediaSourceController {
 
   track(kind: TrackKind, manifest: PlaybackManifest): ManifestTrack {
     return kind === "audio" ? manifest.audio : manifest.video;
+  }
+
+  private queueRanges(kind: TrackKind, queue: AppendQueue | null): MediaBufferedRange[] {
+    if (!queue) return [];
+    const buffered = queue.buffered();
+    const ranges: MediaBufferedRange[] = [];
+    for (let index = 0; index < buffered.length; index += 1) {
+      ranges.push({
+        kind,
+        startMs: Math.round(buffered.start(index) * 1000),
+        endMs: Math.round(buffered.end(index) * 1000),
+      });
+    }
+    return ranges;
   }
 }

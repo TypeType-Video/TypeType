@@ -41,11 +41,13 @@ export function WatchLayout({
   const player = usePlayerError(stream, isLive, settings.enableHighQualityPlayback);
   const { on: bulletCommentsOn } = useDanmakuStore();
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
-  const hideComments = settings.hideComments;
   const sponsor = useWatchSponsorBlock(stream, settings);
   const relatedStreams = settings.hideRelatedVideos ? [] : (stream.related ?? []);
   const playlist = useWatchPlaylist(list, shuffle, currentParam);
-  const { data: bulletComments } = useBulletComments(stream.id, isNicoNico && !hideComments);
+  const { data: bulletComments } = useBulletComments(
+    stream.id,
+    isNicoNico && !settings.hideComments,
+  );
   const cinemaMode = useWatchLayoutStore((state) => state.cinemaMode);
   const seekRef = useRef<((seconds: number) => void) | null>(null);
   const positionReaderRef = useRef<(() => number | null) | null>(null);
@@ -83,7 +85,8 @@ export function WatchLayout({
     readPositionMs: () => positionReaderRef.current?.() ?? null,
     clearFailed: player.clearFailed,
   });
-  const sabrConfig = useSabrPlaybackConfig(stream, player.sabrEnabled && !audioOnly.src);
+  const sabrEnabled = player.sabrEnabled && !audioOnly.src;
+  const sabrConfig = useSabrPlaybackConfig(stream, sabrEnabled, settings.defaultQuality);
   const manifestSrc = audioOnly.src ?? player.manifestSrc;
   const { toast, setToast } = useWatchToast(audioOnly.unavailable);
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
@@ -108,23 +111,6 @@ export function WatchLayout({
     navigating,
     shouldAutoplay: playerEvents.shouldAutoplay,
   });
-  function handleStageError() {
-    if (!audioOnly.fail()) return handlePlayerError();
-    setToast("Audio only unavailable");
-  }
-  const overlay = (
-    <WatchLayoutPlayerOverlay
-      isNicoNico={isNicoNico}
-      hideComments={hideComments}
-      bulletCommentsOn={bulletCommentsOn}
-      bulletComments={bulletComments}
-      positionRef={playerEvents.positionRef}
-      stream={stream}
-      settings={settings}
-      qualityFailed={player.qualityFailed}
-      onOriginalLanguageUnavailable={() => setToast("Original audio unavailable")}
-    />
-  );
   const classes = getWatchLayoutClasses(
     cinemaMode,
     Boolean(!isMobile && (playlist.panel || relatedStreams.length > 0)),
@@ -145,7 +131,19 @@ export function WatchLayout({
         autoplay={sourceState.autoplay}
         navigating={navigating || sourceState.waitForInitialAudioSource || player.manifestLoading}
         originalLocale={getOriginalAudioLocale(stream)}
-        overlay={overlay}
+        overlay={
+          <WatchLayoutPlayerOverlay
+            isNicoNico={isNicoNico}
+            hideComments={settings.hideComments}
+            bulletCommentsOn={bulletCommentsOn}
+            bulletComments={bulletComments}
+            positionRef={playerEvents.positionRef}
+            stream={stream}
+            settings={settings}
+            qualityFailed={player.qualityFailed}
+            onOriginalLanguageUnavailable={() => setToast("Original audio unavailable")}
+          />
+        }
         autoplayState={autoplay.autoplayState}
         sponsorBlockSegments={sponsor.segments}
         autoSkipSegments={sponsor.autoSkipSegments}
@@ -154,7 +152,7 @@ export function WatchLayout({
         chaptersVtt={chaptersVtt}
         playerFailed={player.playerFailed}
         cinemaMode={cinemaMode}
-        hideComments={hideComments}
+        hideComments={settings.hideComments}
         mobilePanel={isMobile ? playlist.panel : null}
         seekRef={seekRef}
         audioOnlyControls={audioOnly.controls}
@@ -172,14 +170,16 @@ export function WatchLayout({
         onPositionReaderChange={(reader) => (positionReaderRef.current = reader)}
         onPreviousVideo={playlist.playPrevious}
         onNextVideo={playlist.playNext}
-        onError={handleStageError}
+        onError={() =>
+          audioOnly.fail() ? setToast("Audio only unavailable") : handlePlayerError()
+        }
         onReset={player.reset}
       />
       <WatchSecondaryContent
         cinemaMode={cinemaMode}
         stream={stream}
         relatedStreams={relatedStreams}
-        showComments={!hideComments}
+        showComments={!settings.hideComments}
         playlistPanel={isMobile ? null : playlist.panel}
         onSeekTimestamp={(seconds) => seekRef.current?.(seconds)}
         audioOnly={audioOnly.controls}

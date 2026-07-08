@@ -45,6 +45,17 @@ export function sabrQualityOptions(stream: VideoStream): SabrQualityOption[] {
     .map((video) => ({ itag: video.itag, label: qualityLabel(video), height: video.height }));
 }
 
+export function defaultSabrItag(
+  options: SabrQualityOption[],
+  defaultQuality: string | undefined,
+): number | null {
+  if (options.length === 0) return null;
+  const defaultHeight = defaultQuality ? Number.parseInt(defaultQuality, 10) : 720;
+  const stableHeight = Math.min(Number.isFinite(defaultHeight) ? defaultHeight : 720, 720);
+  const preferred = options.find((option) => option.height <= stableHeight);
+  return preferred?.itag ?? options.at(-1)?.itag ?? null;
+}
+
 function pickAudio(stream: VideoStream): AudioStreamItem | null {
   const audios = stream.audioStreams ?? [];
   const candidates = audios.filter((item) => isSabrCandidate(item) && item.codec === "mp4a.40.2");

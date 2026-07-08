@@ -18,8 +18,8 @@ type Args = {
 };
 
 type PlayerSessionDeps = {
-  playback: Pick<PlayerDeps["playback"], "create" | "window">;
-  media: Pick<PlayerDeps["media"], "attach">;
+  playback: Pick<PlayerDeps["playback"], "create" | "position" | "prefetch" | "segments">;
+  media: Pick<PlayerDeps["media"], "attach" | "bufferedRanges">;
   scheduler: Pick<PlayerDeps["scheduler"], "appendInit" | "reset">;
   policy: PlayerDeps["policy"];
 };

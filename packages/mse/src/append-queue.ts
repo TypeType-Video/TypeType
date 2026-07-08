@@ -35,6 +35,10 @@ export class AppendQueue {
     });
   }
 
+  buffered(): TimeRanges {
+    return this.sourceBuffer.buffered;
+  }
+
   clear(): void {
     this.queue.splice(0);
     this.current = null;

@@ -1,6 +1,6 @@
 import type { BufferPolicy } from "./buffer-policy";
 import type { PlaybackManifest } from "./manifest";
-import { MediaSourceController } from "./media-source-controller";
+import { type MediaBufferedRange, MediaSourceController } from "./media-source-controller";
 import type { PlaybackClient, PlaybackResponse } from "./playback-client";
 import type { PlaybackWindowRecoveryAction, PlaybackWindowRequest } from "./playback-window";
 import type { SegmentScheduler } from "./segment-scheduler";
@@ -14,8 +14,8 @@ export type LoadedSession = {
 };
 
 type LoadSessionArgs = {
-  playback: Pick<PlaybackClient, "window">;
-  media: Pick<MediaSourceController, "attach">;
+  playback: Pick<PlaybackClient, "position" | "prefetch" | "segments">;
+  media: Pick<MediaSourceController, "attach" | "bufferedRanges">;
   scheduler: Pick<SegmentScheduler, "appendInit" | "reset">;
   video: { currentTime: number };
   response: PlaybackResponse;
@@ -80,13 +80,14 @@ async function attachSession(
 
 export async function refreshPlaybackWindow(
   playback: PlaybackClient,
+  media: Pick<MediaSourceController, "bufferedRanges">,
   session: LoadedSession,
   policy: BufferPolicy,
   playerTimeMs: number,
   signal: AbortSignal,
 ): Promise<void> {
-  const request = playbackWindowRequest({ ...session, policy }, playerTimeMs);
-  const window = await pollWindow(
+  const request = playbackWindowRequest({ ...session, media, policy }, playerTimeMs);
+  const window = await pollSegments(
     { playback, policy, signal },
     session.response.sessionId,
     request,
@@ -97,7 +98,10 @@ export async function refreshPlaybackWindow(
 }
 
 function playbackWindowRequest(
-  args: Pick<LoadSessionArgs, "response" | "videoItag" | "audioItag" | "audioTrackId" | "policy">,
+  args: Pick<
+    LoadSessionArgs,
+    "response" | "videoItag" | "audioItag" | "audioTrackId" | "media" | "policy"
+  >,
   playerTimeMs: number,
 ): PlaybackWindowRequest {
   return {
@@ -108,7 +112,19 @@ function playbackWindowRequest(
     audioTrackId: args.audioTrackId,
     bufferGoalMs: args.policy.bufferGoalMs,
     backBufferMs: args.policy.backBufferMs,
+    bufferedRanges: playbackBufferedRanges(args.media.bufferedRanges(), args),
   };
+}
+
+function playbackBufferedRanges(
+  ranges: MediaBufferedRange[],
+  args: Pick<LoadSessionArgs, "videoItag" | "audioItag">,
+): PlaybackWindowRequest["bufferedRanges"] {
+  return ranges.map((range) => ({
+    itag: range.kind === "audio" ? args.audioItag : args.videoItag,
+    startMs: range.startMs,
+    endMs: range.endMs,
+  }));
 }
 
 async function waitForWindow(
@@ -116,31 +132,35 @@ async function waitForWindow(
   sessionId: string,
   request: PlaybackWindowRequest,
 ) {
-  const window = await pollWindow(args, sessionId, request);
+  const window = await pollSegments(args, sessionId, request);
   if (window) return window;
   throw new PlaybackWindowTimeoutError();
 }
 
-async function pollWindow(
+async function pollSegments(
   args: Pick<LoadSessionArgs, "playback" | "policy" | "signal">,
   sessionId: string,
   request: PlaybackWindowRequest,
 ) {
   for (let attempt = 0; attempt < args.policy.manifestPollLimit; attempt += 1) {
     if (args.signal.aborted) throw new DOMException("Operation aborted", "AbortError");
-    const window = await args.playback.window(sessionId, request, args.signal);
-    if (window.terminalError) {
-      if (window.recoveryAction && window.retryVideoItags.length > 0) {
-        throw new PlaybackWindowRecoveryError(
-          window.terminalError,
-          window.recoveryAction,
-          window.retryVideoItags,
-        );
-      }
-      throw new PlaybackWindowTerminalError(window.terminalError);
-    }
+    handleWindow(await args.playback.position(sessionId, request, args.signal));
+    handleWindow(await args.playback.prefetch(sessionId, request, args.signal));
+    const window = handleWindow(await args.playback.segments(sessionId, request, args.signal));
     if (window.ready && window.manifest) return window;
     await new Promise((resolve) => setTimeout(resolve, window.retryAfterMs ?? 500));
   }
   return null;
+}
+
+function handleWindow(window: Awaited<ReturnType<PlaybackClient["segments"]>>) {
+  if (!window.terminalError) return window;
+  if (window.recoveryAction && window.retryVideoItags.length > 0) {
+    throw new PlaybackWindowRecoveryError(
+      window.terminalError,
+      window.recoveryAction,
+      window.retryVideoItags,
+    );
+  }
+  throw new PlaybackWindowTerminalError(window.terminalError);
 }

@@ -72,6 +72,7 @@ export class PlaybackLoop {
     if (!session) return;
     await refreshPlaybackWindow(
       this.args.playback,
+      this.args.media,
       session,
       this.args.policy,
       currentTimeMs(this.args.video),

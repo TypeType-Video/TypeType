@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import {
+  defaultSabrItag,
   resolveSabrPlaybackConfig,
   type SabrPlaybackConfig,
   sabrQualityOptions,
@@ -11,6 +12,7 @@ import type { VideoStream } from "../types/stream";
 export function useSabrPlaybackConfig(
   stream: VideoStream,
   enabled: boolean,
+  defaultQuality?: string,
 ): SabrPlaybackConfig | null {
   const authScope = useAuthStore((state) => (state.token ? (state.me?.id ?? "auth") : "guest"));
   const selectedItag = useSabrQualityStore((state) =>
@@ -18,7 +20,10 @@ export function useSabrPlaybackConfig(
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
   const options = useMemo(() => sabrQualityOptions(stream), [stream]);
-  const defaultItag = options[0]?.itag ?? null;
+  const defaultItag = useMemo(
+    () => defaultSabrItag(options, defaultQuality),
+    [defaultQuality, options],
+  );
   const effectiveItag = selectedItag ?? defaultItag;
   useEffect(() => {
     if (!enabled) return;

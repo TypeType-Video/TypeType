@@ -1,6 +1,13 @@
 import type { ManifestSegment, ManifestTrack, PlaybackManifest } from "./manifest";
 import type { TrackKind } from "./types";
 
+type PlaybackBufferedRange = {
+  itag: number;
+  startMs: number;
+  endMs: number;
+  sequenceNumber?: number;
+};
+
 export type PlaybackWindowRequest = {
   generation: number | null;
   playerTimeMs: number;
@@ -9,6 +16,7 @@ export type PlaybackWindowRequest = {
   audioTrackId: string | null;
   bufferGoalMs: number;
   backBufferMs: number;
+  bufferedRanges: PlaybackBufferedRange[];
 };
 
 export type PlaybackWindowRecoveryAction = "retry_fresh_session_lower_video_itag";
