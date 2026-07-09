@@ -31,6 +31,7 @@ export async function runDecodePreroll(
     video.muted = muted;
     video.autoplay = autoplay;
     if (!resumePlayback) video.pause();
+    else if (!signal.aborted) await video.play();
   }
 }
 
