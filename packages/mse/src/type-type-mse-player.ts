@@ -2,6 +2,7 @@ import { decodeStartMs, runDecodePreroll } from "./decode-preroll";
 import { EventEmitter } from "./event-emitter";
 import { createPlayerDeps, type PlayerDeps } from "./player-deps";
 import { emitManifest, emitQuality } from "./player-events";
+import { ensureCurrentOperation, ensurePlayerAlive } from "./player-operation";
 import { loadPlayerSession } from "./player-session-loader";
 import {
   bufferedEndMs,
@@ -50,7 +51,7 @@ export class TypeTypeMsePlayer {
   }
 
   async load(): Promise<void> {
-    this.ensureAlive();
+    ensurePlayerAlive(this.destroyed);
     const revision = this.nextRevision();
     const signal = this.operation.signal;
     this.setState("loading");
@@ -69,7 +70,7 @@ export class TypeTypeMsePlayer {
   }
 
   async play(): Promise<void> {
-    this.ensureAlive();
+    ensurePlayerAlive(this.destroyed);
     await this.video.play();
     this.setState("playing");
   }
@@ -106,9 +107,10 @@ export class TypeTypeMsePlayer {
   }
 
   private async performSeek(positionMs: number, quality?: TypeTypeMseQuality): Promise<void> {
-    this.ensureAlive();
+    ensurePlayerAlive(this.destroyed);
     const current = this.session;
     if (!current) throw new Error("Player is not loaded");
+    const resumePlayback = !this.video.paused;
     const revision = this.nextRevision();
     const signal = this.operation.signal;
     const targetMs = Math.max(0, Math.round(positionMs));
@@ -121,7 +123,14 @@ export class TypeTypeMsePlayer {
       quality,
       signal,
     );
-    const session = await this.switchSession(response, targetMs, revision, signal, quality);
+    const session = await this.switchSession(
+      response,
+      targetMs,
+      revision,
+      signal,
+      resumePlayback,
+      quality,
+    );
     if (quality) emitQuality(this.emitter, session);
   }
 
@@ -130,9 +139,9 @@ export class TypeTypeMsePlayer {
     startTimeMs: number,
     revision: number,
     signal: AbortSignal,
+    resumePlayback = !this.video.paused,
     quality?: TypeTypeMseQuality,
   ): Promise<LoadedSession> {
-    const resumePlayback = !this.video.paused;
     const session = await loadPlayerSession({
       deps: this.deps,
       config: this.config,
@@ -143,7 +152,7 @@ export class TypeTypeMsePlayer {
       startTimeMs,
       signal,
     });
-    if (!this.isCurrent(revision)) throw new DOMException("Operation aborted", "AbortError");
+    ensureCurrentOperation(this.destroyed, this.revision, revision);
     const startMs = decodeStartMs(session.manifest, startTimeMs);
     if (startTimeMs > 0) this.video.currentTime = startMs / 1000;
     this.session = session;
@@ -169,18 +178,10 @@ export class TypeTypeMsePlayer {
     this.emitter.emit({ type: "error", error });
   }
 
-  private ensureAlive(): void {
-    if (this.destroyed) throw new Error("Player is destroyed");
-  }
-
   private nextRevision(): number {
     this.operation.abort();
     this.operation = new AbortController();
     this.revision += 1;
     return this.revision;
-  }
-
-  private isCurrent(revision: number): boolean {
-    return !this.destroyed && this.revision === revision;
   }
 }
