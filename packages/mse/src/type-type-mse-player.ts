@@ -45,7 +45,6 @@ export class TypeTypeMsePlayer {
     });
     this.deps.mediaEvents.start();
   }
-
   on(type: TypeTypeMseEventType, listener: TypeTypeMseListener): () => void {
     return this.emitter.on(type, listener);
   }
@@ -68,7 +67,6 @@ export class TypeTypeMsePlayer {
     );
     await this.switchSession(response, startTimeMs, revision, signal);
   }
-
   async play(): Promise<void> {
     ensurePlayerAlive(this.destroyed);
     await this.video.play();
@@ -79,10 +77,12 @@ export class TypeTypeMsePlayer {
     this.video.pause();
     this.setState("ready");
   }
-
   async seek(positionMs: number): Promise<void> {
+    const resumePlayback = !this.video.paused;
     this.operation.abort();
-    return this.seekController.seek(positionMs, (targetMs) => this.performSeek(targetMs));
+    return this.seekController.seek(positionMs, (targetMs) =>
+      this.performSeek(targetMs, undefined, resumePlayback),
+    );
   }
 
   async setQuality(quality: TypeTypeMseQuality): Promise<void> {
@@ -106,11 +106,14 @@ export class TypeTypeMsePlayer {
     this.state = "destroyed";
   }
 
-  private async performSeek(positionMs: number, quality?: TypeTypeMseQuality): Promise<void> {
+  private async performSeek(
+    positionMs: number,
+    quality?: TypeTypeMseQuality,
+    resumePlayback = !this.video.paused,
+  ): Promise<void> {
     ensurePlayerAlive(this.destroyed);
     const current = this.session;
     if (!current) throw new Error("Player is not loaded");
-    const resumePlayback = !this.video.paused;
     const revision = this.nextRevision();
     const signal = this.operation.signal;
     const targetMs = Math.max(0, Math.round(positionMs));
