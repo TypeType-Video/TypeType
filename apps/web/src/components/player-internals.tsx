@@ -48,6 +48,7 @@ export function SponsorBlockSkipper({
   const remote = useMediaRemote();
   const canPlay = useMediaState("canPlay");
   const activeMuteRef = useRef<string | null>(null);
+  const pendingSkipRef = useRef<{ key: string; startTime: number; endTime: number } | null>(null);
   const restoreMutedRef = useRef(false);
   const previousTimeRef = useRef<number | null>(null);
   useEffect(() => {
@@ -67,6 +68,15 @@ export function SponsorBlockSkipper({
       const currentTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
       const previousTime = previousTimeRef.current;
       previousTimeRef.current = currentTime;
+      const pendingSkip = pendingSkipRef.current;
+      if (
+        pendingSkip &&
+        (currentTime >= pendingSkip.endTime - 0.1 ||
+          (currentTime < pendingSkip.startTime &&
+            media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA))
+      ) {
+        pendingSkipRef.current = null;
+      }
       let activeMute: string | null = null;
       for (const seg of segments) {
         if (seg.action !== "skip") continue;
@@ -74,6 +84,8 @@ export function SponsorBlockSkipper({
         const endTime = getSponsorBlockEndTime(seg, duration);
         if (currentTime >= startTime && currentTime < endTime) {
           if (!muteInsteadOfSkip) {
+            const key = `${seg.category}:${seg.startTime}:${seg.endTime}`;
+            if (pendingSkipRef.current?.key === key) break;
             const crossedStart =
               previousTime === null
                 ? currentTime <= startTime + 0.5
@@ -84,6 +96,7 @@ export function SponsorBlockSkipper({
               automatic: true,
               toEnd: isSponsorBlockEndSkip(endTime, duration),
             });
+            pendingSkipRef.current = { key, startTime, endTime };
             remote.seek(sponsorBlockSkipTarget(endTime, duration));
             break;
           }
