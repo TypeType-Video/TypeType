@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
 
   typetype-downloader:
-    image: ghcr.io/priveetee/typetype-downloader:latest
+    image: ghcr.io/priveetee/typetype-downloader-beta:latest
     ports:
       - "${HOST_PORT_DOWNLOADER_BETA:-19093}:18093"
     environment:
