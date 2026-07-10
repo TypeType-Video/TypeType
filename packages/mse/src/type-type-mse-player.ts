@@ -1,5 +1,6 @@
 import { decodeStartMs, runDecodePreroll } from "./decode-preroll";
 import { EventEmitter } from "./event-emitter";
+import { PlaybackIntent } from "./playback-intent";
 import { createPlayerDeps, type PlayerDeps } from "./player-deps";
 import { emitManifest, emitQuality } from "./player-events";
 import { ensureCurrentOperation, ensurePlayerAlive } from "./player-operation";
@@ -19,6 +20,7 @@ export class TypeTypeMsePlayer {
   private readonly emitter = new EventEmitter();
   private readonly deps: PlayerDeps;
   private readonly playerState = new PlayerState(this.emitter);
+  private readonly playbackIntent = new PlaybackIntent();
   private readonly seekController = new SeekController();
   private session: LoadedSession | null = null;
   private operation = new AbortController();
@@ -66,26 +68,29 @@ export class TypeTypeMsePlayer {
   }
   async play(): Promise<void> {
     ensurePlayerAlive(this.destroyed);
+    this.playbackIntent.play();
     await this.video.play();
     this.playerState.set("playing");
   }
 
   pause(): void {
+    this.playbackIntent.pause();
     this.video.pause();
     this.playerState.set("ready");
   }
   async seek(positionMs: number): Promise<void> {
-    const resumePlayback = !this.video.paused;
+    this.playbackIntent.capture(this.video.paused, this.playerState.value === "seeking");
     const targetMs = Math.max(0, Math.round(positionMs));
     return this.seekController.seek(
       targetMs,
       `seek:${targetMs}`,
-      (target) => this.performSeek(target, undefined, resumePlayback),
+      (target) => this.performSeek(target),
       () => this.operation.abort(),
     );
   }
 
   async setQuality(quality: TypeTypeMseQuality): Promise<void> {
+    this.playbackIntent.capture(this.video.paused, this.playerState.value === "seeking");
     const targetMs = currentTimeMs(this.video);
     const key = `quality:${targetMs}:${quality.videoItag}:${quality.audioItag}:${quality.audioTrackId ?? ""}`;
     return this.seekController.seek(
@@ -110,11 +115,7 @@ export class TypeTypeMsePlayer {
     this.playerState.destroy();
   }
 
-  private async performSeek(
-    positionMs: number,
-    quality?: TypeTypeMseQuality,
-    resumePlayback = !this.video.paused,
-  ): Promise<void> {
+  private async performSeek(positionMs: number, quality?: TypeTypeMseQuality): Promise<void> {
     ensurePlayerAlive(this.destroyed);
     const current = this.session;
     if (!current) throw new Error("Player is not loaded");
@@ -131,14 +132,7 @@ export class TypeTypeMsePlayer {
         quality,
         signal,
       );
-      const session = await this.switchSession(
-        response,
-        targetMs,
-        revision,
-        signal,
-        resumePlayback,
-        quality,
-      );
+      const session = await this.switchSession(response, targetMs, revision, signal, quality);
       if (quality) emitQuality(this.emitter, session);
     } catch (error) {
       if (!this.destroyed && this.session === current) {
@@ -154,7 +148,6 @@ export class TypeTypeMsePlayer {
     startTimeMs: number,
     revision: number,
     signal: AbortSignal,
-    resumePlayback = !this.video.paused,
     quality?: TypeTypeMseQuality,
   ): Promise<LoadedSession> {
     const session = await loadPlayerSession({
@@ -173,7 +166,7 @@ export class TypeTypeMsePlayer {
     this.session = session;
     await this.deps.loop.fillOnce();
     if (startTimeMs > startMs) {
-      await runDecodePreroll(this.video, startTimeMs, resumePlayback, signal);
+      await runDecodePreroll(this.video, startTimeMs, this.playbackIntent.shouldResume, signal);
     }
     this.deps.loop.start();
     emitManifest(this.emitter, session.response, session);
