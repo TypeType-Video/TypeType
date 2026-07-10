@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-archive="${1:?deployment archive is required}"
+source_root="${1:?deployment source is required}"
 project=typetype-beta-stack
 server=$(docker ps -q \
   --filter "label=com.docker.compose.project=${project}" \
@@ -10,10 +10,13 @@ test -n "$server"
 root=$(docker inspect "$server" --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')
 test -d "$root"
 
-trap 'rm -f "$archive"' EXIT
-tar -xzf "$archive" -C "$root"
+install -m 644 "$source_root/.env.example" "$root/.env.example"
+install -m 644 "$source_root/docker-compose.dev.yml" "$root/docker-compose.dev.yml"
+install -m 644 "$source_root/garage.toml" "$root/garage.toml"
+install -m 644 "$source_root/nginx.conf" "$root/nginx.conf"
+install -m 755 "$source_root/scripts/bootstrap-garage.sh" "$root/scripts/bootstrap-garage.sh"
+install -m 755 "$source_root/scripts/deploy-beta.sh" "$root/scripts/deploy-beta.sh"
 cd "$root"
-chmod +x scripts/bootstrap-garage.sh scripts/deploy-beta.sh
 export COMPOSE_FILE="$root/docker-compose.dev.yml"
 export COMPOSE_PROJECT_NAME="$project"
 
