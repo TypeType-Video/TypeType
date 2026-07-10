@@ -62,6 +62,8 @@ function loadSelectedSession(
     response,
     videoItag: selection.videoItag,
     audioItag: selection.audioItag,
+    bufferedVideoItag: args.current?.videoItag ?? selection.videoItag,
+    bufferedAudioItag: args.current?.audioItag ?? selection.audioItag,
     audioTrackId: selection.audioTrackId,
     startTimeMs: args.startTimeMs,
     policy: args.deps.policy,

@@ -21,6 +21,8 @@ type LoadSessionArgs = {
   response: PlaybackResponse;
   videoItag: number;
   audioItag: number;
+  bufferedVideoItag?: number;
+  bufferedAudioItag?: number;
   audioTrackId: string | null;
   startTimeMs: number;
   policy: BufferPolicy;
@@ -29,7 +31,13 @@ type LoadSessionArgs = {
 
 type PlaybackWindowRequestArgs = Pick<
   LoadSessionArgs,
-  "response" | "videoItag" | "audioItag" | "audioTrackId" | "policy"
+  | "response"
+  | "videoItag"
+  | "audioItag"
+  | "bufferedVideoItag"
+  | "bufferedAudioItag"
+  | "audioTrackId"
+  | "policy"
 > & {
   media: Pick<MediaSourceController, "bufferedRanges">;
 };
@@ -121,10 +129,16 @@ function playbackWindowRequest(
 
 function playbackBufferedRanges(
   ranges: MediaBufferedRange[],
-  args: Pick<LoadSessionArgs, "videoItag" | "audioItag">,
+  args: Pick<
+    LoadSessionArgs,
+    "videoItag" | "audioItag" | "bufferedVideoItag" | "bufferedAudioItag"
+  >,
 ): PlaybackWindowRequest["bufferedRanges"] {
   return ranges.map((range) => ({
-    itag: range.kind === "audio" ? args.audioItag : args.videoItag,
+    itag:
+      range.kind === "audio"
+        ? (args.bufferedAudioItag ?? args.audioItag)
+        : (args.bufferedVideoItag ?? args.videoItag),
     startMs: range.startMs,
     endMs: range.endMs,
   }));
