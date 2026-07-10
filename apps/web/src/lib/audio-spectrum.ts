@@ -31,9 +31,14 @@ export function audioSpectrum(media: HTMLMediaElement): AudioSpectrum | null {
   }
 }
 
-export function frequencyLevel(data: Uint8Array, index: number, total: number): number {
+export function waveformLevel(data: Uint8Array, index: number, total: number): number {
   if (data.length === 0 || total <= 1) return 0;
   const position = index / (total - 1);
-  const bin = Math.min(data.length - 1, Math.floor(position ** 1.7 * data.length));
-  return data[bin] / 255;
+  const center = Math.min(data.length - 1, Math.round(position * (data.length - 1)));
+  const radius = Math.max(1, Math.floor(data.length / total / 2));
+  let peak = 0;
+  for (let sample = Math.max(0, center - radius); sample <= center + radius; sample += 1) {
+    peak = Math.max(peak, Math.abs((data[sample] ?? 128) - 128) / 128);
+  }
+  return Math.min(1, peak * 2.4);
 }

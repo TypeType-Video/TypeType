@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { audioSpectrum, frequencyLevel } from "../lib/audio-spectrum";
+import { audioSpectrum, waveformLevel } from "../lib/audio-spectrum";
 import { useMediaPlayer, useMediaState } from "../lib/vidstack";
 
 type VisualizerColors = {
@@ -37,8 +37,8 @@ function drawBars(
 
   for (let index = 0; index < bars; index += 1) {
     const fallback = (Math.sin(mediaTime * 5.2 + index * 0.34) + 1) / 2;
-    const measured = spectrum ? frequencyLevel(spectrum, index, bars) : fallback * 0.4;
-    const target = active ? 0.07 + measured * 0.68 : 0.025;
+    const measured = spectrum ? waveformLevel(spectrum, index, bars) : fallback * 0.4;
+    const target = active ? 0.06 + measured * 0.78 : 0.025;
     levels[index] += (target - levels[index]) * (active ? 0.16 : 0.08);
     const edgeFade = 0.65 + Math.sin((index / bars) * Math.PI) * 0.35;
     const barHeight = Math.max(height * 0.025, levels[index] * edgeFade * height * 0.58);
@@ -98,7 +98,7 @@ export function AudioOnlyVisualizer() {
       if (frame % 30 === 0) colors = visualizerColors(canvas);
       const active = Boolean(media && !media.paused && canPlay);
       if (active && spectrum?.context.state === "running") {
-        spectrum.analyser.getByteFrequencyData(spectrum.data);
+        spectrum.analyser.getByteTimeDomainData(spectrum.data);
       }
       drawBars(context, levels, spectrum?.data ?? null, media?.currentTime ?? 0, active, colors);
       frame += 1;
