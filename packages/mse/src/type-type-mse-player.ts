@@ -76,16 +76,23 @@ export class TypeTypeMsePlayer {
   }
   async seek(positionMs: number): Promise<void> {
     const resumePlayback = !this.video.paused;
-    this.operation.abort();
-    return this.seekController.seek(positionMs, (targetMs) =>
-      this.performSeek(targetMs, undefined, resumePlayback),
+    const targetMs = Math.max(0, Math.round(positionMs));
+    return this.seekController.seek(
+      targetMs,
+      `seek:${targetMs}`,
+      (target) => this.performSeek(target, undefined, resumePlayback),
+      () => this.operation.abort(),
     );
   }
 
   async setQuality(quality: TypeTypeMseQuality): Promise<void> {
-    this.operation.abort();
-    return this.seekController.seek(currentTimeMs(this.video), (targetMs) =>
-      this.performSeek(targetMs, quality),
+    const targetMs = currentTimeMs(this.video);
+    const key = `quality:${targetMs}:${quality.videoItag}:${quality.audioItag}:${quality.audioTrackId ?? ""}`;
+    return this.seekController.seek(
+      targetMs,
+      key,
+      (target) => this.performSeek(target, quality),
+      () => this.operation.abort(),
     );
   }
 
