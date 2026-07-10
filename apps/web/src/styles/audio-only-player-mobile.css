@@ -60,10 +60,34 @@
     padding: 0.15rem 0 0.3rem;
   }
 
-  .typetype-audio-only-player .vds-time-slider {
+  .typetype-audio-only-player .typetype-audio-time-slider {
     grid-column: 1 / -1;
     grid-row: 1;
-    width: calc(100% - var(--media-slider-thumb-size, 15px));
+    width: 100%;
+    height: 1.25rem;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .typetype-audio-only-player .typetype-audio-time-slider-track {
+    right: 0;
+    left: 0;
+    height: 4px;
+    background: rgb(255 255 255 / 0.16);
+  }
+
+  .typetype-audio-only-player .typetype-audio-time-slider-progress {
+    background: rgb(255 255 255 / 0.18);
+  }
+
+  .typetype-audio-only-player .typetype-audio-time-slider-fill {
+    background: #ff174d;
+  }
+
+  .typetype-audio-only-player .typetype-audio-time-slider-thumb {
+    width: 14px;
+    height: 14px;
+    opacity: 1;
   }
 
   .typetype-audio-seek-button,
