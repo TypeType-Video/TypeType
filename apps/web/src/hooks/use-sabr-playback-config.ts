@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { bestSabrItag, browserSabrCodecProbe } from "../lib/sabr-codec-capabilities";
 import {
-  defaultSabrItag,
   resolveSabrPlaybackConfig,
   type SabrPlaybackConfig,
   sabrQualityOptions,
@@ -20,13 +20,21 @@ export function useSabrPlaybackConfig(
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
   const options = useMemo(() => sabrQualityOptions(stream), [stream]);
-  const defaultItag = useMemo(
-    () => defaultSabrItag(options, defaultQuality),
-    [defaultQuality, options],
-  );
+  const [defaultItag, setDefaultItag] = useState<number | null>(null);
   const effectiveItag = selectedItag ?? defaultItag;
   useEffect(() => {
+    let active = true;
     if (!enabled) return;
+    setDefaultItag(null);
+    void bestSabrItag(options, defaultQuality, browserSabrCodecProbe()).then((itag) => {
+      if (active) setDefaultItag(itag);
+    });
+    return () => {
+      active = false;
+    };
+  }, [defaultQuality, enabled, options]);
+  useEffect(() => {
+    if (!enabled || defaultItag === null) return;
     setOptions(stream.id, options, defaultItag);
   }, [defaultItag, enabled, options, setOptions, stream.id]);
   const config = useMemo(() => {

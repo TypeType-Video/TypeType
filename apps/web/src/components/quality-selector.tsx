@@ -2,6 +2,7 @@ import type * as dashjs from "dashjs";
 import { useRef } from "react";
 import { useDashPlayerSnapshot } from "../lib/dash-player-store";
 import { dashQualityOptions, selectDashTrack, selectedDashHeight } from "../lib/dash-video";
+import { sabrResolutionOptions } from "../lib/sabr-quality-selection";
 import type { DefaultLayoutIcon, MenuInstance } from "../lib/vidstack";
 import {
   ClipIcon,
@@ -50,10 +51,12 @@ export function QualitySelector() {
   const sabrSelectedItag = useSabrQualityStore((state) => state.selectedItag);
   const selectSabrQuality = useSabrQualityStore((state) => state.selectQuality);
 
-  if (sabrStreamId && sabrOptions.length > 1) {
+  if (sabrStreamId && sabrOptions.length > 0) {
     const streamId = sabrStreamId;
     const selected =
       sabrOptions.find((option) => option.itag === sabrSelectedItag) ?? sabrOptions[0];
+    const resolutionOptions = sabrResolutionOptions(sabrOptions, selected);
+    if (resolutionOptions.length <= 1) return null;
     function onSabrChange(value: string) {
       const itag = Number(value);
       if (!Number.isInteger(itag)) return;
@@ -66,7 +69,7 @@ export function QualitySelector() {
         <Menu.Items className={MENU_ITEMS_CLASS}>
           <DefaultMenuRadioGroup
             value={String(selected.itag)}
-            options={sabrOptions.map((option) => ({
+            options={resolutionOptions.map((option) => ({
               label: option.label,
               value: String(option.itag),
             }))}

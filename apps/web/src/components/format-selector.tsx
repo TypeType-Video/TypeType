@@ -3,6 +3,11 @@ import { useRef } from "react";
 import { useDashPlayerSnapshot } from "../lib/dash-player-store";
 import { dashTrackGroups, maxTrackHeight, selectDashTrack } from "../lib/dash-video";
 import { activeFamily, type CodecFamily, codecFamily, groupByFamily } from "../lib/quality-utils";
+import {
+  maxSabrCodecHeight,
+  sabrCodecOptions,
+  selectSabrCodec,
+} from "../lib/sabr-quality-selection";
 import type { MenuInstance } from "../lib/vidstack";
 import {
   DefaultMenuButton,
@@ -10,6 +15,7 @@ import {
   Menu,
   useVideoQualityOptions,
 } from "../lib/vidstack";
+import { useSabrQualityStore } from "../stores/sabr-quality-store";
 
 const FORMAT_ORDER: CodecFamily[] = ["H.264", "VP9", "AV1"];
 const MENU_ITEMS_CLASS =
@@ -29,6 +35,40 @@ export function FormatSelector() {
   const menuRef = useRef<MenuInstance>(null);
   const { player, selectedVideoTrack } = useDashPlayerSnapshot();
   const options = useVideoQualityOptions(QUALITY_OPTIONS);
+  const sabrStreamId = useSabrQualityStore((state) => state.streamId);
+  const sabrOptions = useSabrQualityStore((state) => state.options);
+  const sabrSelectedItag = useSabrQualityStore((state) => state.selectedItag);
+  const selectSabrQuality = useSabrQualityStore((state) => state.selectQuality);
+
+  if (sabrStreamId && sabrOptions.length > 0) {
+    const streamId = sabrStreamId;
+    const selected =
+      sabrOptions.find((option) => option.itag === sabrSelectedItag) ?? sabrOptions[0];
+    const codecs = sabrCodecOptions(sabrOptions);
+    if (codecs.length <= 1) return null;
+    function onSabrChange(value: string) {
+      if (!isCodecFamily(value)) return;
+      const next = selectSabrCodec(sabrOptions, selected, value);
+      if (!next) return;
+      selectSabrQuality(streamId, next.itag);
+      menuRef.current?.close();
+    }
+    return (
+      <Menu.Root ref={menuRef} className="vds-format-menu vds-menu">
+        <DefaultMenuButton label="Format" hint={selected.codec} />
+        <Menu.Items className={MENU_ITEMS_CLASS}>
+          <DefaultMenuRadioGroup
+            value={selected.codec}
+            options={codecs.map((codec) => ({
+              label: `${codec} ${maxSabrCodecHeight(sabrOptions, codec)}p`,
+              value: codec,
+            }))}
+            onChange={onSabrChange}
+          />
+        </Menu.Items>
+      </Menu.Root>
+    );
+  }
 
   const videoOptions = options.filter((o) => o.quality !== null);
   const dashGroups = player ? dashTrackGroups(player) : null;

@@ -1,6 +1,7 @@
 import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
+import { type CodecFamily, codecFamily } from "./quality-utils";
 import type { MediaSrc } from "./vidstack";
 
 type SabrCandidate = VideoStreamItem | AudioStreamItem;
@@ -24,7 +25,13 @@ function isSabrCandidate(item: SabrCandidate): boolean {
 
 function playableVideos(stream: VideoStream): VideoStreamItem[] {
   const videos = [...(stream.videoOnlyStreams ?? []), ...(stream.videoStreams ?? [])];
-  return videos.filter(isSabrCandidate);
+  return videos.filter((video) => isSabrCandidate(video) && supportedVideo(video));
+}
+
+function supportedVideo(video: VideoStreamItem): boolean {
+  if (!video.codec || !codecFamily(video.codec)) return false;
+  if (typeof MediaSource === "undefined") return true;
+  return MediaSource.isTypeSupported(`${video.mimeType}; codecs="${video.codec}"`);
 }
 
 function qualityLabel(video: VideoStreamItem): string {
@@ -33,16 +40,31 @@ function qualityLabel(video: VideoStreamItem): string {
 }
 
 export function sabrQualityOptions(stream: VideoStream): SabrQualityOption[] {
-  const grouped = new Map<number, VideoStreamItem>();
+  const grouped = new Map<string, { video: VideoStreamItem; codec: CodecFamily }>();
   for (const video of playableVideos(stream)) {
-    const current = grouped.get(video.height);
+    const codec = codecFamily(video.codec);
+    if (!codec) continue;
+    const key = `${video.height}:${codec}`;
+    const current = grouped.get(key)?.video;
     const bitrate = video.bitrate ?? 0;
     const currentBitrate = current?.bitrate ?? 0;
-    if (!current || bitrate > currentBitrate) grouped.set(video.height, video);
+    if (!current || bitrate > currentBitrate) grouped.set(key, { video, codec });
   }
   return [...grouped.values()]
-    .sort((left, right) => right.height - left.height || right.itag - left.itag)
-    .map((video) => ({ itag: video.itag, label: qualityLabel(video), height: video.height }));
+    .sort(
+      (left, right) => right.video.height - left.video.height || right.video.itag - left.video.itag,
+    )
+    .map(({ video, codec }) => ({
+      itag: video.itag,
+      label: qualityLabel(video),
+      height: video.height,
+      codec,
+      codecValue: video.codec ?? "",
+      mimeType: video.mimeType,
+      width: video.width,
+      fps: video.fps,
+      bitrate: video.bitrate ?? 1,
+    }));
 }
 
 export function defaultSabrItag(
@@ -52,7 +74,10 @@ export function defaultSabrItag(
   if (options.length === 0) return null;
   const defaultHeight = defaultQuality ? Number.parseInt(defaultQuality, 10) : 720;
   const stableHeight = Math.min(Number.isFinite(defaultHeight) ? defaultHeight : 720, 720);
-  const preferred = options.find((option) => option.height <= stableHeight);
+  const targetHeight = options.find((option) => option.height <= stableHeight)?.height;
+  const preferred = ["H.264", "VP9", "AV1"].flatMap((codec) =>
+    options.filter((option) => option.height === targetHeight && option.codec === codec),
+  )[0];
   return preferred?.itag ?? options.at(-1)?.itag ?? null;
 }
 

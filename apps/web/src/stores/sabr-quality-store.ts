@@ -1,9 +1,16 @@
 import { create } from "zustand";
+import type { CodecFamily } from "../lib/quality-utils";
 
 export type SabrQualityOption = {
   itag: number;
   label: string;
   height: number;
+  codec: CodecFamily;
+  codecValue: string;
+  mimeType: string;
+  width: number;
+  fps: number;
+  bitrate: number;
 };
 
 type SabrQualityStore = {
