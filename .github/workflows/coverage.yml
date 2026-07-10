@@ -22,7 +22,12 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Skip coverage
-        run: |
-          echo "No test suite is configured yet."
-          echo "Coverage workflow is aligned with TypeType-Server triggers and will run real coverage once tests are added."
+      - name: Test coverage
+        run: bun run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mse-lcov-report
+          path: packages/mse/coverage

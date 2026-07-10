@@ -25,6 +25,9 @@ jobs:
       - name: Biome check
         run: bun run check
 
+      - name: Test
+        run: bun run test
+
       - name: Knip
         run: bun run knip
 

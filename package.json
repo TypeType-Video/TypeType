@@ -17,7 +17,9 @@
     "check": "biome check .",
     "format": "biome format --write .",
     "knip": "knip",
-    "sherif": "sherif"
+    "sherif": "sherif",
+    "test": "bun run --cwd packages/mse test",
+    "test:coverage": "bun run --cwd packages/mse test:coverage"
   },
   "workspaces": [
     "apps/*",

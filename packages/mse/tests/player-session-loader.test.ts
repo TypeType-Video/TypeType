@@ -142,9 +142,10 @@ test("recovers terminal seek windows with a fresh lower video itag session", asy
 
   expect(session.response.sessionId).toBe("fresh-136");
   expect(session.videoItag).toBe(136);
-  expect(video.currentTime).toBe(60);
+  expect(video.currentTime).toBe(0);
   expect(createVideoItags).toEqual([248, 136]);
   expect(attached).toHaveLength(1);
+  expect(prefetchRequests.map((request) => request.playerTimeMs)).toEqual([60_000, 60_000]);
   expect(prefetchRequests.map((request) => request.videoItag)).toEqual([137, 136]);
   expect(segmentRequests.map((request) => request.videoItag)).toEqual([136]);
   expect(positionRequests[0]).toEqual([{ itag: 137, startMs: 0, endMs: 10_000 }]);

@@ -16,7 +16,8 @@
     "build:types": "tsc --emitDeclarationOnly",
     "check": "biome check . && tsc --noEmit",
     "format": "biome format --write .",
-    "test": "bun test"
+    "test": "bun test",
+    "test:coverage": "bun test --coverage --coverage-reporter=lcov"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",

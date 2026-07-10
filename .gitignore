@@ -8,6 +8,7 @@ question.md
 node_modules/
 dist/
 build/
+coverage/
 tmp/
 .DS_Store
 *.tsbuildinfo
