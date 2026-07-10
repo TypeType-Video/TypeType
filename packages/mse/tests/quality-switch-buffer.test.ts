@@ -39,7 +39,7 @@ function window(request: PlaybackWindowRequest, ready: boolean): PlaybackWindow 
   };
 }
 
-test("keeps buffered ranges bound to their loaded itags during a codec switch", async () => {
+test("starts a replacement media source without stale buffered ranges", async () => {
   const requests: PlaybackWindowRequest[] = [];
   const playback = {
     position: async (_sessionId: string, request: PlaybackWindowRequest) => {
@@ -69,8 +69,6 @@ test("keeps buffered ranges bound to their loaded itags during a codec switch", 
     },
     videoItag: 247,
     audioItag: 140,
-    bufferedVideoItag: 136,
-    bufferedAudioItag: 140,
     audioTrackId: null,
     startTimeMs: 20_000,
     policy: {
@@ -84,8 +82,5 @@ test("keeps buffered ranges bound to their loaded itags during a codec switch", 
     signal: new AbortController().signal,
   });
   expect(requests[0]?.videoItag).toBe(247);
-  expect(requests[0]?.bufferedRanges).toEqual([
-    { itag: 140, startMs: 0, endMs: 30_000 },
-    { itag: 136, startMs: 0, endMs: 30_000 },
-  ]);
+  expect(requests[0]?.bufferedRanges).toEqual([]);
 });

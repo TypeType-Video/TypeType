@@ -21,8 +21,6 @@ type LoadSessionArgs = {
   response: PlaybackResponse;
   videoItag: number;
   audioItag: number;
-  bufferedVideoItag?: number;
-  bufferedAudioItag?: number;
   audioTrackId: string | null;
   startTimeMs: number;
   policy: BufferPolicy;
@@ -31,13 +29,7 @@ type LoadSessionArgs = {
 
 type PlaybackWindowRequestArgs = Pick<
   LoadSessionArgs,
-  | "response"
-  | "videoItag"
-  | "audioItag"
-  | "bufferedVideoItag"
-  | "bufferedAudioItag"
-  | "audioTrackId"
-  | "policy"
+  "response" | "videoItag" | "audioItag" | "audioTrackId" | "policy"
 > & {
   media: Pick<MediaSourceController, "bufferedRanges">;
 };
@@ -68,7 +60,7 @@ class PlaybackWindowTimeoutError extends Error {
 }
 
 export async function loadPlaybackSession(args: LoadSessionArgs): Promise<LoadedSession> {
-  const request = playbackWindowRequest(args, args.startTimeMs);
+  const request = { ...playbackWindowRequest(args, args.startTimeMs), bufferedRanges: [] };
   const window = await waitForWindow(args, args.response.sessionId, request);
   if (!window.manifest) throw new Error("Playback window is not ready");
   return attachSession(args, { ...args.response, generation: window.generation }, window.manifest);
@@ -129,16 +121,10 @@ function playbackWindowRequest(
 
 function playbackBufferedRanges(
   ranges: MediaBufferedRange[],
-  args: Pick<
-    LoadSessionArgs,
-    "videoItag" | "audioItag" | "bufferedVideoItag" | "bufferedAudioItag"
-  >,
+  args: Pick<LoadSessionArgs, "videoItag" | "audioItag">,
 ): PlaybackWindowRequest["bufferedRanges"] {
   return ranges.map((range) => ({
-    itag:
-      range.kind === "audio"
-        ? (args.bufferedAudioItag ?? args.audioItag)
-        : (args.bufferedVideoItag ?? args.videoItag),
+    itag: range.kind === "audio" ? args.audioItag : args.videoItag,
     startMs: range.startMs,
     endMs: range.endMs,
   }));
