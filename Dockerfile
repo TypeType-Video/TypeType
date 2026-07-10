@@ -6,14 +6,11 @@ RUN apk upgrade --no-cache libcrypto3 libssl3
 
 COPY bun.lock package.json ./
 COPY apps/web/package.json ./apps/web/
-COPY packages/mse/package.json ./packages/mse/
 
 RUN bun install --frozen-lockfile
 
 COPY apps/web ./apps/web
-COPY packages/mse ./packages/mse
 
-RUN bun run --cwd packages/mse build
 RUN bun run --cwd apps/web build
 
 FROM nginx:1.31.0-alpine AS runner
