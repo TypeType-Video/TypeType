@@ -161,7 +161,7 @@ jobs:
           archive="$RUNNER_TEMP/typetype-beta-stack.tar.gz"
           remote_archive="/tmp/typetype-beta-stack-$GITHUB_SHA.tar.gz"
           tar -czf "$archive" .env.example docker-compose.dev.yml garage.toml nginx.conf scripts/bootstrap-garage.sh scripts/deploy-beta.sh
-          scp -i ~/.ssh/typetype_deploy_key -P "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$archive" "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST:$remote_archive"
+          ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" "cat > '$remote_archive'" < "$archive"
           ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" "bash -s -- '$remote_archive'" < scripts/deploy-beta.sh
           curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/health
           curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/downloader/health
