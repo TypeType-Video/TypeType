@@ -12,26 +12,26 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
-    "@tanstack/react-router": "^1.170.16",
+    "@tanstack/react-router": "^1.170.17",
     "@typetype/mse": "workspace:*",
     "@vidstack/react": "1.12.13",
     "dashjs": "^5.2.0",
-    "lucide-react": "^1.22.0",
+    "lucide-react": "^1.24.0",
     "media-icons": "1.1.5",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "simple-icons": "^16.24.1",
+    "simple-icons": "^16.25.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",
-    "@tanstack/router-plugin": "^1.168.18",
-    "@types/node": "^26.0.1",
+    "@tanstack/router-plugin": "^1.168.19",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.3",
-    "vite": "^8.1.0"
+    "vite": "^8.1.4"
   }
 }
