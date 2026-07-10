@@ -16,7 +16,7 @@
       "dependencies": {
         "@tanstack/react-query": "^5.101.2",
         "@tanstack/react-router": "^1.170.17",
-        "@typetype/mse": "0.1.1",
+        "@typetype/mse": "0.1.2",
         "@vidstack/react": "1.12.13",
         "dashjs": "^5.2.0",
         "lucide-react": "^1.24.0",
@@ -310,7 +310,7 @@
 
     "@types/react-dom": ["@types/react-dom@19.2.3", "", { "peerDependencies": { "@types/react": "^19.2.0" } }, "sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ=="],
 
-    "@typetype/mse": ["@typetype/mse@0.1.1", "", {}, "sha512-1LGYpSROqs35rRxI+uBztCmDxiVYj1CSxvKX0ZqP7L1aIIUEnX7GHUpwQq9T+h2jqqm4TS5XjwQlouZ+VNs+pw=="],
+    "@typetype/mse": ["@typetype/mse@0.1.2", "", {}, "sha512-DBfM1DAQdrf8xPp5OZ3ikD8/ujz9Q498RwaA7ULCL5/eh1eWmDhzSXX42DbXnxmNS2woMYrAIuZKuFr5ijjw6Q=="],
 
     "@typetype/web": ["@typetype/web@workspace:apps/web"],
 
