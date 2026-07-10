@@ -6,7 +6,13 @@ import { PLAYBACK_ROW, PlaybackNumberRow, PlaybackToggleRow } from "./settings-p
 const SECTION_LABEL = "text-xs font-medium text-fg-soft uppercase tracking-wider px-1";
 const CARD = "bg-surface rounded-xl border border-border divide-y divide-border";
 
-const QUALITY_OPTIONS = ["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"];
+const QUALITY_OPTIONS = [
+  { label: "Auto", value: "auto" },
+  ...["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"].map((quality) => ({
+    label: quality,
+    value: quality,
+  })),
+];
 
 type DropdownProps = {
   value: string;
@@ -33,7 +39,7 @@ function QualityDropdown({ value, onChange }: DropdownProps) {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 bg-surface-strong border border-border-strong text-fg text-xs rounded-lg px-3 py-1.5 hover:bg-surface-soft transition-colors"
       >
-        {value}
+        {value === "auto" ? "Auto" : value}
         <svg
           width="12"
           height="12"
@@ -54,21 +60,21 @@ function QualityDropdown({ value, onChange }: DropdownProps) {
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 bg-surface-strong border border-border-strong rounded-lg overflow-hidden z-10 min-w-[72px] shadow-lg">
-          {QUALITY_OPTIONS.map((q) => (
+          {QUALITY_OPTIONS.map((quality) => (
             <button
-              key={q}
+              key={quality.value}
               type="button"
               onClick={() => {
-                onChange(q);
+                onChange(quality.value);
                 setOpen(false);
               }}
               className={`block w-full text-left px-3 py-2 text-xs transition-colors ${
-                q === value
+                quality.value === value
                   ? "text-fg bg-surface-soft"
                   : "text-fg-muted hover:bg-surface-soft hover:text-fg"
               }`}
             >
-              {q}
+              {quality.label}
             </button>
           ))}
         </div>

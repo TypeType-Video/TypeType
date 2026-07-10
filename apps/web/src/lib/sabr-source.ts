@@ -73,12 +73,27 @@ export function defaultSabrItag(
 ): number | null {
   if (options.length === 0) return null;
   const defaultHeight = defaultQuality ? Number.parseInt(defaultQuality, 10) : 720;
-  const stableHeight = Math.min(Number.isFinite(defaultHeight) ? defaultHeight : 720, 720);
-  const targetHeight = options.find((option) => option.height <= stableHeight)?.height;
+  const targetHeight = options.find(
+    (option) => option.height <= (Number.isFinite(defaultHeight) ? defaultHeight : 720),
+  )?.height;
   const preferred = ["H.264", "VP9", "AV1"].flatMap((codec) =>
     options.filter((option) => option.height === targetHeight && option.codec === codec),
   )[0];
   return preferred?.itag ?? options.at(-1)?.itag ?? null;
+}
+
+export function automaticSabrQuality(
+  screenHeight: number,
+  devicePixelRatio: number,
+  saveData = false,
+  effectiveType = "",
+): string {
+  const constrained = saveData || effectiveType === "slow-2g" || effectiveType === "2g";
+  if (constrained) return "360p";
+  if (effectiveType === "3g") return "720p";
+  const physicalHeight = Math.max(360, screenHeight * Math.max(1, devicePixelRatio));
+  const height = [2160, 1440, 1080, 720, 480, 360].find((candidate) => candidate <= physicalHeight);
+  return `${height ?? 360}p`;
 }
 
 function pickAudio(stream: VideoStream): AudioStreamItem | null {

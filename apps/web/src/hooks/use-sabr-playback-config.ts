@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { bestSabrItag, browserSabrCodecProbe } from "../lib/sabr-codec-capabilities";
 import {
+  automaticSabrQuality,
+  defaultSabrItag,
   resolveSabrPlaybackConfig,
   type SabrPlaybackConfig,
   sabrQualityOptions,
@@ -20,13 +22,15 @@ export function useSabrPlaybackConfig(
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
   const options = useMemo(() => sabrQualityOptions(stream), [stream]);
+  const startupItag = useMemo(() => defaultSabrItag(options, "720p"), [options]);
   const [defaultItag, setDefaultItag] = useState<number | null>(null);
-  const effectiveItag = selectedItag ?? defaultItag;
+  const effectiveItag = selectedItag ?? defaultItag ?? startupItag;
   useEffect(() => {
     let active = true;
     if (!enabled) return;
     setDefaultItag(null);
-    void bestSabrItag(options, defaultQuality, browserSabrCodecProbe()).then((itag) => {
+    const quality = resolvePreferredQuality(defaultQuality);
+    void bestSabrItag(options, quality, browserSabrCodecProbe()).then((itag) => {
       if (active) setDefaultItag(itag);
     });
     return () => {
@@ -42,4 +46,22 @@ export function useSabrPlaybackConfig(
     return config ? { ...config, key: `${config.key}:${authScope}` } : null;
   }, [authScope, effectiveItag, stream]);
   return enabled ? config : null;
+}
+
+type NetworkInformation = {
+  effectiveType?: string;
+  saveData?: boolean;
+};
+
+function resolvePreferredQuality(defaultQuality: string | undefined): string | undefined {
+  if (defaultQuality?.toLowerCase() !== "auto" || typeof window === "undefined") {
+    return defaultQuality;
+  }
+  const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
+  return automaticSabrQuality(
+    window.screen.height,
+    window.devicePixelRatio,
+    connection?.saveData,
+    connection?.effectiveType,
+  );
 }
