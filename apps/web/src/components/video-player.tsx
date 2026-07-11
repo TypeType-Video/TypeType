@@ -96,7 +96,7 @@ export function VideoPlayer({
       playsInline
       hideControlsOnMouseLeave
       {...(ios ? { "webkit-playsinline": "true" } : {})}
-      autoPlay={autoplay}
+      autoPlay={sabrConfig ? false : autoplay}
       storage={null}
       title={title}
       poster={poster}
