@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useBulletComments } from "../hooks/use-bullet-comments";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { useMobile } from "../hooks/use-mobile";
 import { usePlayerError } from "../hooks/use-player-error";
 import { usePlayerErrorResume } from "../hooks/use-player-error-resume";
@@ -36,6 +37,8 @@ export function WatchLayout({
   const isMobile = useMobile();
   const save = useSaveProgress(stream.id);
   const { settings, update, settingsReady } = useSettings();
+  const branding = useDeArrowBranding(stream.id, stream.title, stream.thumbnail);
+  const displayStream = { ...stream, ...branding };
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
   const player = usePlayerError(stream, isLive, settings.enableHighQualityPlayback);
   const { on: bulletCommentsOn } = useDanmakuStore();
@@ -105,6 +108,7 @@ export function WatchLayout({
     audioOnlyLoading: audioOnly.loading,
     hasAudioOnlySource: Boolean(audioOnly.src),
     settingsReady,
+    autoplayEnabled: settings.autoplay,
     navigating,
     shouldAutoplay: playerEvents.shouldAutoplay,
   });
@@ -116,7 +120,7 @@ export function WatchLayout({
     <div className={classes.containerClass}>
       <WatchStage
         classes={classes}
-        stream={stream}
+        stream={displayStream}
         settings={settings}
         manifestSrc={manifestSrc}
         sabrConfig={sabrConfig}
@@ -174,7 +178,7 @@ export function WatchLayout({
       />
       <WatchSecondaryContent
         cinemaMode={cinemaMode}
-        stream={stream}
+        stream={displayStream}
         relatedStreams={relatedStreams}
         showComments={!settings.hideComments}
         playlistPanel={isMobile ? null : playlist.panel}

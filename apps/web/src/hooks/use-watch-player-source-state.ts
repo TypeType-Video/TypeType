@@ -18,6 +18,7 @@ type Args = {
   audioOnlyLoading: boolean;
   hasAudioOnlySource: boolean;
   settingsReady: boolean;
+  autoplayEnabled: boolean;
   navigating: boolean;
   shouldAutoplay: () => boolean;
 };
@@ -58,13 +59,14 @@ export function useWatchPlayerSourceState(args: Args) {
     autoplayState.playerKey !== playerKey ||
     (!autoplayState.settingsReady && args.settingsReady)
   ) {
+    const autoplayIntent = consumeWatchAutoplayIntent();
     autoplayRef.current = {
       playerKey,
       settingsReady: args.settingsReady,
       autoplay:
         args.retryKey === 0 &&
         args.settingsReady &&
-        (args.shouldAutoplay() || consumeWatchAutoplayIntent()),
+        (args.autoplayEnabled || args.shouldAutoplay() || autoplayIntent),
     };
   }
   const waitForInitialAudioSource = useWatchInitialAudioSource(args);
