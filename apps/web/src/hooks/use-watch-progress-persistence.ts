@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useRef } from "react";
 import { recordClientEvent } from "../lib/client-debug-log";
 
-type MutateFn = (positionMs: number) => void;
-type SaveReason = "interval" | "pagehide" | "pause" | "seeked" | "threshold" | "visibility";
+type MutateFn = (positionMs: number, keepalive: boolean) => void;
+type SaveReason =
+  | "interval"
+  | "pagehide"
+  | "pause"
+  | "seeked"
+  | "threshold"
+  | "unmount"
+  | "visibility";
 
 type Args = {
   durationSec: number;
@@ -26,7 +33,7 @@ export function useWatchProgressPersistence({ durationSec, isLive, mutate }: Arg
     if (reason === "seeked" && positionMs < 5000 && maxPositionSeenRef.current >= 5000) {
       lastSavedPositionRef.current = 0;
       recordClientEvent("progress.save", { positionMs: 0, reason });
-      mutateRef.current(0);
+      mutateRef.current(0, false);
       return;
     }
     if (positionMs <= 0) return;
@@ -35,7 +42,8 @@ export function useWatchProgressPersistence({ durationSec, isLive, mutate }: Arg
     if (reason !== "seeked" && positionMs < lastSavedPositionRef.current) return;
     lastSavedPositionRef.current = positionMs;
     recordClientEvent("progress.save", { positionMs, reason });
-    mutateRef.current(positionMs);
+    const keepalive = reason === "pagehide" || reason === "unmount" || reason === "visibility";
+    mutateRef.current(positionMs, keepalive);
   };
 
   const handleTimeUpdate = useCallback(
@@ -68,10 +76,11 @@ export function useWatchProgressPersistence({ durationSec, isLive, mutate }: Arg
     const onPageHide = () => {
       saveRef.current("pagehide");
     };
-    const interval = setInterval(() => saveRef.current("interval"), 10_000);
+    const interval = setInterval(() => saveRef.current("interval"), 5_000);
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("pagehide", onPageHide);
     return () => {
+      saveRef.current("unmount");
       clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pagehide", onPageHide);

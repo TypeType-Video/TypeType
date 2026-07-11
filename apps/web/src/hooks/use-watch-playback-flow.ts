@@ -14,7 +14,7 @@ type Args = {
   nextVideo: WatchPlaylistItem | null;
   list?: string;
   shuffle?: string;
-  mutate: (positionMs: number) => void;
+  mutate: (positionMs: number, keepalive: boolean) => void;
   onPlay: () => void;
 };
 

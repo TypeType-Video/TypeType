@@ -26,11 +26,16 @@ export async function fetchProgress(videoUrl: string): Promise<ProgressItem> {
   return body as ProgressItem;
 }
 
-export async function updateProgress(videoUrl: string, position: number): Promise<void> {
+export async function updateProgress(
+  videoUrl: string,
+  position: number,
+  keepalive = false,
+): Promise<void> {
   const res = await authed(`${BASE}/progress/${encodeURIComponent(videoUrl)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ position: Math.round(position) }),
+    keepalive,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "update failed" }));

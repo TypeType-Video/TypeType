@@ -6,7 +6,7 @@ import { useWatchSessionReporting } from "./use-watch-session-reporting";
 type Args = {
   stream: VideoStream;
   isLive: boolean;
-  mutate: (positionMs: number) => void;
+  mutate: (positionMs: number, keepalive: boolean) => void;
   onPlay?: () => void;
   onEnded: () => void;
   onTimeUpdate?: (positionMs: number) => void;

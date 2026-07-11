@@ -68,7 +68,7 @@ export function WatchLayout({
     nextVideo: playlist.nextVideo,
     list,
     shuffle,
-    mutate: save.mutate,
+    mutate: (position, keepalive) => save.mutate({ position, keepalive }),
     onPlay: player.clearFailed,
   });
   const audioOnly = useWatchAudioOnlyPlayback({
