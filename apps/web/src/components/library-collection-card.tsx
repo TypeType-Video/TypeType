@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 
 type Props = {
   kind: "favorites" | "watch-later";
@@ -29,17 +30,20 @@ function EmptyLibraryIcon() {
 }
 
 export function LibraryCollectionCard({ kind, title, count, thumbnail }: Props) {
+  const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
+  const showThumbnail = Boolean(thumbnail) && failedThumbnail !== thumbnail;
   const label = `${count} video${count !== 1 ? "s" : ""}`;
   const body = (
     <div className="flex flex-col gap-2 group">
       <div className="relative aspect-video overflow-hidden rounded-xl bg-surface-strong">
-        {thumbnail ? (
+        {showThumbnail ? (
           <img
             src={thumbnail}
             alt={title}
             className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
             loading="lazy"
             decoding="async"
+            onError={() => setFailedThumbnail(thumbnail ?? null)}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
