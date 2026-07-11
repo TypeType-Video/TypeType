@@ -9,6 +9,7 @@ import { useWatchLaterPlaylist } from "../hooks/use-watch-later-playlist";
 import { useWatchLaterStreams } from "../hooks/use-watch-later-streams";
 import { randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
 import { type PlaylistSortMode, sortPlaylistVideos } from "../lib/playlist-sort";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import { toPublicWatchParam } from "../lib/watch-url";
 
 function WatchLaterPage() {
@@ -28,6 +29,7 @@ function WatchLaterPage() {
   );
 
   function playVideo(id: string, shuffle?: string) {
+    markWatchAutoplayIntent();
     navigate({
       to: "/watch",
       search: { v: toPublicWatchParam(id), ...(shuffle ? { shuffle } : {}) },

@@ -9,6 +9,7 @@ import { useFavoriteStreams } from "../hooks/use-favorite-streams";
 import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
 import { randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
 import { type PlaylistSortMode, sortPlaylistVideos } from "../lib/playlist-sort";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import { toPublicWatchParam } from "../lib/watch-url";
 
 const FAVORITES_BATCH_SIZE = 12;
@@ -36,6 +37,7 @@ function FavoritesPage() {
   function playFrom(index: number, shuffle?: string) {
     const video = visibleVideos[index];
     if (!video) return;
+    markWatchAutoplayIntent();
     navigate({
       to: "/watch",
       search: { v: toPublicWatchParam(video.id), ...(shuffle ? { shuffle } : {}) },
@@ -55,6 +57,7 @@ function FavoritesPage() {
           const shuffled = shuffleByKey(visibleVideos, seed);
           const first = shuffled[0];
           if (!first) return;
+          markWatchAutoplayIntent();
           navigate({ to: "/watch", search: { v: toPublicWatchParam(first.id), shuffle: seed } });
         }}
       />

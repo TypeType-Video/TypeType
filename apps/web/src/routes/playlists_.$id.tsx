@@ -10,6 +10,7 @@ import { usePlaylist } from "../hooks/use-playlist";
 import { usePlaylists } from "../hooks/use-playlists";
 import { randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
 import { type PlaylistSortMode, sortPlaylistVideos } from "../lib/playlist-sort";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import { toPublicWatchParam } from "../lib/watch-url";
 import type { PlaylistVideoItem } from "../types/user";
 
@@ -55,6 +56,7 @@ function PlaylistDetailPage() {
   }
   function playFrom(video: PlaylistVideoItem | undefined, shuffle?: string) {
     if (!video) return;
+    markWatchAutoplayIntent();
     navigate({
       to: "/watch",
       search: { v: toPublicWatchParam(video.url), list: id, ...(shuffle ? { shuffle } : {}) },

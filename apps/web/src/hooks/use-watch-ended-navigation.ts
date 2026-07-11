@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import type { WatchPlaylistItem } from "../types/playlist";
 import type { VideoStream } from "../types/stream";
 
@@ -88,10 +89,18 @@ export function useWatchEndedNavigation({
   const nextTargetRef = useRef(nextTarget);
   nextTargetRef.current = nextTarget;
 
+  const navigateToTarget = useCallback(
+    (next: AutoplayTarget) => {
+      markWatchAutoplayIntent();
+      navigate({ to: "/watch", search: next.search });
+    },
+    [navigate],
+  );
+
   const playNow = useCallback(() => {
     if (!target) return;
-    navigate({ to: "/watch", search: target.search });
-  }, [target, navigate]);
+    navigateToTarget(target);
+  }, [target, navigateToTarget]);
 
   const cancel = useCallback(() => {
     if (target) dismissedTargetIdRef.current = target.id;
@@ -136,17 +145,17 @@ export function useWatchEndedNavigation({
     const next = nextTargetRef.current;
     if (!next || dismissedTargetIdRef.current === next.id) return;
     if (skipPlaylistAutoplayScreen && next.source === "playlist") {
-      navigate({ to: "/watch", search: next.search });
+      navigateToTarget(next);
       return;
     }
     if (delayMs <= 0) {
-      navigate({ to: "/watch", search: next.search });
+      navigateToTarget(next);
       return;
     }
     setRemainingMs(delayMs);
     setPaused(false);
     setTarget(next);
-  }, [settingsReady, autoplay, skipPlaylistAutoplayScreen, delayMs, navigate]);
+  }, [settingsReady, autoplay, skipPlaylistAutoplayScreen, delayMs, navigateToTarget]);
 
   return {
     nextTarget,

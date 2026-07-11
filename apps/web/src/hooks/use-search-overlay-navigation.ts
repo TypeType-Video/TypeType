@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { toDirectWatchUrl } from "../lib/direct-watch-url";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import { useSearchHistory } from "./use-search-history";
 import { useSettings } from "./use-settings";
 
@@ -18,6 +19,7 @@ export function useSearchOverlayNavigation({ onClose }: Params) {
     if (!trimmed) return;
     const directWatchUrl = toDirectWatchUrl(trimmed);
     if (directWatchUrl) {
+      markWatchAutoplayIntent();
       navigate({ to: "/watch", search: { v: directWatchUrl } });
       onClose();
       return;
