@@ -98,7 +98,14 @@ export function SabrMsePlayer({
     };
     const offError = engine.on("error", () => latestHandlers().onError());
     const volumeChange = () => latestHandlers().onVolumeChange?.(video.volume, video.muted);
+    let ignoreInitialZeroSeek = startTime > 0;
+    const playerRoot = video.parentElement?.parentElement;
+    const acceptSeekIntent = () => {
+      ignoreInitialZeroSeek = false;
+    };
     video.addEventListener("volumechange", volumeChange);
+    playerRoot?.addEventListener("pointerdown", acceptSeekIntent, true);
+    playerRoot?.addEventListener("keydown", acceptSeekIntent, true);
     let autoplayStartTime = 0;
     const startAutoplay = () => {
       if (autoplayConfirmedRef.current || video.readyState < 3) return;
@@ -131,13 +138,19 @@ export function SabrMsePlayer({
         video.autoplay = false;
         return engine.pause();
       },
-      seek: (seconds) =>
+      seek: (seconds) => {
+        if (ignoreInitialZeroSeek && seconds === 0) {
+          ignoreInitialZeroSeek = false;
+          return;
+        }
+        ignoreInitialZeroSeek = false;
         runSeek(
           engine,
           Math.max(0, Math.round(seconds * 1000)),
           seekingRef,
           latestHandlers().onError,
-        ),
+        );
+      },
     });
     void engine
       .load()
@@ -158,6 +171,8 @@ export function SabrMsePlayer({
       offError();
       unregisterControls();
       video.removeEventListener("volumechange", volumeChange);
+      playerRoot?.removeEventListener("pointerdown", acceptSeekIntent, true);
+      playerRoot?.removeEventListener("keydown", acceptSeekIntent, true);
       video.removeEventListener("canplay", startAutoplay);
       window.clearInterval(autoplayTimer);
       engine.destroy();
