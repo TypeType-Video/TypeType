@@ -22,5 +22,6 @@ test("uses caption variants instead of numeric duplicate language labels", () =>
   ]);
 
   expect(tracks.map((track) => track.label)).toEqual(["English (CC1)", "English (DTVCC1)"]);
-  expect(tracks.every((track) => track.src.includes("fmt%3Dvtt"))).toBe(true);
+  expect(tracks.every((track) => new URL(track.src).searchParams.get("fmt") === "vtt")).toBe(true);
+  expect(tracks.every((track) => new URL(track.src).hostname === "www.youtube.com")).toBe(true);
 });

@@ -57,5 +57,9 @@ export function proxyImage(url: string): string {
 export function toProxiedVttUrl(url: string): string {
   const parsed = new URL(url);
   parsed.searchParams.set("fmt", "vtt");
+  const youtubeTimedText =
+    (parsed.hostname === "youtube.com" || parsed.hostname === "www.youtube.com") &&
+    parsed.pathname === "/api/timedtext";
+  if (youtubeTimedText) return parsed.toString();
   return proxyUrl(parsed.toString());
 }
