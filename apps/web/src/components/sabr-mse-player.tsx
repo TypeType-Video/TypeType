@@ -104,20 +104,25 @@ export function SabrMsePlayer({
     };
     video.addEventListener("volumechange", volumeChange);
     video.addEventListener("seeking", seeking);
+    let autoplayStartTime = 0;
     const startAutoplay = () => {
-      if (autoplayStartedRef.current || autoplayConfirmedRef.current || video.readyState < 3)
+      if (autoplayConfirmedRef.current || video.readyState < 3) return;
+      if (autoplayStartedRef.current) {
+        if (!video.paused && video.currentTime >= autoplayStartTime + 0.25) {
+          autoplayConfirmedRef.current = true;
+        } else if (video.paused) {
+          autoplayStartedRef.current = false;
+        }
         return;
+      }
       if (!latestHandlers().autoplay && !pendingPlayRef.current) return;
+      autoplayStartTime = video.currentTime;
       autoplayStartedRef.current = true;
       void playWithMuteFallback(engine, video).catch(() => {
         autoplayStartedRef.current = false;
       });
     };
-    const confirmAutoplay = () => {
-      autoplayConfirmedRef.current = true;
-    };
     video.addEventListener("canplay", startAutoplay);
-    video.addEventListener("play", confirmAutoplay);
     const autoplayTimer = window.setInterval(startAutoplay, 250);
     const unregisterControls = registerSabrVidstackControls(video, {
       play: () => {
@@ -127,6 +132,7 @@ export function SabrMsePlayer({
       },
       pause: () => {
         pendingPlayRef.current = false;
+        autoplayConfirmedRef.current = true;
         video.autoplay = false;
         return engine.pause();
       },
@@ -165,7 +171,6 @@ export function SabrMsePlayer({
       video.removeEventListener("volumechange", volumeChange);
       video.removeEventListener("seeking", seeking);
       video.removeEventListener("canplay", startAutoplay);
-      video.removeEventListener("play", confirmAutoplay);
       window.clearInterval(autoplayTimer);
       engine.destroy();
       engineRef.current = null;
