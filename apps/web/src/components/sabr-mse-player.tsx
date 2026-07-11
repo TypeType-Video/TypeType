@@ -98,12 +98,7 @@ export function SabrMsePlayer({
     };
     const offError = engine.on("error", () => latestHandlers().onError());
     const volumeChange = () => latestHandlers().onVolumeChange?.(video.volume, video.muted);
-    const seeking = () => {
-      const next = positionMs(video);
-      if (!seekingRef.current) runSeek(engine, next, seekingRef, latestHandlers().onError);
-    };
     video.addEventListener("volumechange", volumeChange);
-    video.addEventListener("seeking", seeking);
     let autoplayStartTime = 0;
     const startAutoplay = () => {
       if (autoplayConfirmedRef.current || video.readyState < 3) return;
@@ -124,7 +119,6 @@ export function SabrMsePlayer({
     };
     video.addEventListener("canplay", startAutoplay);
     const autoplayTimer = window.setInterval(startAutoplay, 250);
-    let seekUnlockTimer = 0;
     const unregisterControls = registerSabrVidstackControls(video, {
       play: () => {
         pendingPlayRef.current = true;
@@ -145,15 +139,11 @@ export function SabrMsePlayer({
           latestHandlers().onError,
         ),
     });
-    seekingRef.current = true;
     void engine
       .load()
       .then(startAutoplay)
       .catch((error: unknown) => {
         if (!isAbortError(error)) latestHandlers().onError();
-      })
-      .finally(() => {
-        seekUnlockTimer = window.setTimeout(() => (seekingRef.current = false), 500);
       });
     latestHandlers().onSeekReady((seconds) =>
       runSeek(
@@ -168,10 +158,8 @@ export function SabrMsePlayer({
       offError();
       unregisterControls();
       video.removeEventListener("volumechange", volumeChange);
-      video.removeEventListener("seeking", seeking);
       video.removeEventListener("canplay", startAutoplay);
       window.clearInterval(autoplayTimer);
-      window.clearTimeout(seekUnlockTimer);
       engine.destroy();
       engineRef.current = null;
       pendingPlayRef.current = false;
