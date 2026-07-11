@@ -13,6 +13,7 @@ import { useSessionActivityReporting } from "../hooks/use-session-activity-repor
 import { isAdminRoute, isAuthPage, requiresAuth } from "../lib/auth-routes";
 import { bootstrapSession } from "../lib/auth-session";
 import { applyTheme } from "../lib/theme";
+import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
 import { useUiStore } from "../stores/ui-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
@@ -33,8 +34,9 @@ function RootLayout() {
   const theme = useThemeStore((s) => s.theme);
   const cinemaMode = useWatchLayoutStore((s) => s.cinemaMode);
   const { isAuthed, isAdmin, isGuest, status } = useAuth();
+  const setSignedOut = useAuthStore((s) => s.setSignedOut);
   const { data: instance } = useInstance();
-  const registerStatus = useRegisterStatus(status !== "loading" && !isAuthed);
+  const registerStatus = useRegisterStatus(status !== "loading");
   const location = useRouterState({ select: (state) => state.location });
   const pathname = location.pathname;
   const pathWithSearch = `${pathname}${location.searchStr}`;
@@ -71,7 +73,8 @@ function RootLayout() {
 
   useEffect(() => {
     if (status === "loading") return;
-    if (!isAuthed && registerStatus.data?.bootstrapAvailable && pathname !== "/register") {
+    if (registerStatus.data?.bootstrapAvailable && pathname !== "/register") {
+      setSignedOut();
       const redirect = isAuthPage(pathname)
         ? ""
         : `?redirect=${encodeURIComponent(pathWithSearch)}`;
@@ -99,6 +102,7 @@ function RootLayout() {
     status,
     pathname,
     pathWithSearch,
+    setSignedOut,
   ]);
 
   if (status === "loading" && (requiresAuth(pathname) || isAdminRoute(pathname))) {
