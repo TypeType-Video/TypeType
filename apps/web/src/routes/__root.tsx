@@ -8,6 +8,7 @@ import { Sidebar } from "../components/sidebar";
 import { useAuth } from "../hooks/use-auth";
 import { useInstance } from "../hooks/use-instance";
 import { useMobile } from "../hooks/use-mobile";
+import { useRegisterStatus } from "../hooks/use-register-status";
 import { useSessionActivityReporting } from "../hooks/use-session-activity-reporting";
 import { isAdminRoute, isAuthPage, requiresAuth } from "../lib/auth-routes";
 import { bootstrapSession } from "../lib/auth-session";
@@ -33,6 +34,7 @@ function RootLayout() {
   const cinemaMode = useWatchLayoutStore((s) => s.cinemaMode);
   const { isAuthed, isAdmin, isGuest, status } = useAuth();
   const { data: instance } = useInstance();
+  const registerStatus = useRegisterStatus(status !== "loading" && !isAuthed);
   const location = useRouterState({ select: (state) => state.location });
   const pathname = location.pathname;
   const pathWithSearch = `${pathname}${location.searchStr}`;
@@ -69,6 +71,13 @@ function RootLayout() {
 
   useEffect(() => {
     if (status === "loading") return;
+    if (!isAuthed && registerStatus.data?.bootstrapAvailable && pathname !== "/register") {
+      const redirect = isAuthPage(pathname)
+        ? ""
+        : `?redirect=${encodeURIComponent(pathWithSearch)}`;
+      window.location.replace(`/register${redirect}`);
+      return;
+    }
     if (!isAuthed && isAdminRoute(pathname)) {
       const redirect = encodeURIComponent(pathWithSearch);
       window.location.replace(`/login?redirect=${redirect}`);
@@ -83,7 +92,14 @@ function RootLayout() {
       window.location.replace("/");
       return;
     }
-  }, [isAuthed, isAdmin, status, pathname, pathWithSearch]);
+  }, [
+    isAuthed,
+    isAdmin,
+    registerStatus.data?.bootstrapAvailable,
+    status,
+    pathname,
+    pathWithSearch,
+  ]);
 
   if (status === "loading" && (requiresAuth(pathname) || isAdminRoute(pathname))) {
     return (

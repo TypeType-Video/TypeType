@@ -28,6 +28,7 @@ function RegisterPage() {
   const [pending, setPending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const postAuthTarget = redirect ? target : "/import";
+  const bootstrapAvailable = status?.bootstrapAvailable ?? false;
 
   useEffect(() => {
     if (!toast) return;
@@ -38,8 +39,8 @@ function RegisterPage() {
   const closedByPolicy = status ? !status.allowRegistration && !status.bootstrapAvailable : false;
   const subtitle = !localEnabled
     ? "Local registration is disabled."
-    : status?.bootstrapAvailable
-      ? "Fresh install detected. The first account will be admin."
+    : bootstrapAvailable
+      ? "First installation detected. Set up the administrator account."
       : closedByPolicy
         ? "Registrations are currently closed."
         : "Use your email to create an account. You can sign in with email or username.";
@@ -75,7 +76,10 @@ function RegisterPage() {
   return (
     <div className="flex w-full items-center justify-center px-4">
       <Toast message={toast} />
-      <AuthCard title="Create account" subtitle={subtitle}>
+      <AuthCard
+        title={bootstrapAvailable ? "Create admin account" : "Create account"}
+        subtitle={subtitle}
+      >
         <AuthErrorBanner message={bannerMessage} />
         {oidcEnabled && (
           <div className="mb-4">
@@ -99,7 +103,7 @@ function RegisterPage() {
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
+              placeholder={bootstrapAvailable ? "Administrator name" : "Name"}
               className="h-10 rounded-lg border border-border-strong bg-app px-3 text-sm text-fg"
               required
             />
@@ -130,15 +134,19 @@ function RegisterPage() {
                 ? "Registrations closed"
                 : pending
                   ? "Creating account..."
-                  : "Register"}
+                  : bootstrapAvailable
+                    ? "Create admin account"
+                    : "Register"}
             </button>
           </form>
         )}
-        <div className="mt-4 text-xs text-fg-soft">
-          <Link to="/login" search={{ redirect }} className="hover:text-fg-muted">
-            Already have an account? Sign in
-          </Link>
-        </div>
+        {!bootstrapAvailable && (
+          <div className="mt-4 text-xs text-fg-soft">
+            <Link to="/login" search={{ redirect }} className="hover:text-fg-muted">
+              Already have an account? Sign in
+            </Link>
+          </div>
+        )}
       </AuthCard>
     </div>
   );
