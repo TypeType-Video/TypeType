@@ -2,6 +2,7 @@ import type { SabrQualityOption } from "../stores/sabr-quality-store";
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
 import { type CodecFamily, codecFamily } from "./quality-utils";
+import { pickSabrAudio } from "./sabr-audio";
 import type { MediaSrc } from "./vidstack";
 
 type SabrCandidate = VideoStreamItem | AudioStreamItem;
@@ -96,13 +97,6 @@ export function automaticSabrQuality(
   return `${height ?? 360}p`;
 }
 
-function pickAudio(stream: VideoStream): AudioStreamItem | null {
-  const audios = stream.audioStreams ?? [];
-  const candidates = audios.filter((item) => isSabrCandidate(item) && item.codec === "mp4a.40.2");
-  const preferredTrackId = stream.preferredDefaultAudioTrackId ?? stream.originalAudioTrackId;
-  return candidates.find((item) => item.audioTrackId === preferredTrackId) ?? candidates[0] ?? null;
-}
-
 function searchParam(source: string | null | undefined, name: string): string | null {
   if (!source) return null;
   try {
@@ -122,10 +116,14 @@ function videoIdFromSessionUrl(sessionUrl: string): string | null {
   }
 }
 
-function selectSabr(stream: VideoStream, selectedItag: number | null): SabrSelection | null {
+function selectSabr(
+  stream: VideoStream,
+  selectedItag: number | null,
+  selectedTrackId?: string | null,
+): SabrSelection | null {
   const videos = playableVideos(stream);
   const video = videos.find((item) => item.itag === selectedItag) ?? videos[0] ?? null;
-  const audio = pickAudio(stream);
+  const audio = pickSabrAudio(stream, selectedTrackId);
   if (!video?.sabrSessionUrl || !audio) return null;
   const videoId = videoIdFromSessionUrl(video.sabrSessionUrl);
   if (!videoId) return null;
@@ -135,8 +133,9 @@ function selectSabr(stream: VideoStream, selectedItag: number | null): SabrSelec
 export function resolveSabrPlaybackConfig(
   stream: VideoStream,
   selectedItag: number | null,
+  selectedTrackId?: string | null,
 ): SabrPlaybackConfig | null {
-  const selection = selectSabr(stream, selectedItag);
+  const selection = selectSabr(stream, selectedItag, selectedTrackId);
   if (!selection) return null;
   const audioTrackId = searchParam(selection.audio.sabrSessionUrl, "audioTrackId");
   return {

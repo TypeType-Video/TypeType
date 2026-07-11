@@ -11,6 +11,7 @@ import { QualitySelector } from "./quality-selector";
 
 type Props = {
   audioOnly?: boolean;
+  sabr?: boolean;
   thumbnailVtt?: string;
   originalAudioLocale?: string | null;
   onPreviousVideo?: () => void;
@@ -19,6 +20,7 @@ type Props = {
 
 export function VideoPlayerLayout({
   audioOnly = false,
+  sabr = false,
   thumbnailVtt,
   originalAudioLocale,
   onPreviousVideo,
@@ -60,7 +62,7 @@ export function VideoPlayerLayout({
       slots={{
         settingsMenuItemsStart: (
           <>
-            <AudioTrackSelector originalLocale={originalAudioLocale} />
+            <AudioTrackSelector originalLocale={originalAudioLocale} sabr={sabr} />
             <QualitySelector />
             <FormatSelector />
           </>

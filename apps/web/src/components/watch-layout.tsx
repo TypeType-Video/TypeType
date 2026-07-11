@@ -78,7 +78,12 @@ export function WatchLayout({
     clearFailed: player.clearFailed,
   });
   const sabrEnabled = player.sabrEnabled && !audioOnly.src;
-  const sabrConfig = useSabrPlaybackConfig(stream, sabrEnabled, settings.defaultQuality);
+  const sabrConfig = useSabrPlaybackConfig(
+    stream,
+    sabrEnabled,
+    settings.defaultQuality,
+    settings.defaultAudioLanguage,
+  );
   const manifestSrc = audioOnly.src ?? player.manifestSrc;
   const { toast, setToast } = useWatchToast(audioOnly.unavailable);
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(

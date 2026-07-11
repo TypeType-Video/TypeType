@@ -139,6 +139,7 @@ export function VideoPlayer({
       {overlay}
       <VideoPlayerLayout
         audioOnly={audioOnly}
+        sabr={Boolean(sabrConfig)}
         thumbnailVtt={thumbnailVtt}
         originalAudioLocale={originalAudioLocale}
         onPreviousVideo={onPreviousVideo}

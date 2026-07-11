@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { defaultSabrAudioTrackId, sabrAudioOptions } from "../lib/sabr-audio";
 import { bestSabrItag, browserSabrCodecProbe } from "../lib/sabr-codec-capabilities";
 import {
   automaticSabrQuality,
@@ -8,6 +9,7 @@ import {
   sabrQualityOptions,
 } from "../lib/sabr-source";
 import { useAuthStore } from "../stores/auth-store";
+import { useSabrAudioStore } from "../stores/sabr-audio-store";
 import { useSabrQualityStore } from "../stores/sabr-quality-store";
 import type { VideoStream } from "../types/stream";
 
@@ -15,13 +17,24 @@ export function useSabrPlaybackConfig(
   stream: VideoStream,
   enabled: boolean,
   defaultQuality?: string,
+  defaultAudioLanguage?: string,
 ): SabrPlaybackConfig | null {
   const authScope = useAuthStore((state) => (state.token ? (state.me?.id ?? "auth") : "guest"));
   const selectedItag = useSabrQualityStore((state) =>
     state.streamId === stream.id ? state.selectedItag : null,
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
+  const selectedTrackId = useSabrAudioStore((state) =>
+    state.streamId === stream.id ? state.selectedTrackId : null,
+  );
+  const setAudioOptions = useSabrAudioStore((state) => state.setOptions);
   const options = useMemo(() => sabrQualityOptions(stream), [stream]);
+  const audioOptions = useMemo(() => sabrAudioOptions(stream), [stream]);
+  const fallbackTrackId = useMemo(
+    () => defaultSabrAudioTrackId(stream, defaultAudioLanguage),
+    [defaultAudioLanguage, stream],
+  );
+  const effectiveTrackId = selectedTrackId ?? fallbackTrackId;
   const startupItag = useMemo(() => defaultSabrItag(options, "720p"), [options]);
   const [defaultItag, setDefaultItag] = useState<number | null>(null);
   const effectiveItag = selectedItag ?? defaultItag ?? startupItag;
@@ -41,10 +54,14 @@ export function useSabrPlaybackConfig(
     if (!enabled || defaultItag === null) return;
     setOptions(stream.id, options, defaultItag);
   }, [defaultItag, enabled, options, setOptions, stream.id]);
+  useEffect(() => {
+    if (!enabled) return;
+    setAudioOptions(stream.id, audioOptions, fallbackTrackId);
+  }, [audioOptions, enabled, fallbackTrackId, setAudioOptions, stream.id]);
   const config = useMemo(() => {
-    const config = resolveSabrPlaybackConfig(stream, effectiveItag);
+    const config = resolveSabrPlaybackConfig(stream, effectiveItag, effectiveTrackId);
     return config ? { ...config, key: `${config.key}:${authScope}` } : null;
-  }, [authScope, effectiveItag, stream]);
+  }, [authScope, effectiveItag, effectiveTrackId, stream]);
   return enabled ? config : null;
 }
 
