@@ -107,11 +107,25 @@ export function SabrMsePlayer({
     playerRoot?.addEventListener("pointerdown", acceptSeekIntent, true);
     playerRoot?.addEventListener("keydown", acceptSeekIntent, true);
     let autoplayStartTime = 0;
+    let autoplayAttemptAt = 0;
+    let autoplayRecoveryAttempts = 0;
     const startAutoplay = () => {
       if (autoplayConfirmedRef.current || video.readyState < 3) return;
       if (autoplayStartedRef.current) {
         if (!video.paused && video.currentTime >= autoplayStartTime + 0.25) {
           autoplayConfirmedRef.current = true;
+        } else if (
+          !video.paused &&
+          performance.now() - autoplayAttemptAt >= 1500 &&
+          autoplayRecoveryAttempts < 2
+        ) {
+          autoplayRecoveryAttempts += 1;
+          autoplayAttemptAt = performance.now();
+          video.muted = true;
+          engine.pause();
+          void engine.play().catch(() => {
+            autoplayStartedRef.current = false;
+          });
         } else if (video.paused) {
           autoplayStartedRef.current = false;
         }
@@ -119,6 +133,7 @@ export function SabrMsePlayer({
       }
       if (!latestHandlers().autoplay && !pendingPlayRef.current) return;
       autoplayStartTime = video.currentTime;
+      autoplayAttemptAt = performance.now();
       autoplayStartedRef.current = true;
       void playWithMuteFallback(engine, video).catch(() => {
         autoplayStartedRef.current = false;
