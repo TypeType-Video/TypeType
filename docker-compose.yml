@@ -88,7 +88,7 @@ services:
       MUXER: avformat
       STORAGE_BACKEND: s3
       S3_ENDPOINT: http://garage:3900
-      S3_PUBLIC_ENDPOINT: ${DOWNLOADER_S3_PUBLIC_ENDPOINT:-}
+      S3_PUBLIC_ENDPOINT: http://garage:3900
       S3_REGION: garage
       S3_BUCKET: typetype-downloads
       S3_ACCESS_KEY: ${DOWNLOADER_S3_ACCESS_KEY:-}
