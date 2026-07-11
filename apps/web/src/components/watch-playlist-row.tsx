@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Play } from "lucide-react";
 import type { DragEvent } from "react";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { proxyImage } from "../lib/proxy";
 import { toPublicWatchParam } from "../lib/watch-url";
 import type { WatchPlaylistItem } from "../types/playlist";
@@ -31,6 +32,7 @@ export function WatchPlaylistRow({
   onDragStart,
   onMove,
 }: Props) {
+  const branding = useDeArrowBranding(video.url, video.title, proxyImage(video.thumbnail));
   return (
     <>
       <WatchPlaylistHandle
@@ -51,9 +53,9 @@ export function WatchPlaylistRow({
         className="flex min-w-0 flex-1 items-center gap-2 py-1.5"
       >
         <div className="relative aspect-video w-20 shrink-0 overflow-hidden rounded bg-surface-strong">
-          {video.thumbnail && (
+          {branding.thumbnail && (
             <img
-              src={proxyImage(video.thumbnail)}
+              src={branding.thumbnail}
               alt=""
               className="h-full w-full object-cover"
               loading="lazy"
@@ -72,7 +74,7 @@ export function WatchPlaylistRow({
               isCurrent ? "font-medium text-fg" : "text-fg-muted"
             }`}
           >
-            {video.title}
+            {branding.title}
           </p>
           {video.channelName && (
             <p className="mt-0.5 truncate text-[11px] text-fg-soft">{video.channelName}</p>

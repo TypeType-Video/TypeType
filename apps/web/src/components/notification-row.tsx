@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useClientLocale } from "../hooks/use-client-locale";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatPublishedDate } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
@@ -20,6 +21,11 @@ export function NotificationRow({ item, onOpen }: Props) {
       : item.video.publishedAt;
   const createdText = formatPublishedDate(publishedAt ?? undefined, undefined, locale) || "recent";
   const prefetch = useWatchPrefetch(videoId);
+  const branding = useDeArrowBranding(
+    videoId,
+    item.video.title,
+    proxyImage(item.video.thumbnailUrl),
+  );
 
   return (
     <Link
@@ -31,13 +37,13 @@ export function NotificationRow({ item, onOpen }: Props) {
       onMouseLeave={prefetch.onMouseLeave}
     >
       <img
-        src={proxyImage(item.video.thumbnailUrl)}
-        alt={item.video.title}
+        src={branding.thumbnail}
+        alt={branding.title}
         className="h-[54px] w-24 rounded object-cover"
         loading="lazy"
       />
       <div className="min-w-0">
-        <p className="line-clamp-2 text-sm font-medium leading-tight text-fg">{item.video.title}</p>
+        <p className="line-clamp-2 text-sm font-medium leading-tight text-fg">{branding.title}</p>
         <div className="mt-1 flex items-center gap-1.5">
           <img
             src={proxyImage(item.channelAvatarUrl)}

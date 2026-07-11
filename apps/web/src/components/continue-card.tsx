@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useClientLocale } from "../hooks/use-client-locale";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration, formatPublishedDate, formatViews } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
@@ -20,7 +21,8 @@ export function ContinueCard({ item }: ContinueCardProps) {
   const locale = useClientLocale();
   const prefetch = useWatchPrefetch(item.url);
   const uploaderVerified = item.uploaderVerified ?? false;
-  const thumbnail = proxyImage(item.thumbnail);
+  const branding = useDeArrowBranding(item.url, item.title, proxyImage(item.thumbnail));
+  const thumbnail = branding.thumbnail;
   const publishedText = formatPublishedDate(item.publishedAt, undefined, locale);
   const viewsText = item.viewCount === undefined ? "" : formatViews(item.viewCount);
   const metaText = [viewsText, publishedText].filter(Boolean).join(" · ");
@@ -52,7 +54,7 @@ export function ContinueCard({ item }: ContinueCardProps) {
         <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-strong">
           <img
             src={thumbnail}
-            alt={item.title}
+            alt={branding.title}
             className="h-full w-full object-cover"
             loading="lazy"
             decoding="async"
@@ -63,7 +65,7 @@ export function ContinueCard({ item }: ContinueCardProps) {
           <VideoProgressBar progress={item.progress} duration={item.duration} />
         </div>
         <span className="line-clamp-2 text-fg text-sm leading-snug group-hover:text-fg-strong">
-          {item.title}
+          {branding.title}
         </span>
       </Link>
       <div className="mt-2 flex min-w-0 items-center gap-2">

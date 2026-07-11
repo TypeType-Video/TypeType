@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
@@ -47,6 +48,7 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
   const delay = Math.min(index * 45, 270);
   const prefetch = useWatchPrefetch(item.url);
   const watched = isVideoWatched(item.progress, item.duration);
+  const branding = useDeArrowBranding(item.url, item.title, proxyImage(item.thumbnail));
 
   return (
     <div
@@ -62,8 +64,8 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
       >
         <div className="relative aspect-video overflow-hidden rounded-xl bg-surface-strong sm:rounded-lg">
           <img
-            src={proxyImage(item.thumbnail)}
-            alt={item.title}
+            src={branding.thumbnail}
+            alt={branding.title}
             className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
             loading="lazy"
             decoding="async"
@@ -112,7 +114,7 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
             className="min-w-0"
           >
             <p className="line-clamp-2 text-sm font-semibold leading-snug text-fg sm:font-medium">
-              {item.title}
+              {branding.title}
             </p>
           </Link>
           {item.channelUrl ? (

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchDeArrow } from "../lib/api-dearrow";
+import { fetchDeArrow, resolveDeArrowBranding } from "../lib/api-dearrow";
 import { youtubeVideoId } from "../lib/watch-url";
 import { useSettings } from "./use-settings";
 
@@ -14,4 +14,9 @@ export function useDeArrow(sourceUrl: string) {
     gcTime: 24 * 60 * 60 * 1000,
     retry: false,
   });
+}
+
+export function useDeArrowBranding(sourceUrl: string, title: string, thumbnail: string) {
+  const item = useDeArrow(sourceUrl).data;
+  return resolveDeArrowBranding(item, { title, thumbnail });
 }

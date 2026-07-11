@@ -7,6 +7,21 @@ export type DeArrowItem = {
   attributionUrl: string;
 };
 
+export type DeArrowBranding = {
+  title: string;
+  thumbnail: string;
+};
+
+export function resolveDeArrowBranding(
+  item: DeArrowItem | undefined,
+  fallback: DeArrowBranding,
+): DeArrowBranding {
+  return {
+    title: item?.title ?? fallback.title,
+    thumbnail: item?.thumbnailUrl ?? fallback.thumbnail,
+  };
+}
+
 export async function fetchDeArrow(videoId: string): Promise<DeArrowItem> {
   const response = await fetch(`${BASE}/dearrow?videoId=${encodeURIComponent(videoId)}`);
   if (!response.ok) throw new Error("DeArrow metadata unavailable");

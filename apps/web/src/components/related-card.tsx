@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { memo } from "react";
 import { useClientLocale } from "../hooks/use-client-locale";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
 import { formatDuration, formatPublishedDate, formatViews } from "../lib/format";
 import { watchRouteSearch } from "../lib/watch-url";
@@ -18,6 +19,7 @@ type Props = {
 function RelatedCardComponent({ stream }: Props) {
   const locale = useClientLocale();
   const prefetch = useWatchPrefetch(stream.id);
+  const { title, thumbnail } = useDeArrowBranding(stream.id, stream.title, stream.thumbnail);
   const publishedText = formatPublishedDate(stream.publishedAt, undefined, locale);
   const metadata = [formatViews(stream.views), publishedText].filter(Boolean).join(" · ");
 
@@ -32,8 +34,8 @@ function RelatedCardComponent({ stream }: Props) {
         onMouseLeave={prefetch.onMouseLeave}
       >
         <img
-          src={stream.thumbnail}
-          alt={stream.title}
+          src={thumbnail}
+          alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           loading="lazy"
           decoding="async"
@@ -63,7 +65,7 @@ function RelatedCardComponent({ stream }: Props) {
           onMouseEnter={prefetch.onMouseEnter}
           onMouseLeave={prefetch.onMouseLeave}
         >
-          {stream.title}
+          {title}
         </Link>
         {stream.channelUrl ? (
           <ChannelRouteLink
