@@ -98,10 +98,10 @@ export function SabrMsePlayer({
     };
     const offError = engine.on("error", () => latestHandlers().onError());
     const volumeChange = () => latestHandlers().onVolumeChange?.(video.volume, video.muted);
-    let ignoreInitialZeroSeek = startTime > 0;
+    let ignoreInitialSeek = true;
     const playerRoot = video.parentElement?.parentElement;
     const acceptSeekIntent = () => {
-      ignoreInitialZeroSeek = false;
+      ignoreInitialSeek = false;
     };
     video.addEventListener("volumechange", volumeChange);
     playerRoot?.addEventListener("pointerdown", acceptSeekIntent, true);
@@ -155,11 +155,11 @@ export function SabrMsePlayer({
         return engine.pause();
       },
       seek: (seconds) => {
-        if (ignoreInitialZeroSeek && seconds === 0) {
-          ignoreInitialZeroSeek = false;
+        if (ignoreInitialSeek) {
+          ignoreInitialSeek = false;
           return;
         }
-        ignoreInitialZeroSeek = false;
+        ignoreInitialSeek = false;
         runSeek(
           engine,
           Math.max(0, Math.round(seconds * 1000)),
