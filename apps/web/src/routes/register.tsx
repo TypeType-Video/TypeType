@@ -46,7 +46,7 @@ function RegisterPage() {
         : "Use your email to create an account. You can sign in with email or username.";
   const bannerMessage = error ?? (closedByPolicy ? "Registrations are currently closed." : null);
 
-  if (isAuthed && !isGuest) {
+  if (isAuthed && !isGuest && status && !bootstrapAvailable) {
     goto(postAuthTarget);
     return null;
   }
