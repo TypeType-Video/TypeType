@@ -73,12 +73,14 @@ function RootLayout() {
 
   useEffect(() => {
     if (status === "loading") return;
-    if (registerStatus.data?.bootstrapAvailable && pathname !== "/register") {
+    if (registerStatus.data?.bootstrapAvailable) {
       setSignedOut();
-      const redirect = isAuthPage(pathname)
-        ? ""
-        : `?redirect=${encodeURIComponent(pathWithSearch)}`;
-      window.location.replace(`/register${redirect}`);
+      if (pathname !== "/register") {
+        const redirect = isAuthPage(pathname)
+          ? ""
+          : `?redirect=${encodeURIComponent(pathWithSearch)}`;
+        window.location.replace(`/register${redirect}`);
+      }
       return;
     }
     if (!isAuthed && isAdminRoute(pathname)) {
