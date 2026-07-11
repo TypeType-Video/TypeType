@@ -60,6 +60,7 @@ export function SabrMsePlayer({
   const engineRef = useRef<TypeTypeMsePlayer | null>(null);
   const qualityRef = useRef<TypeTypeMseQuality | null>(null);
   const pendingPlayRef = useRef(false);
+  const autoplayStartedRef = useRef(false);
   const seekingRef = useRef(false);
   const latestConfig = useLatestValue(config);
   const latestHandlers = useLatestValue({
@@ -102,13 +103,12 @@ export function SabrMsePlayer({
     };
     video.addEventListener("volumechange", volumeChange);
     video.addEventListener("seeking", seeking);
-    let autoplayStarted = false;
     const startAutoplay = () => {
-      if (autoplayStarted || video.readyState < 3) return;
+      if (autoplayStartedRef.current || video.readyState < 3) return;
       if (!latestHandlers().autoplay && !pendingPlayRef.current) return;
-      autoplayStarted = true;
+      autoplayStartedRef.current = true;
       void playWithMuteFallback(engine, video).catch(() => {
-        autoplayStarted = false;
+        autoplayStartedRef.current = false;
       });
     };
     video.addEventListener("canplay", startAutoplay);
@@ -161,9 +161,19 @@ export function SabrMsePlayer({
       engine.destroy();
       engineRef.current = null;
       pendingPlayRef.current = false;
+      autoplayStartedRef.current = false;
       video.autoplay = false;
       latestHandlers().onPositionReaderChange(null);
     };
   }, [config.videoId, latestConfig, latestHandlers, startTime, token, video]);
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!autoplay || !engine || !video || video.readyState < 3 || autoplayStartedRef.current)
+      return;
+    autoplayStartedRef.current = true;
+    void playWithMuteFallback(engine, video).catch(() => {
+      autoplayStartedRef.current = false;
+    });
+  }, [autoplay, video]);
   return null;
 }
