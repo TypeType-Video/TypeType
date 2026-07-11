@@ -124,6 +124,7 @@ export function SabrMsePlayer({
     };
     video.addEventListener("canplay", startAutoplay);
     const autoplayTimer = window.setInterval(startAutoplay, 250);
+    let seekUnlockTimer = 0;
     const unregisterControls = registerSabrVidstackControls(video, {
       play: () => {
         pendingPlayRef.current = true;
@@ -147,14 +148,12 @@ export function SabrMsePlayer({
     seekingRef.current = true;
     void engine
       .load()
-      .then(() => {
-        startAutoplay();
-      })
+      .then(startAutoplay)
       .catch((error: unknown) => {
         if (!isAbortError(error)) latestHandlers().onError();
       })
       .finally(() => {
-        seekingRef.current = false;
+        seekUnlockTimer = window.setTimeout(() => (seekingRef.current = false), 500);
       });
     latestHandlers().onSeekReady((seconds) =>
       runSeek(
@@ -172,6 +171,7 @@ export function SabrMsePlayer({
       video.removeEventListener("seeking", seeking);
       video.removeEventListener("canplay", startAutoplay);
       window.clearInterval(autoplayTimer);
+      window.clearTimeout(seekUnlockTimer);
       engine.destroy();
       engineRef.current = null;
       pendingPlayRef.current = false;
