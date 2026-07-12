@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { audioSpectrum, waveformLevel } from "../lib/audio-spectrum";
-import { useMediaPlayer, useMediaState } from "../lib/vidstack";
+import { useMediaPlayer } from "../lib/vidstack";
 
 type VisualizerColors = {
   top: string;
@@ -69,7 +69,6 @@ function visualizerColors(element: Element): VisualizerColors {
 export function AudioOnlyVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const player = useMediaPlayer();
-  const canPlay = useMediaState("canPlay");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -96,7 +95,13 @@ export function AudioOnlyVisualizer() {
     activate();
     const render = () => {
       if (frame % 30 === 0) colors = visualizerColors(canvas);
-      const active = Boolean(media && !media.paused && canPlay);
+      const active = Boolean(
+        media &&
+          !media.paused &&
+          !media.ended &&
+          !media.error &&
+          media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
+      );
       if (active && spectrum?.context.state === "running") {
         spectrum.analyser.getByteTimeDomainData(spectrum.data);
       }
@@ -111,7 +116,7 @@ export function AudioOnlyVisualizer() {
       observer.disconnect();
       media?.removeEventListener("playing", activate);
     };
-  }, [canPlay, player]);
+  }, [player]);
 
   return <canvas ref={canvasRef} className="typetype-audio-visualizer" />;
 }
