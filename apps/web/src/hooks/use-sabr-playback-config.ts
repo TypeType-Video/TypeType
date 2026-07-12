@@ -18,6 +18,7 @@ export function useSabrPlaybackConfig(
   enabled: boolean,
   defaultQuality?: string,
   defaultAudioLanguage?: string,
+  audioOnly = false,
 ): SabrPlaybackConfig | null {
   const authScope = useAuthStore((state) => (state.token ? (state.me?.id ?? "auth") : "guest"));
   const selectedItag = useSabrQualityStore((state) =>
@@ -59,9 +60,9 @@ export function useSabrPlaybackConfig(
     setAudioOptions(stream.id, audioOptions, fallbackTrackId);
   }, [audioOptions, enabled, fallbackTrackId, setAudioOptions, stream.id]);
   const config = useMemo(() => {
-    const config = resolveSabrPlaybackConfig(stream, effectiveItag, effectiveTrackId);
+    const config = resolveSabrPlaybackConfig(stream, effectiveItag, effectiveTrackId, audioOnly);
     return config ? { ...config, key: `${config.key}:${authScope}` } : null;
-  }, [authScope, effectiveItag, effectiveTrackId, stream]);
+  }, [audioOnly, authScope, effectiveItag, effectiveTrackId, stream]);
   return enabled ? config : null;
 }
 

@@ -25,7 +25,6 @@ import { WatchLayoutPlayerOverlay } from "./watch-layout-player-overlay";
 import type { WatchLayoutProps } from "./watch-layout-types";
 import { WatchSecondaryContent } from "./watch-secondary-content";
 import { WatchStage } from "./watch-stage";
-
 export function WatchLayout({
   stream,
   startTime,
@@ -79,15 +78,15 @@ export function WatchLayout({
     positionRef: playerEvents.positionRef,
     readPositionMs: () => positionReaderRef.current?.() ?? null,
     clearFailed: player.clearFailed,
+    sabrEnabled: player.sabrEnabled,
   });
-  const sabrEnabled = player.sabrEnabled && !audioOnly.src;
   const sabrConfig = useSabrPlaybackConfig(
     stream,
-    sabrEnabled,
+    player.sabrEnabled,
     settings.defaultQuality,
     settings.defaultAudioLanguage,
+    audioOnly.active,
   );
-  const manifestSrc = audioOnly.src ?? player.manifestSrc;
   const { toast, setToast } = useWatchToast(audioOnly.unavailable);
   const { retryStartTime, handlePlayerError } = usePlayerErrorResume(
     stream.id,
@@ -99,7 +98,7 @@ export function WatchLayout({
     streamId: stream.id,
     retryKey: player.retryKey,
     startTime: retryStartTime > 0 ? retryStartTime : (audioOnly.switchPositionMs ?? startTime),
-    manifestSrc,
+    manifestSrc: audioOnly.src ?? player.manifestSrc,
     positionRef: playerEvents.positionRef,
     highQuality: settings.enableHighQualityPlayback,
     hasThumbnails: Boolean(thumbnailVtt),
@@ -122,9 +121,9 @@ export function WatchLayout({
         classes={classes}
         stream={displayStream}
         settings={settings}
-        manifestSrc={manifestSrc}
+        manifestSrc={audioOnly.src ?? player.manifestSrc}
         sabrConfig={sabrConfig}
-        audioOnly={Boolean(audioOnly.src)}
+        audioOnly={audioOnly.active}
         playerKey={sourceState.playerKey}
         startTime={player.seekStartTime ?? sourceState.startTime}
         isLive={isLive}
@@ -162,7 +161,7 @@ export function WatchLayout({
         onTimeUpdate={playerEvents.handleTimeUpdate}
         onPlay={playerEvents.handlePlay}
         onPause={playerEvents.handlePause}
-        onSeeking={audioOnly.src ? () => undefined : player.handleSeeking}
+        onSeeking={audioOnly.active ? () => undefined : player.handleSeeking}
         onSeeked={playerEvents.handleSeeked}
         onEnded={playerEvents.handleEnded}
         onAutoplayPlayNow={autoplay.playNow}

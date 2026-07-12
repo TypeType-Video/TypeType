@@ -4,6 +4,7 @@ import { useLatestValue } from "../hooks/use-latest-value";
 import { useSabrQualitySwitch } from "../hooks/use-sabr-quality-switch";
 import { toAbsoluteApiUrl } from "../lib/env";
 import { isAbortError, playWithMuteFallback } from "../lib/sabr-playback-retry";
+import { positionMs, runSabrSeek } from "../lib/sabr-player-seek";
 import type { SabrPlaybackConfig } from "../lib/sabr-source";
 import { registerSabrVidstackControls } from "../lib/sabr-vidstack-bridge";
 import { useAuthStore } from "../stores/auth-store";
@@ -21,27 +22,6 @@ type Props = {
   onSeekReady: (seek: (seconds: number) => void) => void;
   onPositionReaderChange: (reader: (() => number | null) | null) => void;
 };
-
-function positionMs(video: HTMLVideoElement): number {
-  return Math.max(0, Math.round(video.currentTime * 1000));
-}
-
-function runSeek(
-  player: TypeTypeMsePlayer | null,
-  position: number,
-  flag: { current: boolean },
-  onError: () => void,
-) {
-  flag.current = true;
-  void player
-    ?.seek(position)
-    .catch((error: unknown) => {
-      if (!isAbortError(error)) onError();
-    })
-    .finally(() => {
-      flag.current = false;
-    });
-}
 
 export function SabrMsePlayer({
   config,
@@ -87,6 +67,7 @@ export function SabrMsePlayer({
       videoItag: initialConfig.videoItag,
       audioItag: initialConfig.audioItag,
       audioTrackId: initialConfig.audioTrackId,
+      audioOnly: initialConfig.audioOnly,
       startTimeMs: Math.max(0, Math.round(startTime)),
       headers,
     });
@@ -160,7 +141,7 @@ export function SabrMsePlayer({
           return;
         }
         ignoreInitialSeek = false;
-        runSeek(
+        runSabrSeek(
           engine,
           Math.max(0, Math.round(seconds * 1000)),
           seekingRef,
@@ -178,7 +159,7 @@ export function SabrMsePlayer({
         if (!isAbortError(error)) latestHandlers().onError();
       });
     latestHandlers().onSeekReady((seconds) =>
-      runSeek(
+      runSabrSeek(
         engine,
         Math.max(0, Math.round(seconds * 1000)),
         seekingRef,

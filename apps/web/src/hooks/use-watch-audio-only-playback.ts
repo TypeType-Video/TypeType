@@ -13,6 +13,7 @@ type Args = {
   positionRef: MutableRefObject<number>;
   readPositionMs: () => number | null;
   clearFailed: () => void;
+  sabrEnabled: boolean;
 };
 
 type WatchAudioOnlyPlayback = {
@@ -41,6 +42,7 @@ export function useWatchAudioOnlyPlayback({
   positionRef,
   readPositionMs,
   clearFailed,
+  sabrEnabled,
 }: Args): WatchAudioOnlyPlayback {
   const mode = useWatchAudioOnlyMode({
     currentParam,
@@ -55,10 +57,10 @@ export function useWatchAudioOnlyPlayback({
     toWatchSourceUrl(currentParam),
     settings,
     isLive,
-    mode.active,
+    mode.active && !sabrEnabled,
   );
   const runtimeFailed = failedKey === failureKey;
-  const src = runtimeFailed ? null : source.src;
+  const src = runtimeFailed || sabrEnabled ? null : source.src;
 
   useEffect(() => {
     if (!source.unavailable || !mode.active) return;
@@ -75,11 +77,15 @@ export function useWatchAudioOnlyPlayback({
 
   return {
     src,
-    controls: { active: mode.active, loading: source.loading, onToggle: mode.toggle },
+    controls: {
+      active: mode.active,
+      loading: !sabrEnabled && source.loading,
+      onToggle: mode.toggle,
+    },
     switchPositionMs: mode.switchPositionMs,
     active: mode.active,
-    loading: source.loading,
-    enabled: source.enabled,
+    loading: !sabrEnabled && source.loading,
+    enabled: sabrEnabled ? mode.active : source.enabled,
     unavailable: source.unavailable,
     toggle: mode.toggle,
     fail,

@@ -57,4 +57,7 @@ test("exposes backend audio names without generic duplicate labels", () => {
 test("matches the preferred language and switches the sabr track id", () => {
   expect(defaultSabrAudioTrackId(stream, "fr-FR")).toBe("fr-FR.1");
   expect(resolveSabrPlaybackConfig(stream, 137, "fr-FR.1")?.audioTrackId).toBe("fr-FR.1");
+  const audioOnly = resolveSabrPlaybackConfig(stream, 137, "fr-FR.1", true);
+  expect(audioOnly?.audioOnly).toBe(true);
+  expect(audioOnly?.key.endsWith(":audio")).toBe(true);
 });

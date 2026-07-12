@@ -18,6 +18,7 @@ export type SabrPlaybackConfig = {
   videoItag: number;
   audioItag: number;
   audioTrackId: string | null;
+  audioOnly?: boolean;
 };
 
 function isSabrCandidate(item: SabrCandidate): boolean {
@@ -134,16 +135,18 @@ export function resolveSabrPlaybackConfig(
   stream: VideoStream,
   selectedItag: number | null,
   selectedTrackId?: string | null,
+  audioOnly = false,
 ): SabrPlaybackConfig | null {
   const selection = selectSabr(stream, selectedItag, selectedTrackId);
   if (!selection) return null;
   const audioTrackId = searchParam(selection.audio.sabrSessionUrl, "audioTrackId");
   return {
-    key: `${selection.videoId}:${selection.video.itag}:${selection.audio.itag}:${audioTrackId ?? "main"}`,
+    key: `${selection.videoId}:${selection.video.itag}:${selection.audio.itag}:${audioTrackId ?? "main"}:${audioOnly ? "audio" : "video"}`,
     videoId: selection.videoId,
     videoItag: selection.video.itag,
     audioItag: selection.audio.itag,
     audioTrackId,
+    audioOnly,
   };
 }
 
