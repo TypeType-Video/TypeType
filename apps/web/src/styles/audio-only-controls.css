@@ -19,34 +19,6 @@
   touch-action: none;
 }
 
-.typetype-audio-only-player .typetype-audio-time-slider[data-seeking] {
-  cursor: wait;
-  pointer-events: none;
-}
-
-.typetype-audio-only-player .typetype-audio-time-slider[data-seeking]::after {
-  position: absolute;
-  z-index: 4;
-  top: 50%;
-  left: 0;
-  width: 28%;
-  height: 4px;
-  border-radius: 999px;
-  background: #ff174d;
-  content: "";
-  transform: translateY(-50%);
-  animation: typetype-seek-progress 1.1s ease-in-out infinite alternate;
-}
-
-@keyframes typetype-seek-progress {
-  from {
-    left: 0;
-  }
-  to {
-    left: 72%;
-  }
-}
-
 .typetype-audio-only-player .typetype-audio-time-slider-track {
   position: absolute;
   top: 50%;

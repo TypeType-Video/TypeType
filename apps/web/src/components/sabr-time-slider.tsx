@@ -1,3 +1,4 @@
+import { type CSSProperties, useEffect, useState } from "react";
 import { secondsFromSliderPercent } from "../lib/sabr-player-seek";
 import { requestSabrSeek } from "../lib/sabr-vidstack-bridge";
 import { TimeSlider } from "../lib/vidstack";
@@ -8,14 +9,25 @@ type Props = {
 };
 
 export function SabrTimeSlider({ disabled = false, video }: Props) {
+  const [seekTarget, setSeekTarget] = useState<number | null>(null);
+  useEffect(() => {
+    if (!disabled) setSeekTarget(null);
+  }, [disabled]);
+  const style =
+    seekTarget === null
+      ? undefined
+      : ({ "--typetype-seek-target": `${seekTarget}%` } as CSSProperties);
+
   return (
     <TimeSlider.Root
       className="vds-time-slider vds-slider"
+      style={style}
       aria-label="Seek"
       aria-busy={disabled}
       data-seeking={disabled ? "true" : undefined}
       disabled={disabled}
       onDragEnd={(percent) => {
+        setSeekTarget(percent);
         const seconds = video ? secondsFromSliderPercent(video.duration, percent) : null;
         if (video && !disabled && seconds !== null) requestSabrSeek(video, seconds);
       }}
