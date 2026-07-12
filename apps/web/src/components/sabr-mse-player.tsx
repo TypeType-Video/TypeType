@@ -4,7 +4,7 @@ import { useLatestValue } from "../hooks/use-latest-value";
 import { useSabrModeSwitch } from "../hooks/use-sabr-mode-switch";
 import { useSabrQualitySwitch } from "../hooks/use-sabr-quality-switch";
 import { toAbsoluteApiUrl } from "../lib/env";
-import { isAbortError, playWithMuteFallback } from "../lib/sabr-playback-retry";
+import { isAbortError } from "../lib/sabr-playback-retry";
 import { positionMs, runSabrSeek } from "../lib/sabr-player-seek";
 import { registerSabrVidstackControls } from "../lib/sabr-vidstack-bridge";
 import { useAuthStore } from "../stores/auth-store";
@@ -70,37 +70,14 @@ export function SabrMsePlayer({
     };
     const offError = engine.on("error", () => latestHandlers().onError());
     const volumeChange = () => latestHandlers().onVolumeChange?.(video.volume, video.muted);
-    let ignoreInitialSeek = true;
-    const playerRoot = video.parentElement?.parentElement;
-    const acceptSeekIntent = (event: Event) => {
-      if (!(event.target instanceof Element)) return;
-      if (!event.target.closest('media-time-slider,[role="slider"][aria-label="Seek"]')) return;
-      ignoreInitialSeek = false;
-    };
     video.addEventListener("volumechange", volumeChange);
-    playerRoot?.addEventListener("pointerdown", acceptSeekIntent, true);
-    playerRoot?.addEventListener("keydown", acceptSeekIntent, true);
     let autoplayStartTime = 0;
-    let autoplayAttemptAt = 0;
-    let autoplayRecoveryAttempts = 0;
     let engineLoaded = false;
     const startAutoplay = () => {
       if (!engineLoaded || autoplayConfirmedRef.current || video.readyState < 3) return;
       if (autoplayStartedRef.current) {
         if (!video.paused && video.currentTime >= autoplayStartTime + 0.25) {
           autoplayConfirmedRef.current = true;
-        } else if (
-          !video.paused &&
-          performance.now() - autoplayAttemptAt >= 1500 &&
-          autoplayRecoveryAttempts < 2
-        ) {
-          autoplayRecoveryAttempts += 1;
-          autoplayAttemptAt = performance.now();
-          video.muted = true;
-          engine.pause();
-          void engine.play().catch(() => {
-            autoplayStartedRef.current = false;
-          });
         } else if (video.paused) {
           autoplayStartedRef.current = false;
         }
@@ -108,9 +85,8 @@ export function SabrMsePlayer({
       }
       if (!latestHandlers().autoplay && !pendingPlayRef.current) return;
       autoplayStartTime = video.currentTime;
-      autoplayAttemptAt = performance.now();
       autoplayStartedRef.current = true;
-      void playWithMuteFallback(engine, video).catch(() => {
+      void engine.play().catch(() => {
         autoplayStartedRef.current = false;
       });
     };
@@ -130,11 +106,6 @@ export function SabrMsePlayer({
         return engine.pause();
       },
       seek: (seconds) => {
-        if (ignoreInitialSeek) {
-          ignoreInitialSeek = false;
-          return;
-        }
-        ignoreInitialSeek = false;
         runSabrSeek(
           engine,
           Math.max(0, Math.round(seconds * 1000)),
@@ -167,8 +138,6 @@ export function SabrMsePlayer({
       offError();
       unregisterControls();
       video.removeEventListener("volumechange", volumeChange);
-      playerRoot?.removeEventListener("pointerdown", acceptSeekIntent, true);
-      playerRoot?.removeEventListener("keydown", acceptSeekIntent, true);
       video.removeEventListener("canplay", startAutoplay);
       window.clearInterval(autoplayTimer);
       engine.destroy();

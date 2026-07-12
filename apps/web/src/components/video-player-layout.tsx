@@ -8,6 +8,7 @@ import { FormatSelector } from "./format-selector";
 import { PlayerTrackButton } from "./player-track-button";
 import { PlayerVolumeControl } from "./player-volume-control";
 import { QualitySelector } from "./quality-selector";
+import { SabrTimeSlider } from "./sabr-time-slider";
 
 type Props = {
   audioOnly?: boolean;
@@ -45,10 +46,14 @@ export function VideoPlayerLayout({
               <Time type="duration" />
             </div>
           ),
-          timeSlider: <AudioTimeSlider disabled={seeking} />,
-          seekBackwardButton: <AudioSeekButton direction="backward" disabled={seeking} />,
+          timeSlider: <AudioTimeSlider disabled={seeking} video={sabrVideo} />,
+          seekBackwardButton: (
+            <AudioSeekButton direction="backward" disabled={seeking} video={sabrVideo} />
+          ),
           playButton: <AudioPlayButton video={sabrVideo} />,
-          seekForwardButton: <AudioSeekButton direction="forward" disabled={seeking} />,
+          seekForwardButton: (
+            <AudioSeekButton direction="forward" disabled={seeking} video={sabrVideo} />
+          ),
           beforeCaptionButton: <PlayerTrackButton direction="previous" onClick={onPreviousVideo} />,
           afterCaptionButton: <PlayerTrackButton direction="next" onClick={onNextVideo} />,
           beforeSettingsMenu: <PlayerVolumeControl />,
@@ -64,6 +69,7 @@ export function VideoPlayerLayout({
       smallLayoutWhen={false}
       translations={{ Captions: "Subtitles" }}
       slots={{
+        timeSlider: sabr ? <SabrTimeSlider disabled={seeking} video={sabrVideo} /> : undefined,
         settingsMenuItemsStart: (
           <>
             <AudioTrackSelector originalLocale={originalAudioLocale} sabr={sabr} />

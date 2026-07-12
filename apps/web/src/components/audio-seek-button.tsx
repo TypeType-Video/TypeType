@@ -1,12 +1,14 @@
+import { requestSabrSeek } from "../lib/sabr-vidstack-bridge";
 import { useMediaRemote, useMediaState } from "../lib/vidstack";
 import { AudioSeekBackward10Icon, AudioSeekForward10Icon } from "./audio-control-icons";
 
 type Props = {
   direction: "backward" | "forward";
   disabled?: boolean;
+  video?: HTMLVideoElement | null;
 };
 
-export function AudioSeekButton({ direction, disabled = false }: Props) {
+export function AudioSeekButton({ direction, disabled = false, video = null }: Props) {
   const remote = useMediaRemote();
   const currentTime = useMediaState("currentTime");
   const duration = useMediaState("duration");
@@ -16,7 +18,9 @@ export function AudioSeekButton({ direction, disabled = false }: Props) {
 
   const seek = () => {
     const target = currentTime + seconds;
-    remote.seek(Math.min(Math.max(target, 0), duration > 0 ? duration : target));
+    const bounded = Math.min(Math.max(target, 0), duration > 0 ? duration : target);
+    if (video && requestSabrSeek(video, bounded)) return;
+    remote.seek(bounded);
   };
 
   return (

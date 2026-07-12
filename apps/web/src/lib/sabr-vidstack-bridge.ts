@@ -21,8 +21,15 @@ export function registerSabrVidstackControls(
   };
 }
 
-export function getSabrVidstackControls(video: HTMLVideoElement): SabrVidstackControls | null {
+function getSabrVidstackControls(video: HTMLVideoElement): SabrVidstackControls | null {
   return controlsByVideo.get(video) ?? null;
+}
+
+export function requestSabrSeek(video: HTMLVideoElement, seconds: number): boolean {
+  const controls = getSabrVidstackControls(video);
+  if (!controls) return false;
+  controls.seek(seconds);
+  return true;
 }
 
 export function requestSabrVidstackPlayback(
