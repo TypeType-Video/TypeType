@@ -12,6 +12,7 @@ export type {
 export {
   isAudioProvider,
   isDASHProvider,
+  isHLSProvider,
   isVideoProvider,
   MediaPlayer,
   MediaProvider,

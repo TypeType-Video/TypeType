@@ -13,9 +13,10 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.17",
-    "@typetype/mse": "0.1.21",
+    "@typetype/mse": "0.1.25",
     "@vidstack/react": "1.12.13",
     "dashjs": "^5.2.0",
+    "hls.js": "1.6.15",
     "lucide-react": "^1.24.0",
     "media-icons": "1.1.5",
     "react": "^19.2.7",

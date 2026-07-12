@@ -16,9 +16,10 @@
       "dependencies": {
         "@tanstack/react-query": "^5.101.2",
         "@tanstack/react-router": "^1.170.17",
-        "@typetype/mse": "0.1.21",
+        "@typetype/mse": "0.1.25",
         "@vidstack/react": "1.12.13",
         "dashjs": "^5.2.0",
+        "hls.js": "1.6.15",
         "lucide-react": "^1.24.0",
         "media-icons": "1.1.5",
         "react": "^19.2.7",
@@ -310,7 +311,7 @@
 
     "@types/react-dom": ["@types/react-dom@19.2.3", "", { "peerDependencies": { "@types/react": "^19.2.0" } }, "sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ=="],
 
-    "@typetype/mse": ["@typetype/mse@0.1.21", "", {}, "sha512-H9sZukLRVfwTPLzPabBZ/4mh/hRLWlJooKTWuaLt01iSDGwADq0Rv0UHMcy1tEnZiZ1nsnKsZQyWghChOlkgig=="],
+    "@typetype/mse": ["@typetype/mse@0.1.25", "", {}, "sha512-B3CTQvzbxhiG/M4jUV0022x8bC7rFLrVjSnXSj8c5A8mfFfkUFpbn9ngsWhUA2w87d8nc3oaklMIFnZUrJUFkw=="],
 
     "@typetype/web": ["@typetype/web@workspace:apps/web"],
 
@@ -369,6 +370,8 @@
     "get-tsconfig": ["get-tsconfig@4.14.0", "", { "dependencies": { "resolve-pkg-maps": "^1.0.0" } }, "sha512-yTb+8DXzDREzgvYmh6s9vHsSVCHeC0G3PI5bEXNBHtmshPnO+S5O7qgLEOn0I5QvMy6kpZN8K1NKGyilLb93wA=="],
 
     "graceful-fs": ["graceful-fs@4.2.11", "", {}, "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="],
+
+    "hls.js": ["hls.js@1.6.15", "", {}, "sha512-E3a5VwgXimGHwpRGV+WxRTKeSp2DW5DI5MWv34ulL3t5UNmyJWCQ1KmLEHbYzcfThfXG8amBL+fCYPneGHC4VA=="],
 
     "html-entities": ["html-entities@2.6.0", "", {}, "sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ=="],
 

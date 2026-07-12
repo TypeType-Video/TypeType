@@ -123,6 +123,7 @@ export function VideoPlayer({
       {audioOnly && <AudioOnlyPoster poster={poster} title={title} media={sabrState.media} />}
       {audioOnly && <AudioCenterToggle video={sabrState.video} />}
       <MediaProgressEvents
+        suppressPlaybackEvents={sabrState.seeking}
         onTimeUpdate={onTimeUpdate}
         onPlay={onPlay}
         onPause={onPause}
@@ -134,6 +135,7 @@ export function VideoPlayer({
       {overlay}
       <VideoPlayerLayout
         audioOnly={audioOnly}
+        audioUsesVideoProvider={audioOnly && viewType === "video"}
         sabr={Boolean(sabrConfig)}
         sabrVideo={sabrState.video}
         seeking={sabrState.seeking}
