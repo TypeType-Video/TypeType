@@ -13,7 +13,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.17",
-    "@typetype/mse": "0.1.7",
+    "@typetype/mse": "0.1.8",
     "@vidstack/react": "1.12.13",
     "dashjs": "^5.2.0",
     "lucide-react": "^1.24.0",
