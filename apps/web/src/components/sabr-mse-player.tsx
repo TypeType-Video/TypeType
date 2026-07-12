@@ -119,6 +119,7 @@ export function SabrMsePlayer({
         return engine.play();
       },
       pause: () => {
+        if (pendingPlayRef.current && !engineLoaded) return;
         pendingPlayRef.current = false;
         autoplayConfirmedRef.current = true;
         video.autoplay = false;
