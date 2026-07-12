@@ -1,4 +1,3 @@
-import { LoaderCircle } from "lucide-react";
 import { DefaultAudioLayout, DefaultVideoLayout, defaultLayoutIcons, Time } from "../lib/vidstack";
 import { AudioPlayButton } from "./audio-play-button";
 import { AudioSeekButton } from "./audio-seek-button";
@@ -42,7 +41,6 @@ export function VideoPlayerLayout({
               <Time type="current" />
               <span>/</span>
               <Time type="duration" />
-              {seeking && <LoaderCircle aria-label="Seeking" className="typetype-seek-loader" />}
             </div>
           ),
           timeSlider: <AudioTimeSlider disabled={seeking} />,

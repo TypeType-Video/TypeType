@@ -98,6 +98,8 @@ export function VideoPlayer({
       poster={poster}
       onProviderChange={sabrState.handleProviderChange}
       onError={handleError}
+      aria-busy={sabrState.seeking}
+      data-sabr-seeking={sabrState.seeking ? "true" : undefined}
     >
       <MediaProvider
         loaders={sabrConfig ? SABR_VIDEO_PROVIDER_LOADERS : undefined}

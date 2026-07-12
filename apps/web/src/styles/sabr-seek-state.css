@@ -1,0 +1,18 @@
+media-player[data-sabr-seeking] .vds-time-slider {
+  cursor: wait;
+  pointer-events: none;
+}
+
+media-player[data-sabr-seeking] .vds-time-slider::after {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 0;
+  width: 28%;
+  height: var(--track-height, 5px);
+  border-radius: 999px;
+  background: #ff174d;
+  content: "";
+  transform: translateY(-50%);
+  animation: typetype-seek-progress 1.1s ease-in-out infinite alternate;
+}

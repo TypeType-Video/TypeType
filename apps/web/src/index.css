@@ -10,6 +10,8 @@
 @import "./styles/audio-only-player-mobile.css";
 @import "./styles/player-mode-transition.css";
 @import "./styles/player-volume-controls.css";
+@import "./styles/sabr-seek-state.css";
+@import "./styles/video-player-mobile.css";
 @import "./styles/player-hotkeys.css";
 @import "./styles/autoplay-overlay.css";
 @import "./styles/pixel-scene-enter.css";
