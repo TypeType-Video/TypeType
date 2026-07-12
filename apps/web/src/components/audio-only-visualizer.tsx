@@ -30,7 +30,7 @@ function createMotion(bars: number): VisualizerMotion {
     motion.targets[index] = Math.random();
     motion.phases[index] = Math.random() * Math.PI * 2;
     motion.speeds[index] = 0.018 + Math.random() * 0.055;
-    motion.intervals[index] = 5 + Math.floor(Math.random() * 15);
+    motion.intervals[index] = 4 + Math.floor(Math.random() * 10);
     motion.offsets[index] = Math.floor(Math.random() * motion.intervals[index]);
   }
   return motion;
@@ -71,13 +71,13 @@ function drawBars(
     if ((frame + (motion.offsets[index] ?? 0)) % interval === 0) {
       motion.targets[index] = Math.random();
     }
-    motion.values[index] += ((motion.targets[index] ?? 0) - (motion.values[index] ?? 0)) * 0.075;
+    motion.values[index] += ((motion.targets[index] ?? 0) - (motion.values[index] ?? 0)) * 0.11;
     const pulse =
       0.5 + Math.sin(frame * (motion.speeds[index] ?? 0.03) + (motion.phases[index] ?? 0)) * 0.5;
     const signal = active ? Math.max(energy, 0.18) : 0;
-    const movement = signal * (0.12 + (motion.values[index] ?? 0) * 0.34 + pulse * 0.18);
-    const target = active ? 0.045 + measured * 0.58 + movement : 0.025;
-    levels[index] += (target - levels[index]) * (active ? 0.19 : 0.08);
+    const movement = signal * (0.08 + (motion.values[index] ?? 0) * 0.52 + pulse * 0.26);
+    const target = active ? Math.min(1, 0.035 + measured * 0.44 + movement) : 0.025;
+    levels[index] += (target - levels[index]) * (active ? 0.22 : 0.08);
     const edgeFade = 0.65 + Math.sin((index / bars) * Math.PI) * 0.35;
     const barHeight = Math.max(height * 0.025, levels[index] * edgeFade * height * 0.58);
     const x = index * (barWidth + gap);
