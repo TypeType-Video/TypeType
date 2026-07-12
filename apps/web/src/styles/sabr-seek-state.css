@@ -4,9 +4,12 @@
   pointer-events: none;
 }
 
-.vds-time-slider[data-seeking] .vds-slider-track-fill,
-.typetype-audio-time-slider[data-seeking] .typetype-audio-time-slider-fill {
+.vds-time-slider[data-seeking] .vds-slider-track-fill {
   background: #fff;
+  width: var(--typetype-seek-target, var(--slider-fill, 0%));
+}
+
+.typetype-audio-time-slider[data-seeking] .typetype-audio-time-slider-fill {
   width: var(--typetype-seek-target, var(--slider-fill, 0%));
 }
 
