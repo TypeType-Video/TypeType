@@ -110,7 +110,7 @@ export function WatchLayout({
     settingsReady,
     autoplayEnabled: settings.autoplay,
     navigating,
-    shouldAutoplay: playerEvents.shouldAutoplay,
+    playbackIntent: playerEvents.playbackIntent,
   });
   const classes = getWatchLayoutClasses(
     cinemaMode,

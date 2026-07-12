@@ -3,6 +3,7 @@ import { recordClientEvent } from "../lib/client-debug-log";
 import { useMediaPlayer } from "../lib/vidstack";
 
 type Props = {
+  suppressPlaybackEvents?: boolean;
   onTimeUpdate?: (positionMs: number) => void;
   onPlay?: () => void;
   onPause?: () => void;
@@ -17,6 +18,7 @@ function toPositionMs(media: HTMLMediaElement): number {
 }
 
 export function MediaProgressEvents({
+  suppressPlaybackEvents = false,
   onTimeUpdate,
   onPlay,
   onPause,
@@ -26,6 +28,7 @@ export function MediaProgressEvents({
   onPositionReaderChange,
 }: Props) {
   const player = useMediaPlayer();
+  const suppressPlaybackEventsRef = useRef(suppressPlaybackEvents);
   const onTimeUpdateRef = useRef(onTimeUpdate);
   const onPlayRef = useRef(onPlay);
   const onPauseRef = useRef(onPause);
@@ -34,6 +37,7 @@ export function MediaProgressEvents({
   const onEndedRef = useRef(onEnded);
   const onPositionReaderChangeRef = useRef(onPositionReaderChange);
 
+  suppressPlaybackEventsRef.current = suppressPlaybackEvents;
   onTimeUpdateRef.current = onTimeUpdate;
   onPlayRef.current = onPlay;
   onPauseRef.current = onPause;
@@ -57,10 +61,12 @@ export function MediaProgressEvents({
       const readPosition = () => toPositionMs(media);
       const play = () => {
         update();
+        if (suppressPlaybackEventsRef.current) return;
         onPlayRef.current?.();
       };
       const pause = () => {
         update();
+        if (suppressPlaybackEventsRef.current) return;
         onPauseRef.current?.();
       };
       const seeked = () => {

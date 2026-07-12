@@ -5,10 +5,11 @@ import { TimeSlider } from "../lib/vidstack";
 
 type Props = {
   disabled?: boolean;
+  thumbnails?: string;
   video: HTMLVideoElement | null;
 };
 
-export function SabrTimeSlider({ disabled = false, video }: Props) {
+export function SabrTimeSlider({ disabled = false, thumbnails, video }: Props) {
   const [seekTarget, setSeekTarget] = useState<number | null>(null);
   useEffect(() => {
     if (!disabled) setSeekTarget(null);
@@ -34,6 +35,14 @@ export function SabrTimeSlider({ disabled = false, video }: Props) {
       <TimeSlider.Progress className="vds-slider-progress vds-slider-track" />
       <TimeSlider.Thumb className="vds-slider-thumb" />
       <TimeSlider.Preview className="vds-slider-preview">
+        {thumbnails && (
+          <TimeSlider.Thumbnail.Root
+            src={thumbnails}
+            className="vds-slider-thumbnail vds-thumbnail"
+          >
+            <TimeSlider.Thumbnail.Img />
+          </TimeSlider.Thumbnail.Root>
+        )}
         <TimeSlider.Value className="vds-slider-value" />
       </TimeSlider.Preview>
     </TimeSlider.Root>

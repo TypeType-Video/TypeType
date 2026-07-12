@@ -20,10 +20,11 @@ export function useWatchPlayerEvents({
   onEnded,
   onTimeUpdate,
 }: Args) {
-  const playingRef = useRef(false);
+  const playbackIntentRef = useRef<boolean | null>(null);
   const streamIdRef = useRef(stream.id);
   if (streamIdRef.current !== stream.id) {
     streamIdRef.current = stream.id;
+    playbackIntentRef.current = null;
   }
   const { positionRef, handleTimeUpdate, handlePause, handleSeeked } = useWatchProgressPersistence({
     durationSec: stream.duration,
@@ -39,16 +40,16 @@ export function useWatchPlayerEvents({
     onEnded,
   });
   const handlePlay = useCallback(() => {
-    playingRef.current = true;
+    playbackIntentRef.current = true;
     onPlay?.();
   }, [onPlay]);
   const handleTrackedPause = useCallback(() => {
-    playingRef.current = false;
+    playbackIntentRef.current = false;
     sessionReporting.handlePause();
   }, [sessionReporting.handlePause]);
   return {
     positionRef,
-    shouldAutoplay: () => playingRef.current,
+    playbackIntent: () => playbackIntentRef.current,
     handleTimeUpdate: (positionMs: number) => {
       sessionReporting.handleTimeUpdate(positionMs);
       onTimeUpdate?.(positionMs);

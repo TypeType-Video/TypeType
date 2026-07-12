@@ -25,6 +25,9 @@ export function SabrMsePlayer({
   onPositionReaderChange,
 }: SabrMsePlayerProps) {
   const token = useAuthStore((state) => state.token);
+  const headersRef = useRef(new Headers());
+  if (token) headersRef.current.set("authorization", `Bearer ${token}`);
+  else headersRef.current.delete("authorization");
   const engineRef = useRef<TypeTypeMsePlayer | null>(null);
   const qualityRef = useRef<TypeTypeMseQuality | null>(null);
   const pendingPlayRef = useRef(false);
@@ -51,7 +54,6 @@ export function SabrMsePlayer({
   useEffect(() => {
     if (!video) return;
     const initialConfig = latestConfig();
-    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
     const engine = new TypeTypeMsePlayer(video, {
       endpoint: toAbsoluteApiUrl(""),
       videoId: config.videoId,
@@ -60,7 +62,7 @@ export function SabrMsePlayer({
       audioTrackId: initialConfig.audioTrackId,
       audioOnly: initialConfig.audioOnly,
       startTimeMs: Math.max(0, Math.round(latestStartTime())),
-      headers,
+      headers: headersRef.current,
     });
     engineRef.current = engine;
     qualityRef.current = {
@@ -150,6 +152,6 @@ export function SabrMsePlayer({
       video.autoplay = false;
       latestHandlers().onPositionReaderChange(null);
     };
-  }, [config.videoId, latestConfig, latestHandlers, latestStartTime, token, video]);
+  }, [config.videoId, latestConfig, latestHandlers, latestStartTime, video]);
   return null;
 }

@@ -21,7 +21,7 @@ type Args = {
   settingsReady: boolean;
   autoplayEnabled: boolean;
   navigating: boolean;
-  shouldAutoplay: () => boolean;
+  playbackIntent: () => boolean | null;
 };
 
 function sourceIdentity(src: MediaSrc): string {
@@ -33,9 +33,32 @@ function sourceIdentity(src: MediaSrc): string {
 
 type AutoplayState = {
   playerKey: string;
+  streamId: string;
   settingsReady: boolean;
   autoplay: boolean;
 };
+
+type AutoplayDecision = {
+  previous: AutoplayState | null;
+  streamId: string;
+  retryKey: number;
+  settingsReady: boolean;
+  autoplayEnabled: boolean;
+  playbackIntent: boolean | null;
+  autoplayIntent: boolean;
+};
+
+export function decideWatchSourceAutoplay(args: AutoplayDecision): boolean {
+  if (!args.settingsReady) return false;
+  if (args.autoplayIntent) return true;
+  if (args.playbackIntent !== null) return args.playbackIntent;
+  if (args.retryKey !== 0) return false;
+  const initialSource =
+    args.previous === null ||
+    args.previous.streamId !== args.streamId ||
+    !args.previous.settingsReady;
+  return args.previous?.autoplay === true || (initialSource && args.autoplayEnabled);
+}
 
 export function useWatchPlayerSourceState(args: Args) {
   const sourceStart = useWatchSourceStartTime({
@@ -63,11 +86,17 @@ export function useWatchPlayerSourceState(args: Args) {
     const autoplayIntent = consumeWatchAutoplayIntent();
     autoplayRef.current = {
       playerKey,
+      streamId: args.streamId,
       settingsReady: args.settingsReady,
-      autoplay:
-        args.retryKey === 0 &&
-        args.settingsReady &&
-        (args.autoplayEnabled || args.shouldAutoplay() || autoplayIntent),
+      autoplay: decideWatchSourceAutoplay({
+        previous: autoplayState,
+        streamId: args.streamId,
+        retryKey: args.retryKey,
+        settingsReady: args.settingsReady,
+        autoplayEnabled: args.autoplayEnabled,
+        playbackIntent: args.playbackIntent(),
+        autoplayIntent,
+      }),
     };
   }
   const waitForInitialAudioSource = useWatchInitialAudioSource(args);

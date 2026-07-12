@@ -30,11 +30,11 @@
   left: var(--typetype-seek-target, var(--slider-fill, 0%));
   height: var(--track-height, 5px);
   border-radius: 999px;
-  background: repeating-linear-gradient(115deg, #111 0 7px, #fff 7px 14px);
-  background-size: 28px 100%;
+  background: repeating-linear-gradient(115deg, #f8fafc 0 10px, #94a3b8 10px 16px);
+  background-size: 32px 100%;
   content: "";
   transform: translateY(-50%);
-  animation: typetype-seek-barber-pole 700ms linear infinite;
+  animation: typetype-seek-barber-pole 1s linear infinite;
 }
 
 .typetype-audio-time-slider[data-seeking]::after {
@@ -43,7 +43,7 @@
 
 @keyframes typetype-seek-barber-pole {
   to {
-    background-position-x: 28px;
+    background-position-x: 32px;
   }
 }
 

@@ -44,7 +44,7 @@ export function WatchActions({ stream, audioOnly }: Props) {
   const favorited = isInFavorites(stream.id);
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
-  const audioOnlyAvailable = !isLive && !isNicoNico;
+  const audioOnlyAvailable = !isLive;
   const audioOnlyDisabled = !authReady || audioOnly.loading;
 
   function handleSaved(label: string) {
