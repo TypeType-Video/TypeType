@@ -3,9 +3,10 @@ import { AudioSeekBackward10Icon, AudioSeekForward10Icon } from "./audio-control
 
 type Props = {
   direction: "backward" | "forward";
+  disabled?: boolean;
 };
 
-export function AudioSeekButton({ direction }: Props) {
+export function AudioSeekButton({ direction, disabled = false }: Props) {
   const remote = useMediaRemote();
   const currentTime = useMediaState("currentTime");
   const duration = useMediaState("duration");
@@ -24,6 +25,7 @@ export function AudioSeekButton({ direction }: Props) {
       className={`typetype-audio-seek-button typetype-audio-seek-button-${direction}`}
       aria-label={label}
       title={label}
+      disabled={disabled}
       onClick={seek}
     >
       <Icon size={32} />

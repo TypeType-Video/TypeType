@@ -5,23 +5,9 @@ import { useSabrQualitySwitch } from "../hooks/use-sabr-quality-switch";
 import { toAbsoluteApiUrl } from "../lib/env";
 import { isAbortError, playWithMuteFallback } from "../lib/sabr-playback-retry";
 import { positionMs, runSabrSeek } from "../lib/sabr-player-seek";
-import type { SabrPlaybackConfig } from "../lib/sabr-source";
 import { registerSabrVidstackControls } from "../lib/sabr-vidstack-bridge";
 import { useAuthStore } from "../stores/auth-store";
-
-type Props = {
-  config: SabrPlaybackConfig;
-  video: HTMLVideoElement | null;
-  startTime: number;
-  autoplay: boolean;
-  initialVolume: number;
-  initialMuted: boolean;
-  settingsReady: boolean;
-  onVolumeChange?: (volume: number, muted: boolean) => void;
-  onError: () => void;
-  onSeekReady: (seek: (seconds: number) => void) => void;
-  onPositionReaderChange: (reader: (() => number | null) | null) => void;
-};
+import type { SabrMsePlayerProps } from "./sabr-mse-player-types";
 
 export function SabrMsePlayer({
   config,
@@ -33,9 +19,10 @@ export function SabrMsePlayer({
   settingsReady,
   onVolumeChange,
   onError,
+  onSeekStateChange,
   onSeekReady,
   onPositionReaderChange,
-}: Props) {
+}: SabrMsePlayerProps) {
   const token = useAuthStore((state) => state.token);
   const engineRef = useRef<TypeTypeMsePlayer | null>(null);
   const qualityRef = useRef<TypeTypeMseQuality | null>(null);
@@ -48,6 +35,7 @@ export function SabrMsePlayer({
   const latestHandlers = useLatestValue({
     autoplay,
     onError,
+    onSeekStateChange,
     onSeekReady,
     onPositionReaderChange,
     onVolumeChange,
@@ -147,6 +135,7 @@ export function SabrMsePlayer({
           Math.max(0, Math.round(seconds * 1000)),
           seekingRef,
           latestHandlers().onError,
+          latestHandlers().onSeekStateChange,
         );
       },
     });
@@ -165,6 +154,7 @@ export function SabrMsePlayer({
         Math.max(0, Math.round(seconds * 1000)),
         seekingRef,
         latestHandlers().onError,
+        latestHandlers().onSeekStateChange,
       ),
     );
     latestHandlers().onPositionReaderChange(() => positionMs(video));
@@ -181,6 +171,8 @@ export function SabrMsePlayer({
       pendingPlayRef.current = false;
       autoplayStartedRef.current = false;
       autoplayConfirmedRef.current = false;
+      seekingRef.current = false;
+      latestHandlers().onSeekStateChange(false);
       video.autoplay = false;
       latestHandlers().onPositionReaderChange(null);
     };

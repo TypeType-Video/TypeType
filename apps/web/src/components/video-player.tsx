@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSabrPlayerState } from "../hooks/use-sabr-player-state";
 import { isIosDevice } from "../lib/ios-device";
 import { adaptiveSourceNeedsVideoProvider } from "../lib/media-source-view-type";
 import { SABR_VIDEO_PROVIDER_LOADERS, sabrMediaSrc } from "../lib/sabr-vidstack-loader";
-import type { MediaProviderAdapter } from "../lib/vidstack";
 import { isVideoProvider, MediaPlayer, MediaProvider } from "../lib/vidstack";
 import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-patch";
 import { AudioCenterToggle } from "./audio-center-toggle";
@@ -69,7 +69,6 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const ios = isIosDevice();
   const playerClassName = videoPlayerClassName(audioOnly, className);
-  const [sabrProvider, setSabrProvider] = useState<MediaProviderAdapter | null>(null);
   const sabrVideoId = sabrConfig?.videoId;
   const sabrSrc = useMemo(() => (sabrVideoId ? sabrMediaSrc(sabrVideoId) : null), [sabrVideoId]);
   const activeSrc = sabrSrc ?? src;
@@ -80,10 +79,7 @@ export function VideoPlayer({
     onEnded,
   });
 
-  function handlePlayerProviderChange(provider: MediaProviderAdapter | null) {
-    handleProviderChange(provider);
-    setSabrProvider(sabrConfig && isVideoProvider(provider) ? provider : null);
-  }
+  const sabrState = useSabrPlayerState(Boolean(sabrConfig), handleProviderChange);
 
   return (
     <MediaPlayer
@@ -100,7 +96,7 @@ export function VideoPlayer({
       storage={null}
       title={title}
       poster={poster}
-      onProviderChange={handlePlayerProviderChange}
+      onProviderChange={sabrState.handleProviderChange}
       onError={handleError}
     >
       <MediaProvider
@@ -113,7 +109,7 @@ export function VideoPlayer({
       {sabrConfig && (
         <SabrMsePlayer
           config={sabrConfig}
-          video={isVideoProvider(sabrProvider) ? sabrProvider.video : null}
+          video={isVideoProvider(sabrState.provider) ? sabrState.provider.video : null}
           startTime={startTime}
           autoplay={autoplay}
           initialVolume={initialVolume}
@@ -121,6 +117,7 @@ export function VideoPlayer({
           settingsReady={settingsReady}
           onVolumeChange={onVolumeChange}
           onError={onError ?? (() => undefined)}
+          onSeekStateChange={sabrState.setSeeking}
           onSeekReady={onSeekReady ?? (() => undefined)}
           onPositionReaderChange={onPositionReaderChange ?? (() => undefined)}
         />
@@ -140,6 +137,7 @@ export function VideoPlayer({
       <VideoPlayerLayout
         audioOnly={audioOnly}
         sabr={Boolean(sabrConfig)}
+        seeking={sabrState.seeking}
         thumbnailVtt={thumbnailVtt}
         originalAudioLocale={originalAudioLocale}
         onPreviousVideo={onPreviousVideo}

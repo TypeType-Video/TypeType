@@ -1,3 +1,4 @@
+import { LoaderCircle } from "lucide-react";
 import { DefaultAudioLayout, DefaultVideoLayout, defaultLayoutIcons, Time } from "../lib/vidstack";
 import { AudioPlayButton } from "./audio-play-button";
 import { AudioSeekButton } from "./audio-seek-button";
@@ -12,6 +13,7 @@ import { QualitySelector } from "./quality-selector";
 type Props = {
   audioOnly?: boolean;
   sabr?: boolean;
+  seeking?: boolean;
   thumbnailVtt?: string;
   originalAudioLocale?: string | null;
   onPreviousVideo?: () => void;
@@ -21,6 +23,7 @@ type Props = {
 export function VideoPlayerLayout({
   audioOnly = false,
   sabr = false,
+  seeking = false,
   thumbnailVtt,
   originalAudioLocale,
   onPreviousVideo,
@@ -39,12 +42,13 @@ export function VideoPlayerLayout({
               <Time type="current" />
               <span>/</span>
               <Time type="duration" />
+              {seeking && <LoaderCircle aria-label="Seeking" className="typetype-seek-loader" />}
             </div>
           ),
-          timeSlider: <AudioTimeSlider />,
-          seekBackwardButton: <AudioSeekButton direction="backward" />,
+          timeSlider: <AudioTimeSlider disabled={seeking} />,
+          seekBackwardButton: <AudioSeekButton direction="backward" disabled={seeking} />,
           playButton: <AudioPlayButton />,
-          seekForwardButton: <AudioSeekButton direction="forward" />,
+          seekForwardButton: <AudioSeekButton direction="forward" disabled={seeking} />,
           beforeCaptionButton: <PlayerTrackButton direction="previous" onClick={onPreviousVideo} />,
           afterCaptionButton: <PlayerTrackButton direction="next" onClick={onNextVideo} />,
           beforeSettingsMenu: <PlayerVolumeControl />,

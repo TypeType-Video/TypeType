@@ -10,14 +10,18 @@ export function runSabrSeek(
   position: number,
   flag: { current: boolean },
   onError: () => void,
+  onSeekingChange?: (seeking: boolean) => void,
 ) {
+  if (!player || flag.current) return;
   flag.current = true;
+  onSeekingChange?.(true);
   void player
-    ?.seek(position)
+    .seek(position)
     .catch((error: unknown) => {
       if (!isAbortError(error)) onError();
     })
     .finally(() => {
       flag.current = false;
+      onSeekingChange?.(false);
     });
 }
