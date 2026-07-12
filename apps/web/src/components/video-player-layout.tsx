@@ -45,7 +45,7 @@ export function VideoPlayerLayout({
           ),
           timeSlider: <AudioTimeSlider disabled={seeking} />,
           seekBackwardButton: <AudioSeekButton direction="backward" disabled={seeking} />,
-          playButton: <AudioPlayButton />,
+          playButton: <AudioPlayButton sabr={sabr} />,
           seekForwardButton: <AudioSeekButton direction="forward" disabled={seeking} />,
           beforeCaptionButton: <PlayerTrackButton direction="previous" onClick={onPreviousVideo} />,
           afterCaptionButton: <PlayerTrackButton direction="next" onClick={onNextVideo} />,

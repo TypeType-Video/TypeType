@@ -125,7 +125,7 @@ export function VideoPlayer({
         />
       )}
       {audioOnly && <AudioOnlyPoster poster={poster} title={title} />}
-      {audioOnly && <AudioCenterToggle />}
+      {audioOnly && <AudioCenterToggle sabr={Boolean(sabrConfig)} />}
       <MediaProgressEvents
         onTimeUpdate={onTimeUpdate}
         onPlay={onPlay}
