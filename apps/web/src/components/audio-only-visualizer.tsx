@@ -7,6 +7,35 @@ type VisualizerColors = {
   bottom: string;
 };
 
+type VisualizerMotion = {
+  values: Float32Array;
+  targets: Float32Array;
+  phases: Float32Array;
+  speeds: Float32Array;
+  intervals: Uint8Array;
+  offsets: Uint8Array;
+};
+
+function createMotion(bars: number): VisualizerMotion {
+  const motion: VisualizerMotion = {
+    values: new Float32Array(bars),
+    targets: new Float32Array(bars),
+    phases: new Float32Array(bars),
+    speeds: new Float32Array(bars),
+    intervals: new Uint8Array(bars),
+    offsets: new Uint8Array(bars),
+  };
+  for (let index = 0; index < bars; index += 1) {
+    motion.values[index] = Math.random();
+    motion.targets[index] = Math.random();
+    motion.phases[index] = Math.random() * Math.PI * 2;
+    motion.speeds[index] = 0.018 + Math.random() * 0.055;
+    motion.intervals[index] = 5 + Math.floor(Math.random() * 15);
+    motion.offsets[index] = Math.floor(Math.random() * motion.intervals[index]);
+  }
+  return motion;
+}
+
 function resizeCanvas(canvas: HTMLCanvasElement) {
   const rect = canvas.getBoundingClientRect();
   const scale = window.devicePixelRatio || 1;
@@ -17,9 +46,11 @@ function resizeCanvas(canvas: HTMLCanvasElement) {
 function drawBars(
   context: CanvasRenderingContext2D,
   levels: Float32Array,
+  motion: VisualizerMotion,
   spectrum: Uint8Array | null,
   active: boolean,
   colors: VisualizerColors,
+  frame: number,
 ) {
   const width = context.canvas.width;
   const height = context.canvas.height;
@@ -36,8 +67,17 @@ function drawBars(
 
   for (let index = 0; index < bars; index += 1) {
     const measured = spectrum ? waveformLevel(spectrum, index, bars, energy) : 0;
-    const target = active ? 0.06 + measured * 0.78 : 0.025;
-    levels[index] += (target - levels[index]) * (active ? 0.16 : 0.08);
+    const interval = motion.intervals[index] ?? 10;
+    if ((frame + (motion.offsets[index] ?? 0)) % interval === 0) {
+      motion.targets[index] = Math.random();
+    }
+    motion.values[index] += ((motion.targets[index] ?? 0) - (motion.values[index] ?? 0)) * 0.075;
+    const pulse =
+      0.5 + Math.sin(frame * (motion.speeds[index] ?? 0.03) + (motion.phases[index] ?? 0)) * 0.5;
+    const signal = active ? Math.max(energy, 0.18) : 0;
+    const movement = signal * (0.12 + (motion.values[index] ?? 0) * 0.34 + pulse * 0.18);
+    const target = active ? 0.045 + measured * 0.58 + movement : 0.025;
+    levels[index] += (target - levels[index]) * (active ? 0.19 : 0.08);
     const edgeFade = 0.65 + Math.sin((index / bars) * Math.PI) * 0.35;
     const barHeight = Math.max(height * 0.025, levels[index] * edgeFade * height * 0.58);
     const x = index * (barWidth + gap);
@@ -77,6 +117,7 @@ export function AudioOnlyVisualizer({ media }: { media: HTMLMediaElement | null 
     const observer = new ResizeObserver(() => resizeCanvas(canvas));
     observer.observe(canvas);
     const levels = new Float32Array(112);
+    const motion = createMotion(levels.length);
     let spectrum = activeMedia && !activeMedia.paused ? audioSpectrum(activeMedia) : null;
     let colors = visualizerColors(canvas);
     let animation = 0;
@@ -107,7 +148,7 @@ export function AudioOnlyVisualizer({ media }: { media: HTMLMediaElement | null 
       if (active && spectrum?.context.state === "running") {
         spectrum.analyser.getByteFrequencyData(spectrum.data);
       }
-      drawBars(context, levels, spectrum?.data ?? null, active, colors);
+      drawBars(context, levels, motion, spectrum?.data ?? null, active, colors, frame);
       frame += 1;
       animation = requestAnimationFrame(render);
     };
