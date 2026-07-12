@@ -74,7 +74,7 @@ function drawBars(
     motion.values[index] += ((motion.targets[index] ?? 0) - (motion.values[index] ?? 0)) * 0.11;
     const pulse =
       0.5 + Math.sin(frame * (motion.speeds[index] ?? 0.03) + (motion.phases[index] ?? 0)) * 0.5;
-    const signal = active ? Math.max(energy, 0.18) : 0;
+    const signal = active ? Math.max(energy, 0.34) : 0;
     const movement = signal * (0.08 + (motion.values[index] ?? 0) * 0.52 + pulse * 0.26);
     const target = active ? Math.min(1, 0.035 + measured * 0.44 + movement) : 0.025;
     levels[index] += (target - levels[index]) * (active ? 0.22 : 0.08);
