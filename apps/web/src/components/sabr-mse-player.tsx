@@ -1,6 +1,7 @@
 import { TypeTypeMsePlayer, type TypeTypeMseQuality } from "@typetype/mse";
 import { useEffect, useRef } from "react";
 import { useLatestValue } from "../hooks/use-latest-value";
+import { useSabrModeSwitch } from "../hooks/use-sabr-mode-switch";
 import { useSabrQualitySwitch } from "../hooks/use-sabr-quality-switch";
 import { toAbsoluteApiUrl } from "../lib/env";
 import { isAbortError, playWithMuteFallback } from "../lib/sabr-playback-retry";
@@ -30,8 +31,8 @@ export function SabrMsePlayer({
   const autoplayStartedRef = useRef(false);
   const autoplayConfirmedRef = useRef(false);
   const seekingRef = useRef(false);
-  const sessionKey = config.key;
   const latestConfig = useLatestValue(config);
+  const latestStartTime = useLatestValue(startTime);
   const latestHandlers = useLatestValue({
     autoplay,
     onError,
@@ -41,13 +42,14 @@ export function SabrMsePlayer({
     onVolumeChange,
   });
   useSabrQualitySwitch(config, engineRef, qualityRef, seekingRef);
+  useSabrModeSwitch(config.audioOnly === true, engineRef, seekingRef, latestHandlers);
   useEffect(() => {
     if (!video || !settingsReady) return;
     video.volume = Math.min(1, Math.max(0, initialVolume));
     video.muted = initialMuted;
   }, [initialMuted, initialVolume, settingsReady, video]);
   useEffect(() => {
-    if (!video || !sessionKey) return;
+    if (!video) return;
     const initialConfig = latestConfig();
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
     const engine = new TypeTypeMsePlayer(video, {
@@ -57,7 +59,7 @@ export function SabrMsePlayer({
       audioItag: initialConfig.audioItag,
       audioTrackId: initialConfig.audioTrackId,
       audioOnly: initialConfig.audioOnly,
-      startTimeMs: Math.max(0, Math.round(startTime)),
+      startTimeMs: Math.max(0, Math.round(latestStartTime())),
       headers,
     });
     engineRef.current = engine;
@@ -179,6 +181,6 @@ export function SabrMsePlayer({
       video.autoplay = false;
       latestHandlers().onPositionReaderChange(null);
     };
-  }, [config.videoId, latestConfig, latestHandlers, sessionKey, startTime, token, video]);
+  }, [config.videoId, latestConfig, latestHandlers, latestStartTime, token, video]);
   return null;
 }
