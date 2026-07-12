@@ -39,7 +39,7 @@ type AutoplayState = {
 export function useWatchPlayerSourceState(args: Args) {
   const sourceStart = useWatchSourceStartTime({
     streamId: args.streamId,
-    sourceKey: args.hasAudioOnlySource ? "audio" : "video",
+    sourceKey: args.audioOnlyEnabled ? "audio" : "video",
     retryKey: args.retryKey,
     startTime: args.startTime,
     positionRef: args.positionRef,
