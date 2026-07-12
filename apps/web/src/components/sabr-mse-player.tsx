@@ -43,6 +43,7 @@ export function SabrMsePlayer({
   const autoplayStartedRef = useRef(false);
   const autoplayConfirmedRef = useRef(false);
   const seekingRef = useRef(false);
+  const sessionKey = config.key;
   const latestConfig = useLatestValue(config);
   const latestHandlers = useLatestValue({
     autoplay,
@@ -58,7 +59,7 @@ export function SabrMsePlayer({
     video.muted = initialMuted;
   }, [initialMuted, initialVolume, settingsReady, video]);
   useEffect(() => {
-    if (!video) return;
+    if (!video || !sessionKey) return;
     const initialConfig = latestConfig();
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
     const engine = new TypeTypeMsePlayer(video, {
@@ -183,6 +184,6 @@ export function SabrMsePlayer({
       video.autoplay = false;
       latestHandlers().onPositionReaderChange(null);
     };
-  }, [config.videoId, latestConfig, latestHandlers, startTime, token, video]);
+  }, [config.videoId, latestConfig, latestHandlers, sessionKey, startTime, token, video]);
   return null;
 }
