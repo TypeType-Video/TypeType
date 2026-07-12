@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { MediaProviderAdapter } from "../lib/vidstack";
-import { isVideoProvider } from "../lib/vidstack";
+import { isAudioProvider, isVideoProvider } from "../lib/vidstack";
 
 export function useSabrPlayerState(
   enabled: boolean,
@@ -11,8 +11,15 @@ export function useSabrPlayerState(
 
   const handleProviderChange = (nextProvider: MediaProviderAdapter | null) => {
     onProviderChange(nextProvider);
-    setProvider(enabled && isVideoProvider(nextProvider) ? nextProvider : null);
+    setProvider(nextProvider);
   };
 
-  return { provider, seeking, setSeeking, handleProviderChange };
+  const video = enabled && isVideoProvider(provider) ? provider.video : null;
+  const media = isVideoProvider(provider)
+    ? provider.video
+    : isAudioProvider(provider)
+      ? provider.audio
+      : null;
+
+  return { video, media, seeking, setSeeking, handleProviderChange };
 }

@@ -3,7 +3,7 @@ import { useSabrPlayerState } from "../hooks/use-sabr-player-state";
 import { isIosDevice } from "../lib/ios-device";
 import { adaptiveSourceNeedsVideoProvider } from "../lib/media-source-view-type";
 import { SABR_VIDEO_PROVIDER_LOADERS, sabrMediaSrc } from "../lib/sabr-vidstack-loader";
-import { isVideoProvider, MediaPlayer, MediaProvider } from "../lib/vidstack";
+import { MediaPlayer, MediaProvider } from "../lib/vidstack";
 import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-patch";
 import { AudioCenterToggle } from "./audio-center-toggle";
 import { AudioOnlyPoster } from "./audio-only-poster";
@@ -107,7 +107,7 @@ export function VideoPlayer({
       {sabrConfig && (
         <SabrMsePlayer
           config={sabrConfig}
-          video={isVideoProvider(sabrState.provider) ? sabrState.provider.video : null}
+          video={sabrState.video}
           startTime={startTime}
           autoplay={autoplay}
           initialVolume={initialVolume}
@@ -120,12 +120,8 @@ export function VideoPlayer({
           onPositionReaderChange={onPositionReaderChange ?? (() => undefined)}
         />
       )}
-      {audioOnly && <AudioOnlyPoster poster={poster} title={title} />}
-      {audioOnly && (
-        <AudioCenterToggle
-          video={isVideoProvider(sabrState.provider) ? sabrState.provider.video : null}
-        />
-      )}
+      {audioOnly && <AudioOnlyPoster poster={poster} title={title} media={sabrState.media} />}
+      {audioOnly && <AudioCenterToggle video={sabrState.video} />}
       <MediaProgressEvents
         onTimeUpdate={onTimeUpdate}
         onPlay={onPlay}
@@ -139,7 +135,7 @@ export function VideoPlayer({
       <VideoPlayerLayout
         audioOnly={audioOnly}
         sabr={Boolean(sabrConfig)}
-        sabrVideo={isVideoProvider(sabrState.provider) ? sabrState.provider.video : null}
+        sabrVideo={sabrState.video}
         seeking={sabrState.seeking}
         thumbnailVtt={thumbnailVtt}
         originalAudioLocale={originalAudioLocale}

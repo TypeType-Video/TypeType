@@ -1,9 +1,9 @@
-media-player[data-sabr-seeking] .vds-time-slider {
+.vds-time-slider[data-seeking] {
   cursor: wait;
   pointer-events: none;
 }
 
-media-player[data-sabr-seeking] .vds-time-slider::after {
+.vds-time-slider[data-seeking]::after {
   position: absolute;
   z-index: 4;
   top: 50%;

@@ -6,6 +6,7 @@ import { AudioOnlyVisualizer } from "./audio-only-visualizer";
 type Props = {
   poster?: string;
   title?: string;
+  media?: HTMLMediaElement | null;
 };
 
 type PaletteStyle = CSSProperties & {
@@ -17,7 +18,7 @@ type PaletteStyle = CSSProperties & {
   "--typetype-audio-wave-bottom": string;
 };
 
-export function AudioOnlyPoster({ poster, title }: Props) {
+export function AudioOnlyPoster({ poster, title, media = null }: Props) {
   const image = poster ? proxyImage(poster) : "";
   const palette = useAudioPalette(image);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -69,7 +70,7 @@ export function AudioOnlyPoster({ poster, title }: Props) {
             className="typetype-audio-poster-backdrop absolute inset-0 h-full w-full scale-110 object-cover blur-3xl"
           />
           <div className="typetype-audio-poster-tint absolute inset-0" />
-          <AudioOnlyVisualizer />
+          <AudioOnlyVisualizer media={media} />
           <div className="absolute inset-0 flex items-center justify-center px-5 pt-5 pb-20 sm:px-10 sm:pt-8 sm:pb-24">
             <div className="relative flex w-full max-w-3xl items-center justify-start gap-4 text-left sm:gap-7">
               <img

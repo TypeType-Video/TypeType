@@ -10,6 +10,7 @@ export type {
   VideoQualityOption,
 } from "@vidstack/react";
 export {
+  isAudioProvider,
   isDASHProvider,
   isVideoProvider,
   MediaPlayer,

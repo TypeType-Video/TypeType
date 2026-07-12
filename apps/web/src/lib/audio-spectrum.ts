@@ -6,19 +6,28 @@ export type AudioSpectrum = {
 
 const spectra = new WeakMap<HTMLMediaElement, AudioSpectrum>();
 
+type CapturableMedia = HTMLMediaElement & {
+  captureStream?: () => MediaStream;
+  mozCaptureStream?: () => MediaStream;
+};
+
 export function audioSpectrum(media: HTMLMediaElement): AudioSpectrum | null {
   const existing = spectra.get(media);
   if (existing) return existing;
   try {
+    const capturable = media as CapturableMedia;
+    const capture = capturable.captureStream ?? capturable.mozCaptureStream;
+    if (!capture) return null;
+    const stream = capture.call(media);
+    if (stream.getAudioTracks().length === 0) return null;
     const context = new AudioContext();
     const analyser = context.createAnalyser();
     analyser.fftSize = 256;
     analyser.minDecibels = -90;
     analyser.maxDecibels = -18;
     analyser.smoothingTimeConstant = 0.78;
-    const source = context.createMediaElementSource(media);
+    const source = context.createMediaStreamSource(stream);
     source.connect(analyser);
-    analyser.connect(context.destination);
     const spectrum = {
       analyser,
       context,
