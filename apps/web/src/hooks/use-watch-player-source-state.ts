@@ -17,6 +17,7 @@ type Args = {
   audioOnlyEnabled: boolean;
   audioOnlyLoading: boolean;
   hasAudioOnlySource: boolean;
+  sabrEnabled: boolean;
   settingsReady: boolean;
   autoplayEnabled: boolean;
   navigating: boolean;
@@ -47,7 +48,7 @@ export function useWatchPlayerSourceState(args: Args) {
   const playerKey = buildWatchPlayerKey({
     streamId: args.streamId,
     retryKey: args.retryKey,
-    sourceKey: `${sourceStart.keyPart}:${sourceIdentity(args.manifestSrc)}`,
+    sourceKey: `${args.sabrEnabled ? "sabr" : sourceStart.keyPart}:${sourceIdentity(args.manifestSrc)}`,
     highQuality: args.highQuality,
     hasThumbnails: args.hasThumbnails,
     hasChapters: args.hasChapters,

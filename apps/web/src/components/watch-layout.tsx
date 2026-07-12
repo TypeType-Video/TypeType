@@ -106,6 +106,7 @@ export function WatchLayout({
     audioOnlyEnabled: audioOnly.enabled,
     audioOnlyLoading: audioOnly.loading,
     hasAudioOnlySource: Boolean(audioOnly.src),
+    sabrEnabled: player.sabrEnabled,
     settingsReady,
     autoplayEnabled: settings.autoplay,
     navigating,
