@@ -1,6 +1,13 @@
 import { expect, test } from "bun:test";
 import type { TypeTypeMsePlayer } from "@typetype/mse";
-import { runSabrSeek } from "../src/lib/sabr-player-seek";
+import { runSabrSeek, secondsFromSliderPercent } from "../src/lib/sabr-player-seek";
+
+test("converts vidstack slider percentages to media seconds", () => {
+  expect(secondsFromSliderPercent(3_554.534, 44)).toBeCloseTo(1_563.99496);
+  expect(secondsFromSliderPercent(3_554.534, -1)).toBe(0);
+  expect(secondsFromSliderPercent(3_554.534, 101)).toBe(3_554.534);
+  expect(secondsFromSliderPercent(Number.NaN, 44)).toBeNull();
+});
 
 test("blocks concurrent sabr seeks until the active seek completes", async () => {
   let finishSeek: (() => void) | undefined;

@@ -1,3 +1,4 @@
+import { secondsFromSliderPercent } from "../lib/sabr-player-seek";
 import { requestSabrSeek } from "../lib/sabr-vidstack-bridge";
 import { TimeSlider } from "../lib/vidstack";
 
@@ -14,8 +15,9 @@ export function SabrTimeSlider({ disabled = false, video }: Props) {
       aria-busy={disabled}
       data-seeking={disabled ? "true" : undefined}
       disabled={disabled}
-      onDragEnd={(seconds) => {
-        if (video && !disabled) requestSabrSeek(video, seconds);
+      onDragEnd={(percent) => {
+        const seconds = video ? secondsFromSliderPercent(video.duration, percent) : null;
+        if (video && !disabled && seconds !== null) requestSabrSeek(video, seconds);
       }}
     >
       <TimeSlider.Track className="vds-slider-track" />
