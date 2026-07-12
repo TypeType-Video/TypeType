@@ -10,17 +10,13 @@ import { AudioOnlyPoster } from "./audio-only-poster";
 import { CaptionStyleRestorer } from "./caption-style-restorer";
 import { MediaProgressEvents } from "./media-progress-events";
 import { MediaSessionSync } from "./media-session-sync";
-import { PlayerHotkeys } from "./player-hotkeys";
-import { SeekBridge, SponsorBlockSkipper } from "./player-internals";
-import { PlayerPlayPauseIndicator } from "./player-play-pause-indicator";
+import { SeekBridge } from "./player-internals";
 import { PlayerSeeker } from "./player-seeker";
 import { SabrMsePlayer } from "./sabr-mse-player";
-import { SponsorBlockBar } from "./sponsorblock-bar";
-import { SponsorBlockCurrentSegment } from "./sponsorblock-current-segment";
-import { SponsorBlockSkipNotice } from "./sponsorblock-skip-notice";
 import { videoPlayerClassName } from "./video-player-class";
 import { useVideoPlayerEvents } from "./video-player-events";
 import { VideoPlayerLayout } from "./video-player-layout";
+import { VideoPlayerPlaybackTools } from "./video-player-playback-tools";
 import { VideoPlayerTracks } from "./video-player-tracks";
 import type { VideoPlayerProps } from "./video-player-types";
 import { VolumeRestorer } from "./volume-restorer";
@@ -125,7 +121,11 @@ export function VideoPlayer({
         />
       )}
       {audioOnly && <AudioOnlyPoster poster={poster} title={title} />}
-      {audioOnly && <AudioCenterToggle sabr={Boolean(sabrConfig)} />}
+      {audioOnly && (
+        <AudioCenterToggle
+          video={isVideoProvider(sabrState.provider) ? sabrState.provider.video : null}
+        />
+      )}
       <MediaProgressEvents
         onTimeUpdate={onTimeUpdate}
         onPlay={onPlay}
@@ -139,6 +139,7 @@ export function VideoPlayer({
       <VideoPlayerLayout
         audioOnly={audioOnly}
         sabr={Boolean(sabrConfig)}
+        sabrVideo={isVideoProvider(sabrState.provider) ? sabrState.provider.video : null}
         seeking={sabrState.seeking}
         thumbnailVtt={thumbnailVtt}
         originalAudioLocale={originalAudioLocale}
@@ -167,24 +168,16 @@ export function VideoPlayer({
         onPreviousTrack={onPreviousVideo}
         onNextTrack={onNextVideo}
       />
-      <PlayerHotkeys canSeek={streamType !== "live"} />
-      {!audioOnly && <PlayerPlayPauseIndicator />}
-      {!audioOnly && autoSkipSponsorBlock && autoSkipSponsorBlockSegments && (
-        <SponsorBlockSkipper
-          segments={autoSkipSponsorBlockSegments}
-          muteInsteadOfSkip={muteSponsorBlockInsteadOfSkip}
-        />
-      )}
-      {sponsorBlockSegments && <SponsorBlockBar segments={sponsorBlockSegments} />}
-      {sponsorBlockSegments && <SponsorBlockSkipNotice />}
-      {showCurrentSponsorBlockSegment && sponsorBlockSegments && (
-        <SponsorBlockCurrentSegment
-          segments={sponsorBlockSegments}
-          autoSkipSegments={autoSkipSponsorBlockSegments}
-          manualSkipSegments={manualSkipSponsorBlockSegments}
-          muteInsteadOfSkip={muteSponsorBlockInsteadOfSkip}
-        />
-      )}
+      <VideoPlayerPlaybackTools
+        canSeek={streamType !== "live"}
+        audioOnly={audioOnly}
+        segments={sponsorBlockSegments}
+        autoSkipSegments={autoSkipSponsorBlockSegments}
+        manualSkipSegments={manualSkipSponsorBlockSegments}
+        autoSkip={autoSkipSponsorBlock}
+        mutedSkip={muteSponsorBlockInsteadOfSkip}
+        showCurrent={showCurrentSponsorBlockSegment}
+      />
       {onSeekReady && <SeekBridge onSeekReady={onSeekReady} />}
     </MediaPlayer>
   );

@@ -41,13 +41,3 @@ export function requestSabrVidstackPlayback(
   controls.pause();
   return Promise.resolve();
 }
-
-export async function requestSabrRootPlayback(
-  root: HTMLElement | null,
-  playing: boolean,
-): Promise<boolean> {
-  const video = root?.querySelector<HTMLVideoElement>("video");
-  if (!video) return false;
-  await requestSabrVidstackPlayback(video, playing);
-  return true;
-}

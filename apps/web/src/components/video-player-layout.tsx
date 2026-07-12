@@ -12,6 +12,7 @@ import { QualitySelector } from "./quality-selector";
 type Props = {
   audioOnly?: boolean;
   sabr?: boolean;
+  sabrVideo?: HTMLVideoElement | null;
   seeking?: boolean;
   thumbnailVtt?: string;
   originalAudioLocale?: string | null;
@@ -22,6 +23,7 @@ type Props = {
 export function VideoPlayerLayout({
   audioOnly = false,
   sabr = false,
+  sabrVideo = null,
   seeking = false,
   thumbnailVtt,
   originalAudioLocale,
@@ -45,7 +47,7 @@ export function VideoPlayerLayout({
           ),
           timeSlider: <AudioTimeSlider disabled={seeking} />,
           seekBackwardButton: <AudioSeekButton direction="backward" disabled={seeking} />,
-          playButton: <AudioPlayButton sabr={sabr} />,
+          playButton: <AudioPlayButton video={sabrVideo} />,
           seekForwardButton: <AudioSeekButton direction="forward" disabled={seeking} />,
           beforeCaptionButton: <PlayerTrackButton direction="previous" onClick={onPreviousVideo} />,
           afterCaptionButton: <PlayerTrackButton direction="next" onClick={onNextVideo} />,

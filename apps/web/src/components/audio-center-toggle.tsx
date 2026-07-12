@@ -1,14 +1,13 @@
-import { requestSabrRootPlayback } from "../lib/sabr-vidstack-bridge";
-import { useMediaPlayer, useMediaRemote, useMediaState } from "../lib/vidstack";
+import { requestSabrVidstackPlayback } from "../lib/sabr-vidstack-bridge";
+import { useMediaRemote, useMediaState } from "../lib/vidstack";
 
-export function AudioCenterToggle({ sabr = false }: { sabr?: boolean }) {
-  const player = useMediaPlayer();
+export function AudioCenterToggle({ video = null }: { video?: HTMLVideoElement | null }) {
   const remote = useMediaRemote();
   const paused = useMediaState("paused");
   const label = paused ? "Play audio" : "Pause audio";
 
   const togglePlayback = async () => {
-    if (sabr && (await requestSabrRootPlayback(player?.el ?? null, paused))) return;
+    if (video) return requestSabrVidstackPlayback(video, paused);
     if (paused) await remote.play();
     else await remote.pause();
   };
