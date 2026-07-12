@@ -145,6 +145,7 @@ function WatchPage() {
   return (
     <Suspense fallback={<PlayerOnlyLoader />}>
       <WatchLayout
+        key={stream.id}
         stream={stream}
         startTime={startTime}
         currentParam={publicParam}
