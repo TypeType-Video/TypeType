@@ -18,7 +18,6 @@ function drawBars(
   context: CanvasRenderingContext2D,
   levels: Float32Array,
   spectrum: Uint8Array | null,
-  mediaTime: number,
   active: boolean,
   colors: VisualizerColors,
 ) {
@@ -35,8 +34,7 @@ function drawBars(
   context.fillStyle = gradient;
 
   for (let index = 0; index < bars; index += 1) {
-    const fallback = (Math.sin(mediaTime * 5.2 + index * 0.34) + 1) / 2;
-    const measured = spectrum ? waveformLevel(spectrum, index, bars) : fallback * 0.4;
+    const measured = spectrum ? waveformLevel(spectrum, index, bars) : 0;
     const target = active ? 0.06 + measured * 0.78 : 0.025;
     levels[index] += (target - levels[index]) * (active ? 0.16 : 0.08);
     const edgeFade = 0.65 + Math.sin((index / bars) * Math.PI) * 0.35;
@@ -72,37 +70,43 @@ export function AudioOnlyVisualizer({ media }: { media: HTMLMediaElement | null 
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
+    let activeMedia = media;
 
     resizeCanvas(canvas);
     const observer = new ResizeObserver(() => resizeCanvas(canvas));
     observer.observe(canvas);
     const levels = new Float32Array(112);
-    let spectrum = media && !media.paused ? audioSpectrum(media) : null;
+    let spectrum = activeMedia && !activeMedia.paused ? audioSpectrum(activeMedia) : null;
     let colors = visualizerColors(canvas);
     let animation = 0;
     let frame = 0;
-    const activate = () => {
-      if (!media) return;
-      spectrum ??= audioSpectrum(media);
+    const activate = (event?: Event) => {
+      if (event?.target instanceof HTMLMediaElement) activeMedia = event.target;
+      activeMedia ??=
+        [...document.querySelectorAll<HTMLMediaElement>("video,audio")].find(
+          (element) => element.currentSrc && !element.paused,
+        ) ?? null;
+      if (!activeMedia) return;
+      spectrum ??= audioSpectrum(activeMedia);
       if (spectrum?.context.state === "suspended") {
         void spectrum.context.resume().catch(() => undefined);
       }
     };
-    media?.addEventListener("playing", activate);
+    document.addEventListener("playing", activate, true);
     activate();
     const render = () => {
       if (frame % 30 === 0) colors = visualizerColors(canvas);
       const active = Boolean(
-        media &&
-          !media.paused &&
-          !media.ended &&
-          !media.error &&
-          media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
+        activeMedia &&
+          !activeMedia.paused &&
+          !activeMedia.ended &&
+          !activeMedia.error &&
+          activeMedia.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
       );
       if (active && spectrum?.context.state === "running") {
-        spectrum.analyser.getByteTimeDomainData(spectrum.data);
+        spectrum.analyser.getByteFrequencyData(spectrum.data);
       }
-      drawBars(context, levels, spectrum?.data ?? null, media?.currentTime ?? 0, active, colors);
+      drawBars(context, levels, spectrum?.data ?? null, active, colors);
       frame += 1;
       animation = requestAnimationFrame(render);
     };
@@ -111,7 +115,7 @@ export function AudioOnlyVisualizer({ media }: { media: HTMLMediaElement | null 
     return () => {
       cancelAnimationFrame(animation);
       observer.disconnect();
-      media?.removeEventListener("playing", activate);
+      document.removeEventListener("playing", activate, true);
     };
   }, [media]);
 

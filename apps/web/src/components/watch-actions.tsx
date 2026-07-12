@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/use-auth";
 import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
 import { useShareUrl } from "../hooks/use-share-url";
 import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
+import { prepareAudioSpectrum } from "../lib/audio-spectrum";
 import { detectProvider } from "../lib/provider";
 import { goto } from "../lib/route-redirect";
 import { toPublicWatchUrl } from "../lib/watch-url";
@@ -74,6 +75,11 @@ export function WatchActions({ stream, audioOnly }: Props) {
     setDownloadOpen(true);
   }
 
+  function handleAudioOnly() {
+    if (!audioOnly.active) prepareAudioSpectrum();
+    audioOnly.onToggle();
+  }
+
   const showSave = true;
   const showReport = true;
   const showDanmaku = isNicoNico;
@@ -95,7 +101,7 @@ export function WatchActions({ stream, audioOnly }: Props) {
       </WatchActionButton>
       {audioOnlyAvailable && (
         <WatchActionButton
-          onClick={audioOnly.onToggle}
+          onClick={handleAudioOnly}
           disabled={audioOnlyDisabled}
           pressed={audioOnly.active}
           active={audioOnly.active}

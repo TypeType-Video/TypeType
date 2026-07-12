@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { waveformLevel } from "../src/lib/audio-spectrum";
 
-test("normalizes time-domain samples across the waveform", () => {
-  const data = new Uint8Array([128, 160, 128, 96, 128]);
+test("normalizes frequency samples across the waveform", () => {
+  const data = new Uint8Array([0, 64, 128, 64, 0]);
 
-  expect(waveformLevel(data, 0, 5)).toBeCloseTo(0.6);
-  expect(waveformLevel(data, 2, 5)).toBeCloseTo(0.6);
-  expect(waveformLevel(data, 4, 5)).toBeCloseTo(0.6);
+  expect(waveformLevel(data, 0, 5)).toBeCloseTo(0.45);
+  expect(waveformLevel(data, 2, 5)).toBeCloseTo(0.9);
+  expect(waveformLevel(data, 4, 5)).toBeCloseTo(0.45);
 });
 
 test("returns silence when waveform data is unavailable", () => {
