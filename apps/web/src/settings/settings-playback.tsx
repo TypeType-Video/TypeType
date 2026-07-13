@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { usePlaybackMode } from "../hooks/use-playback-mode";
 import { useSettings } from "../hooks/use-settings";
@@ -40,23 +41,10 @@ function QualityDropdown({ value, onChange }: DropdownProps) {
         className="flex items-center gap-2 bg-surface-strong border border-border-strong text-fg text-xs rounded-lg px-3 py-1.5 hover:bg-surface-soft transition-colors"
       >
         {value === "auto" ? "Auto" : value}
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 12 12"
-          fill="none"
-          role="img"
-          aria-label="toggle"
+        <ChevronDown
+          size={12}
           className={`transition-transform duration-150 ${open ? "rotate-180" : ""}`}
-        >
-          <path
-            d="M2 4l4 4 4-4"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        />
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 bg-surface-strong border border-border-strong rounded-lg overflow-hidden z-10 min-w-[72px] shadow-lg">
@@ -86,7 +74,7 @@ function QualityDropdown({ value, onChange }: DropdownProps) {
 export function SettingsPlayback() {
   const { settings, update } = useSettings();
   const { playbackMode, setMode } = usePlaybackMode();
-  const compatibilityMode = playbackMode === "ios-legacy-compat";
+  const sabrEnabled = playbackMode === "sabr";
   const autoplayCountdownSeconds = Math.min(
     60,
     Math.max(0, Math.round(settings.autoplayCountdownSeconds)),
@@ -145,10 +133,10 @@ export function SettingsPlayback() {
           }
         />
         <PlaybackToggleRow
-          title="Compatibility playback mode"
-          description="Prioritize reliable iOS legacy playback over adaptive behavior"
-          checked={compatibilityMode}
-          onClick={() => setMode(compatibilityMode ? "adaptive" : "ios-legacy-compat")}
+          title="SABR playback"
+          description="Recommended for YouTube as classic DASH and HLS extraction becomes less reliable"
+          checked={sabrEnabled}
+          onClick={() => setMode(sabrEnabled ? "legacy" : "sabr")}
         />
       </div>
     </section>

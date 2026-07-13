@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { ContinueWatching } from "../components/continue-watching";
 import { HomeFallbackSection } from "../components/home-fallback-section";
 import { HomeRecommendationsSection } from "../components/home-recommendations-section";
+import { PlaybackTransitionNotice } from "../components/playback-transition-notice";
 import { useAuth } from "../hooks/use-auth";
 import { useSettings } from "../hooks/use-settings";
 
@@ -49,6 +50,7 @@ function HomePage() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
+      <PlaybackTransitionNotice />
       {!settings.hideContinueWatching && <ContinueWatching />}
       {showRecommendations && (
         <section className="flex flex-col gap-3">

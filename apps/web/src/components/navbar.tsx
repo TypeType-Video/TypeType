@@ -10,6 +10,7 @@ import { useUiStore } from "../stores/ui-store";
 import { NavbarAccountControls } from "./navbar-account-controls";
 import { NavbarLeadingControl } from "./navbar-leading-control";
 import { NavbarNotifications } from "./navbar-notifications";
+import { NavbarPlaybackMode } from "./navbar-playback-mode";
 import { NavbarSearch } from "./navbar-search";
 import { Toast } from "./toast";
 
@@ -76,6 +77,7 @@ export function Navbar() {
         {canOpenSearch && !isMobile && <NavbarSearch />}
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          <NavbarPlaybackMode />
           <NavbarNotifications />
           <NavbarAccountControls
             status={status}
