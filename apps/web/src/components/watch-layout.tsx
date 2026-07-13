@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { useBulletComments } from "../hooks/use-bullet-comments";
 import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { useMobile } from "../hooks/use-mobile";
 import { usePlayerError } from "../hooks/use-player-error";
@@ -9,6 +8,7 @@ import { useSabrPlaybackConfig } from "../hooks/use-sabr-playback-config";
 import { useSettings } from "../hooks/use-settings";
 import { useVolumeSync } from "../hooks/use-volume-sync";
 import { useWatchAudioOnlyPlayback } from "../hooks/use-watch-audio-only-playback";
+import { useWatchBulletComments } from "../hooks/use-watch-bullet-comments";
 import { useWatchVttAssets } from "../hooks/use-watch-layout-assets";
 import { useWatchPlaybackFlow } from "../hooks/use-watch-playback-flow";
 import { useWatchPlayerSourceState } from "../hooks/use-watch-player-source-state";
@@ -16,7 +16,6 @@ import { useWatchPlaylist } from "../hooks/use-watch-playlist";
 import { useWatchSponsorBlock } from "../hooks/use-watch-sponsorblock";
 import { useWatchToast } from "../hooks/use-watch-toast";
 import { getOriginalAudioLocale } from "../lib/audio-track";
-import { detectProvider } from "../lib/provider";
 import { useDanmakuStore } from "../stores/danmaku-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
 import { Toast } from "./toast";
@@ -41,14 +40,10 @@ export function WatchLayout({
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
   const player = usePlayerError(stream, isLive, settings.enableHighQualityPlayback);
   const { on: bulletCommentsOn } = useDanmakuStore();
-  const isNicoNico = detectProvider(stream.id) === "nicovideo";
+  const { isNicoNico, bulletComments } = useWatchBulletComments(stream.id, settings.hideComments);
   const sponsor = useWatchSponsorBlock(stream, settings);
   const relatedStreams = settings.hideRelatedVideos ? [] : (stream.related ?? []);
   const playlist = useWatchPlaylist(list, shuffle, currentParam);
-  const { data: bulletComments } = useBulletComments(
-    stream.id,
-    isNicoNico && !settings.hideComments,
-  );
   const cinemaMode = useWatchLayoutStore((state) => state.cinemaMode);
   const seekRef = useRef<((seconds: number) => void) | null>(null);
   const positionReaderRef = useRef<(() => number | null) | null>(null);
