@@ -1,8 +1,9 @@
 import { TypeTypeMsePlayer, type TypeTypeMseQuality } from "@typetype/mse";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatestValue } from "../hooks/use-latest-value";
 import { useSabrModeSwitch } from "../hooks/use-sabr-mode-switch";
 import { useSabrQualitySwitch } from "../hooks/use-sabr-quality-switch";
+import { recordClientEvent } from "../lib/client-debug-log";
 import { toAbsoluteApiUrl } from "../lib/env";
 import { isAbortError } from "../lib/sabr-playback-retry";
 import { positionMs, runSabrSeek } from "../lib/sabr-player-seek";
@@ -34,6 +35,7 @@ export function SabrMsePlayer({
   const autoplayStartedRef = useRef(false);
   const autoplayConfirmedRef = useRef(false);
   const seekingRef = useRef(false);
+  const errorReportedRef = useRef(false);
   const [engineReady, setEngineReady] = useState(false);
   const latestConfig = useLatestValue(config);
   const latestStartTime = useLatestValue(startTime);
@@ -45,8 +47,25 @@ export function SabrMsePlayer({
     onPositionReaderChange,
     onVolumeChange,
   });
+  const reportError = useCallback(
+    (error: unknown) => {
+      if (errorReportedRef.current) return;
+      errorReportedRef.current = true;
+      const message = error instanceof Error ? error.message : String(error);
+      recordClientEvent("player.sabr_engine_error", { error: message });
+      latestHandlers().onError();
+    },
+    [latestHandlers],
+  );
+  const latestEngineHandlers = useCallback(() => {
+    const handlers = latestHandlers();
+    return {
+      onError: reportError,
+      onSeekStateChange: handlers.onSeekStateChange,
+    };
+  }, [latestHandlers, reportError]);
   useSabrQualitySwitch(config, engineReady, engineRef, qualityRef, seekingRef);
-  useSabrModeSwitch(config.audioOnly === true, engineRef, seekingRef, latestHandlers);
+  useSabrModeSwitch(config.audioOnly === true, engineRef, seekingRef, latestEngineHandlers);
   useEffect(() => {
     if (!video || !settingsReady) return;
     video.volume = Math.min(1, Math.max(0, initialVolume));
@@ -54,6 +73,7 @@ export function SabrMsePlayer({
   }, [initialMuted, initialVolume, settingsReady, video]);
   useEffect(() => {
     if (!video) return;
+    errorReportedRef.current = false;
     const initialConfig = latestConfig();
     const engine = new TypeTypeMsePlayer(video, {
       endpoint: toAbsoluteApiUrl(""),
@@ -71,7 +91,9 @@ export function SabrMsePlayer({
       audioItag: initialConfig.audioItag,
       audioTrackId: initialConfig.audioTrackId,
     };
-    const offError = engine.on("error", () => latestHandlers().onError());
+    const offError = engine.on("error", (event) => {
+      if (event.type === "error") reportError(event.error);
+    });
     const volumeChange = () => latestHandlers().onVolumeChange?.(video.volume, video.muted);
     video.addEventListener("volumechange", volumeChange);
     let autoplayStartTime = 0;
@@ -113,7 +135,7 @@ export function SabrMsePlayer({
           engine,
           Math.max(0, Math.round(seconds * 1000)),
           seekingRef,
-          latestHandlers().onError,
+          reportError,
           latestHandlers().onSeekStateChange,
         );
       },
@@ -126,14 +148,14 @@ export function SabrMsePlayer({
         startAutoplay();
       })
       .catch((error: unknown) => {
-        if (!isAbortError(error)) latestHandlers().onError();
+        if (!isAbortError(error)) reportError(error);
       });
     latestHandlers().onSeekReady((seconds) =>
       runSabrSeek(
         engine,
         Math.max(0, Math.round(seconds * 1000)),
         seekingRef,
-        latestHandlers().onError,
+        reportError,
         latestHandlers().onSeekStateChange,
       ),
     );
@@ -155,6 +177,6 @@ export function SabrMsePlayer({
       video.autoplay = false;
       latestHandlers().onPositionReaderChange(null);
     };
-  }, [config.videoId, latestConfig, latestHandlers, latestStartTime, video]);
+  }, [config.videoId, latestConfig, latestHandlers, latestStartTime, reportError, video]);
   return null;
 }

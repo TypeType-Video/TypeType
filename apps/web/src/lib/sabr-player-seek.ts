@@ -14,7 +14,7 @@ export function runSabrSeek(
   player: TypeTypeMsePlayer | null,
   position: number,
   flag: { current: boolean },
-  onError: () => void,
+  onError: (error: unknown) => void,
   onSeekingChange?: (seeking: boolean) => void,
 ) {
   if (!player || flag.current) return;
@@ -23,7 +23,7 @@ export function runSabrSeek(
   void player
     .seek(position)
     .catch((error: unknown) => {
-      if (!isAbortError(error)) onError();
+      if (!isAbortError(error)) onError(error);
     })
     .finally(() => {
       flag.current = false;

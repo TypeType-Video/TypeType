@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { bilibiliVariantCount } from "../lib/bilibili-manifest";
 import { recordClientEvent } from "../lib/client-debug-log";
 import { sanitizeVideoContext } from "../lib/debug-sanitize";
 import { isIosDevice } from "../lib/ios-device";
 import { detectProvider } from "../lib/provider";
+import { claimAutomaticSabrRecovery, resetAutomaticSabrRecovery } from "../lib/sabr-error-recovery";
 import {
   hasLegacyDashPair,
   hasSabrPlayback,
@@ -54,6 +55,7 @@ export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerE
   const [bilibiliVariant, setBilibiliVariant] = useState(0);
   const [playerFailed, setPlayerFailed] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const sabrRecoveryRef = useRef(false);
   const bilibiliVariants =
     provider === "bilibili"
       ? bilibiliVariantCount(stream.videoOnlyStreams ?? [], stream.audioStreams ?? [])
@@ -72,6 +74,11 @@ export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerE
   const manifestSrc: MediaSrc = sabrSelected ? { src: "", type: "video/mp4" } : fallbackSrc;
   const handleError = useCallback(() => {
     if (sabrSelected) {
+      if (claimAutomaticSabrRecovery(sabrRecoveryRef)) {
+        recordClientEvent("player.sabr_recovering", { video: debugVideo });
+        setRetryKey((k) => k + 1);
+        return;
+      }
       recordClientEvent("player.sabr_failed", { video: debugVideo });
       setPlayerFailed(true);
     } else if (hlsEnabled && !hlsFailed) {
@@ -126,6 +133,7 @@ export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerE
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
+    resetAutomaticSabrRecovery(sabrRecoveryRef);
     setRetryKey((k) => k + 1);
   }, []);
 
@@ -138,6 +146,7 @@ export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerE
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
+    resetAutomaticSabrRecovery(sabrRecoveryRef);
     setRetryKey(0);
   }, [playbackSourceId]);
 

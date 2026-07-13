@@ -4,7 +4,7 @@ import { recordClientEvent } from "../lib/client-debug-log";
 import { isAbortError } from "../lib/sabr-playback-retry";
 
 type ModeSwitchHandlers = {
-  onError: () => void;
+  onError: (error: unknown) => void;
   onSeekStateChange: (seeking: boolean) => void;
 };
 
@@ -36,7 +36,7 @@ export function useSabrModeSwitch(
         recordClientEvent("player.sabr_mode_switch_failed", {
           error: error instanceof Error ? error.message : String(error),
         });
-        handlers().onError();
+        handlers().onError(error);
       })
       .finally(() => {
         if (revision !== revisionRef.current) return;
