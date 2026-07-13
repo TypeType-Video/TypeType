@@ -1,5 +1,5 @@
 import { TypeTypeMsePlayer, type TypeTypeMseQuality } from "@typetype/mse";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLatestValue } from "../hooks/use-latest-value";
 import { useSabrModeSwitch } from "../hooks/use-sabr-mode-switch";
 import { useSabrQualitySwitch } from "../hooks/use-sabr-quality-switch";
@@ -34,6 +34,7 @@ export function SabrMsePlayer({
   const autoplayStartedRef = useRef(false);
   const autoplayConfirmedRef = useRef(false);
   const seekingRef = useRef(false);
+  const [engineReady, setEngineReady] = useState(false);
   const latestConfig = useLatestValue(config);
   const latestStartTime = useLatestValue(startTime);
   const latestHandlers = useLatestValue({
@@ -44,7 +45,7 @@ export function SabrMsePlayer({
     onPositionReaderChange,
     onVolumeChange,
   });
-  useSabrQualitySwitch(config, engineRef, qualityRef, seekingRef);
+  useSabrQualitySwitch(config, engineReady, engineRef, qualityRef, seekingRef);
   useSabrModeSwitch(config.audioOnly === true, engineRef, seekingRef, latestHandlers);
   useEffect(() => {
     if (!video || !settingsReady) return;
@@ -121,6 +122,7 @@ export function SabrMsePlayer({
       .load()
       .then(() => {
         engineLoaded = true;
+        setEngineReady(true);
         startAutoplay();
       })
       .catch((error: unknown) => {
@@ -144,6 +146,7 @@ export function SabrMsePlayer({
       window.clearInterval(autoplayTimer);
       engine.destroy();
       engineRef.current = null;
+      setEngineReady(false);
       pendingPlayRef.current = false;
       autoplayStartedRef.current = false;
       autoplayConfirmedRef.current = false;

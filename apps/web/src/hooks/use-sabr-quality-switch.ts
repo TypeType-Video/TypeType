@@ -6,6 +6,7 @@ import { useSabrQualityStore } from "../stores/sabr-quality-store";
 
 export function useSabrQualitySwitch(
   config: SabrPlaybackConfig,
+  engineReady: boolean,
   engineRef: RefObject<TypeTypeMsePlayer | null>,
   qualityRef: RefObject<TypeTypeMseQuality | null>,
   seekingRef: RefObject<boolean>,
@@ -20,6 +21,7 @@ export function useSabrQualitySwitch(
     const previous = qualityRef.current;
     const engine = engineRef.current;
     if (
+      !engineReady ||
       !engine ||
       !previous ||
       (previous.videoItag === quality.videoItag &&
@@ -42,5 +44,5 @@ export function useSabrQualitySwitch(
       .finally(() => {
         if (revision === revisionRef.current) seekingRef.current = false;
       });
-  }, [config, engineRef, qualityRef, seekingRef]);
+  }, [config, engineReady, engineRef, qualityRef, seekingRef]);
 }
