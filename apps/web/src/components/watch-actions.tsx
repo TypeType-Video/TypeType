@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
-import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
+import { useFavoriteStatus } from "../hooks/use-favorite-status";
 import { useShareUrl } from "../hooks/use-share-url";
 import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
 import { prepareAudioSpectrum } from "../lib/audio-spectrum";
@@ -39,10 +39,9 @@ export function WatchActions({ stream, audioOnly }: Props) {
   const {
     add: addFavorite,
     remove: removeFavorite,
-    isInFavorites,
+    isFavorite: favorited,
     isPending: favPending,
-  } = useFavoritesPlaylist();
-  const favorited = isInFavorites(stream.id);
+  } = useFavoriteStatus(stream.id);
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
   const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
   const audioOnlyAvailable = !isLive;
@@ -58,15 +57,10 @@ export function WatchActions({ stream, audioOnly }: Props) {
       return;
     }
     if (favorited) {
-      await removeFavorite(stream.id);
+      await removeFavorite();
       handleSaved("Removed from Favorites");
     } else {
-      await addFavorite({
-        url: stream.id,
-        title: stream.title,
-        thumbnail: stream.thumbnail,
-        duration: stream.duration,
-      });
+      await addFavorite();
       handleSaved("Saved to Favorites");
     }
   }

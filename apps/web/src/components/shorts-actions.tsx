@@ -1,6 +1,6 @@
 import { Clock3, MessageCircle, Share2, Star } from "lucide-react";
 import { useAuth } from "../hooks/use-auth";
-import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
+import { useFavoriteStatus } from "../hooks/use-favorite-status";
 import { useShareUrl } from "../hooks/use-share-url";
 import { useWatchLaterPlaylist } from "../hooks/use-watch-later-playlist";
 import { toPublicWatchUrl } from "../lib/watch-url";
@@ -27,9 +27,9 @@ export function ShortsActions({
   const {
     add: addFavorite,
     remove: removeFavorite,
-    isInFavorites,
+    isFavorite: favorited,
     isPending: favoritesPending,
-  } = useFavoritesPlaylist();
+  } = useFavoriteStatus(stream.id);
   const {
     add: addWatchLater,
     remove: removeWatchLater,
@@ -37,7 +37,6 @@ export function ShortsActions({
     isPending: watchLaterPending,
   } = useWatchLaterPlaylist();
 
-  const favorited = isInFavorites(stream.id);
   const watchLater = isInWatchLater(stream.id);
 
   function requireAuth(): boolean {
@@ -50,15 +49,10 @@ export function ShortsActions({
   async function toggleFavorite() {
     if (!requireAuth()) return;
     if (favorited) {
-      await removeFavorite(stream.id);
+      await removeFavorite();
       return;
     }
-    await addFavorite({
-      url: stream.id,
-      title: stream.title,
-      thumbnail: stream.rawThumbnail || stream.thumbnail,
-      duration: stream.duration,
-    });
+    await addFavorite();
   }
 
   async function toggleWatchLater() {
