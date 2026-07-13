@@ -13,6 +13,12 @@ export function clampTime(value: number, duration: number): number {
   return Math.min(max, Math.max(0, value));
 }
 
+export function keyboardSeekOffset(code: string): number | null {
+  if (code === "ArrowLeft") return -10;
+  if (code === "ArrowRight") return 10;
+  return null;
+}
+
 export function consumeEvent(event: KeyboardEvent) {
   event.preventDefault();
   event.stopImmediatePropagation();

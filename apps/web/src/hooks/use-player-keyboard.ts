@@ -1,11 +1,17 @@
 import { useEffect, useRef } from "react";
-import { clampTime, consumeEvent, isInteractiveTarget } from "../components/player-hotkeys-utils";
+import {
+  clampTime,
+  consumeEvent,
+  isInteractiveTarget,
+  keyboardSeekOffset,
+} from "../components/player-hotkeys-utils";
+import { requestSabrSeek } from "../lib/sabr-vidstack-bridge";
 import { useMediaRemote, useMediaState } from "../lib/vidstack";
 import { useHoldFastForward } from "./use-hold-fast-forward";
 
 const FRAME_STEP_SECONDS = 1 / 30;
 
-export function usePlayerKeyboard(canSeek: boolean) {
+export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement | null = null) {
   const remote = useMediaRemote();
   const currentTime = useMediaState("currentTime");
   const duration = useMediaState("duration");
@@ -33,6 +39,14 @@ export function usePlayerKeyboard(canSeek: boolean) {
       );
     }
 
+    function seekBy(seconds: number) {
+      if (!canSeek) return;
+      const target = clampTime(currentTimeRef.current + seconds, durationRef.current);
+      currentTimeRef.current = target;
+      if (sabrVideo && requestSabrSeek(sabrVideo, target)) return;
+      remote.seek(target);
+    }
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
       if (isInteractiveTarget(event.target)) return;
@@ -42,6 +56,12 @@ export function usePlayerKeyboard(canSeek: boolean) {
           spaceStartedRef.current = true;
           start();
         }
+        return;
+      }
+      const seekOffset = keyboardSeekOffset(event.code);
+      if (seekOffset !== null) {
+        consumeEvent(event);
+        seekBy(seekOffset);
         return;
       }
       if (event.key === "," || event.code === "Comma") {
@@ -79,7 +99,7 @@ export function usePlayerKeyboard(canSeek: boolean) {
       window.removeEventListener("blur", onBlur);
       restore(false);
     };
-  }, [canSeek, remote, start, restore, isActive]);
+  }, [canSeek, remote, sabrVideo, start, restore, isActive]);
 
   return holding;
 }

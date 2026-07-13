@@ -172,6 +172,7 @@ export function VideoPlayer({
       <VideoPlayerPlaybackTools
         canSeek={streamType !== "live"}
         audioOnly={audioOnly}
+        sabrVideo={sabrState.video}
         segments={sponsorBlockSegments}
         autoSkipSegments={autoSkipSponsorBlockSegments}
         manualSkipSegments={manualSkipSponsorBlockSegments}
