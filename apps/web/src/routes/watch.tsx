@@ -13,11 +13,13 @@ import {
   isMemberOnlyApiError,
   isStreamUnavailableError,
   MEMBER_ONLY_MESSAGE,
+  useSabrBootstrap,
   useStream,
 } from "../hooks/use-stream";
 import { FAMILY_LIST_BLOCKED_MESSAGE, isChannelNotAllowedError } from "../lib/allow-list-error";
 import { ApiError } from "../lib/api";
 import { isYoutubeSessionReconnectError } from "../lib/api-youtube-session";
+import { selectProgressiveWatchStream } from "../lib/progressive-watch-stream";
 import { toPublicWatchParam, toWatchSourceUrl } from "../lib/watch-url";
 import { youtubeSessionReturnToForWatch } from "../lib/youtube-session-route";
 import { useWatchNavigationStore } from "../stores/watch-navigation-store";
@@ -39,20 +41,26 @@ function WatchPage() {
   const useAuthenticatedStream =
     isAuthed && (settings.accessMode === "allow_list" || instance?.guestAllowed === false);
   const streamEnabled = authReady && !instancePending && (!isAuthed || settingsReady);
-  const {
-    data: stream,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useStream(sourceUrl, useAuthenticatedStream, streamEnabled, playbackMode);
+  const streamQuery = useStream(sourceUrl, useAuthenticatedStream, streamEnabled, playbackMode);
+  const bootstrap = useSabrBootstrap(
+    sourceUrl,
+    useAuthenticatedStream,
+    streamEnabled,
+    playbackMode,
+  );
   const { add } = useHistory();
   const progressFetch = useProgress(sourceUrl);
-  useDocumentTitle(stream?.title);
   const previewMatches =
     navigationSnapshot && toPublicWatchParam(navigationSnapshot.stream.id) === publicParam;
   const previewStream = previewMatches ? navigationSnapshot.stream : undefined;
   const previewRelated = previewMatches ? navigationSnapshot.relatedStreams : [];
+  const activeStream = selectProgressiveWatchStream(
+    streamQuery.isPlaceholderData ? undefined : streamQuery.data,
+    playbackMode === "sabr" ? bootstrap.data : undefined,
+    publicParam,
+    previewRelated,
+  );
+  useDocumentTitle(activeStream?.title ?? previewStream?.title);
   const loadingPage = (
     <WatchPageSkeleton
       stream={previewStream}
@@ -73,37 +81,39 @@ function WatchPage() {
   }, [navigate, publicParam, v]);
 
   useEffect(() => {
-    if (!stream) return;
-    if (historyAddedForRef.current === stream.id) return;
-    const historyPositionMs = progressFetch.data?.position ?? (stream.startPosition ?? 0) * 1000;
+    if (!activeStream) return;
+    if (historyAddedForRef.current === activeStream.id) return;
+    const historyPositionMs =
+      progressFetch.data?.position ?? (activeStream.startPosition ?? 0) * 1000;
     const progress = Math.max(0, Math.round(historyPositionMs / 1000));
-    historyAddedForRef.current = stream.id;
+    historyAddedForRef.current = activeStream.id;
     addToHistoryRef.current({
-      url: stream.id,
-      title: stream.title,
-      thumbnail: stream.rawThumbnail,
-      channelName: stream.channelName,
-      channelUrl: stream.channelUrl ?? "",
-      channelAvatar: stream.rawChannelAvatar,
-      duration: stream.duration,
-      publishedAt: stream.publishedAt,
-      viewCount: stream.views,
+      url: activeStream.id,
+      title: activeStream.title,
+      thumbnail: activeStream.rawThumbnail,
+      channelName: activeStream.channelName,
+      channelUrl: activeStream.channelUrl ?? "",
+      channelAvatar: activeStream.rawChannelAvatar,
+      duration: activeStream.duration,
+      publishedAt: activeStream.publishedAt,
+      viewCount: activeStream.views,
       progress,
     });
-  }, [progressFetch.data?.position, stream]);
+  }, [activeStream, progressFetch.data?.position]);
 
-  if (isLoading && !stream) return loadingPage;
-  if (!authReady) return loadingPage;
+  const pending = streamQuery.isLoading || bootstrap.isLoading;
+  if (!activeStream && (!streamEnabled || pending)) return loadingPage;
 
-  if (isError || !stream) {
+  if (!activeStream) {
+    const activeError = streamQuery.error ?? bootstrap.error;
     const genericExtractorError =
-      error instanceof ApiError &&
-      error.status === 422 &&
-      error.message ===
+      activeError instanceof ApiError &&
+      activeError.status === 422 &&
+      activeError.message ===
         "Error occurs when fetching the page. Try increase the loading timeout in Settings.";
-    const isMemberOnlyError = isMemberOnlyApiError(error) || genericExtractorError;
-    const needsYoutubeSession = isYoutubeSessionReconnectError(error);
-    const familyListBlocked = isChannelNotAllowedError(error);
+    const isMemberOnlyError = isMemberOnlyApiError(activeError) || genericExtractorError;
+    const needsYoutubeSession = isYoutubeSessionReconnectError(activeError);
+    const familyListBlocked = isChannelNotAllowedError(activeError);
     const youtubeSessionReturnTo = needsYoutubeSession
       ? youtubeSessionReturnToForWatch(publicParam, list, shuffle)
       : undefined;
@@ -113,9 +123,10 @@ function WatchPage() {
         ? FAMILY_LIST_BLOCKED_MESSAGE
         : needsYoutubeSession
           ? "Connect YouTube to load this browser-only video."
-          : error instanceof ApiError && (error.status === 400 || error.status === 422)
-            ? error.message
-            : isStreamUnavailableError(error)
+          : activeError instanceof ApiError &&
+              (activeError.status === 400 || activeError.status === 422)
+            ? activeError.message
+            : isStreamUnavailableError(activeError)
               ? "This video is currently unavailable"
               : "Failed to load stream.";
     return (
@@ -125,7 +136,8 @@ function WatchPage() {
           needsYoutubeSession || familyListBlocked
             ? undefined
             : () => {
-                void refetch();
+                void streamQuery.refetch();
+                void bootstrap.refetch();
               }
         }
         youtubeSessionReturnTo={youtubeSessionReturnTo}
@@ -133,31 +145,31 @@ function WatchPage() {
     );
   }
 
-  if (stream.requiresMembership) {
+  if (activeStream.requiresMembership) {
     return <StreamError message={MEMBER_ONLY_MESSAGE} />;
   }
 
   const savedPosition = progressFetch.data?.position ?? 0;
-  const serverPositionMs = (stream.startPosition ?? 0) * 1000;
+  const serverPositionMs = (activeStream.startPosition ?? 0) * 1000;
   const resumeMs = savedPosition > 0 ? savedPosition : serverPositionMs;
-  const durationMs = stream.duration * 1000;
+  const durationMs = activeStream.duration * 1000;
   const startTime = resumeMs >= 5000 && resumeMs < durationMs * 0.95 ? resumeMs : 0;
-  const navigating = toPublicWatchParam(stream.id) !== publicParam;
+  const navigating = toPublicWatchParam(activeStream.id) !== publicParam;
 
   return (
     <Suspense
       fallback={
         <WatchPageSkeleton
-          stream={stream}
-          relatedStreams={stream.related}
+          stream={activeStream}
+          relatedStreams={activeStream.related}
           videoUrl={sourceUrl}
           showComments={!settings.hideComments}
         />
       }
     >
       <WatchLayout
-        key={stream.id}
-        stream={stream}
+        key={activeStream.id}
+        stream={activeStream}
         startTime={startTime}
         currentParam={publicParam}
         navigating={navigating}

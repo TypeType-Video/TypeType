@@ -12,6 +12,11 @@ export function streamEndpoint(url: string, playbackMode: PlaybackMode): string 
   return `${BASE}${path}?url=${encodeURIComponent(url)}`;
 }
 
+export function sabrBootstrapEndpoint(url: string): string | null {
+  if (detectProvider(url) !== "youtube") return null;
+  return `${BASE}/streams/youtube/sabr/bootstrap?url=${encodeURIComponent(url)}`;
+}
+
 function providerStreamPath(
   provider: ReturnType<typeof detectProvider>,
   playbackMode: PlaybackMode,
@@ -28,4 +33,11 @@ export function streamQueryKey(
   playbackMode: PlaybackMode,
 ): readonly ["stream", string, "auth" | "anon", PlaybackMode] {
   return ["stream", url, authenticated ? "auth" : "anon", effectivePlaybackMode(url, playbackMode)];
+}
+
+export function sabrBootstrapQueryKey(
+  url: string,
+  authenticated: boolean,
+): readonly ["stream-bootstrap", string, "auth" | "anon"] {
+  return ["stream-bootstrap", url, authenticated ? "auth" : "anon"];
 }
