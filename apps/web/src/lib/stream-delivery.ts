@@ -1,7 +1,6 @@
 import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
-import { hasSabrSession, resolveSabrSessionSrc } from "./sabr-source";
-import type { MediaSrc } from "./vidstack";
+import { hasSabrSession } from "./sabr-source";
 
 export type DeliveredStream = {
   deliveryMethod?: string | null;
@@ -30,10 +29,6 @@ export function legacyProgressiveStreams(stream: VideoStream): VideoStreamItem[]
 
 export function hasLegacyDashPair(stream: VideoStream): boolean {
   return legacyVideoOnlyStreams(stream).length > 0 && legacyAudioStreams(stream).length > 0;
-}
-
-export function resolveSabrSrc(stream: VideoStream): MediaSrc | null {
-  return resolveSabrSessionSrc(stream);
 }
 
 export function hasSabrPlayback(stream: VideoStream): boolean {

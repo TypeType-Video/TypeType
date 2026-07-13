@@ -2,7 +2,7 @@ import { API_BASE as BASE } from "./env";
 import type { PlaybackMode } from "./playback-mode";
 import { detectProvider } from "./provider";
 
-export function effectivePlaybackMode(url: string, playbackMode: PlaybackMode): PlaybackMode {
+function effectivePlaybackMode(url: string, playbackMode: PlaybackMode): PlaybackMode {
   return playbackMode === "sabr" && detectProvider(url) === "youtube" ? "sabr" : "legacy";
 }
 

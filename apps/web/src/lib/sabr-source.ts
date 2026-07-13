@@ -3,7 +3,6 @@ import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import type { VideoStream } from "../types/stream";
 import { type CodecFamily, codecFamily } from "./quality-utils";
 import { pickSabrAudio } from "./sabr-audio";
-import type { MediaSrc } from "./vidstack";
 
 type SabrCandidate = VideoStreamItem | AudioStreamItem;
 type SabrSelection = {
@@ -148,10 +147,6 @@ export function resolveSabrPlaybackConfig(
     audioTrackId,
     audioOnly,
   };
-}
-
-export function resolveSabrSessionSrc(stream: VideoStream): MediaSrc | null {
-  return selectSabr(stream, null) ? { src: "", type: "video/mp4" } : null;
 }
 
 export function hasSabrSession(stream: VideoStream): boolean {
