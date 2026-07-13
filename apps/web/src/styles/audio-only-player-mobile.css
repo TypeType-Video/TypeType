@@ -54,9 +54,9 @@
 
   .typetype-audio-only-player .vds-audio-layout .vds-controls-group {
     height: 100%;
-    grid-template-columns: auto auto auto 1fr auto auto;
+    grid-template-columns: 2.25rem 2.25rem 2.25rem minmax(4.75rem, 1fr) 4.3rem 2.25rem;
     grid-template-rows: 1.25rem 2.2rem;
-    gap: 0 0.8rem;
+    gap: 0 0.2rem;
     align-items: center;
     padding: 0.15rem 0 0.3rem;
   }
@@ -106,7 +106,7 @@
   .typetype-audio-seek-button-backward {
     grid-column: 1;
     grid-row: 2;
-    margin-left: 0.75rem;
+    margin-left: 0.45rem;
   }
 
   .typetype-audio-seek-button-forward {
@@ -126,11 +126,12 @@
   .typetype-audio-only-player .vds-menu-button {
     grid-column: 6;
     grid-row: 2;
+    margin-right: 0.45rem;
   }
 
   .typetype-audio-only-player .typetype-mobile-volume-control {
     grid-column: 5;
     grid-row: 2;
-    width: 5.2rem;
+    width: 4.3rem;
   }
 }
