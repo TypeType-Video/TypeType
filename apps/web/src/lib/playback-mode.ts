@@ -1,4 +1,4 @@
-export type PlaybackMode = "adaptive" | "ios-legacy-compat";
+export type PlaybackMode = "legacy" | "sabr";
 
 const STORAGE_KEY = "typed-playback-mode";
 const CHANGE_EVENT = "typed:playback-mode-change";
@@ -8,13 +8,18 @@ function canUseStorage(): boolean {
 }
 
 function isPlaybackMode(value: string | null): value is PlaybackMode {
-  return value === "adaptive" || value === "ios-legacy-compat";
+  return value === "legacy" || value === "sabr";
 }
 
 export function readPlaybackMode(): PlaybackMode {
-  if (!canUseStorage()) return "adaptive";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return isPlaybackMode(stored) ? stored : "adaptive";
+  if (!canUseStorage()) return "legacy";
+  return resolveStoredPlaybackMode(window.localStorage.getItem(STORAGE_KEY));
+}
+
+export function resolveStoredPlaybackMode(stored: string | null): PlaybackMode {
+  if (stored === "adaptive") return "sabr";
+  if (stored === "ios-legacy-compat") return "legacy";
+  return isPlaybackMode(stored) ? stored : "legacy";
 }
 
 export function setPlaybackMode(mode: PlaybackMode): void {
@@ -39,8 +44,4 @@ export function subscribePlaybackMode(listener: () => void): () => void {
     window.removeEventListener("storage", onStorage);
     window.removeEventListener(CHANGE_EVENT, onChange);
   };
-}
-
-export function isCompatibilityPlaybackMode(): boolean {
-  return readPlaybackMode() === "ios-legacy-compat";
 }

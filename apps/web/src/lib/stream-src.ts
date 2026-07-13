@@ -2,11 +2,10 @@ import type { VideoStream } from "../types/stream";
 import { buildBilibiliDashManifest } from "./bilibili-manifest";
 import { API_BASE as BASE, toApiUrl } from "./env";
 import { buildNicoHlsManifest } from "./nico-hls-manifest";
-import { isCompatibilityPlaybackMode } from "./playback-mode";
 import { detectProvider } from "./provider";
 import { proxyDashManifest } from "./proxy";
 import { hasCompatibleMp4, pickCompatibleProgressiveSrc } from "./stream-compatibility";
-import { hasLegacyDashPair, resolveSabrSrc } from "./stream-delivery";
+import { hasLegacyDashPair } from "./stream-delivery";
 import { resolveLegacyFallbackSrc } from "./stream-fallback-src";
 import type { MediaSrc } from "./vidstack";
 
@@ -46,7 +45,7 @@ export function resolveManifestSrc(
   options?: ResolveManifestOptions,
 ): MediaSrc {
   const isShort = Boolean(stream.isShortFormContent) || stream.id.includes("/shorts/");
-  const compatibilityMode = options?.compatibilityMode ?? isCompatibilityPlaybackMode();
+  const compatibilityMode = options?.compatibilityMode ?? false;
   const preferNativeManifest = (options?.preferNativeManifest ?? !isShort) && !compatibilityMode;
   const compactAudioTracks = options?.compactAudioTracks ?? isShort;
   const maxCompactAudioTracks = options?.maxCompactAudioTracks ?? (isShort ? 3 : 8);
@@ -56,11 +55,6 @@ export function resolveManifestSrc(
   const safeMaxHeight = qualityFailed ? 720 : 1080;
   const legacyDashPair = hasLegacyDashPair(stream);
   const allowLegacyServerManifests = allowServerManifests;
-
-  if (provider === "youtube" && !isLive && !isShort) {
-    const sabrSrc = resolveSabrSrc(stream);
-    if (sabrSrc) return sabrSrc;
-  }
 
   if (stream.hlsUrl && !options?.hlsFailed && (isLive || isSignedHlsManifestUrl(stream.hlsUrl))) {
     return {

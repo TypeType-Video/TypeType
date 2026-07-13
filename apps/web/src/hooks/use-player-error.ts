@@ -14,6 +14,7 @@ import { isSignedHlsManifestUrl, resolveManifestSrc } from "../lib/stream-src";
 import type { MediaSrc } from "../lib/vidstack";
 import type { VideoStream } from "../types/stream";
 import { useInstance } from "./use-instance";
+import { usePlaybackMode } from "./use-playback-mode";
 
 type UsePlayerErrorReturn = {
   manifestSrc: MediaSrc;
@@ -29,25 +30,22 @@ type UsePlayerErrorReturn = {
   seekStartTime: number | null;
 };
 
-const SABR_PLACEHOLDER_SRC: MediaSrc = { src: "", type: "video/mp4" };
-
 export function usePlayerError(
   stream: VideoStream,
   isLive: boolean,
   enableHighQualityPlayback = false,
 ): UsePlayerErrorReturn {
-  const streamId = stream.id;
-  const debugVideo = sanitizeVideoContext(streamId) ?? "unknown";
+  const debugVideo = sanitizeVideoContext(stream.id) ?? "unknown";
   const provider = detectProvider(stream.id);
   const iosDevice = isIosDevice();
   const { data: instance } = useInstance();
+  const { playbackMode } = usePlaybackMode();
+  const playbackSourceId = stream.id.length === 0 ? "" : `${stream.id}:${playbackMode}`;
   const preferServerManifests = instance?.guestAllowed !== false;
   const preferNativeManifest =
     preferServerManifests && !iosDevice && !hasMultipleAudioLanguages(stream);
   const legacyDashPair = hasLegacyDashPair(stream);
-  const legacyProgressiveCount = legacyProgressiveStreams(stream).length;
-  const sabrEnabled = provider === "youtube" && !isLive && hasSabrPlayback(stream);
-  const hasLegacyPlaybackFallback = !sabrEnabled && (legacyDashPair || legacyProgressiveCount > 0);
+  const hasLegacyPlaybackFallback = legacyDashPair || legacyProgressiveStreams(stream).length > 0;
   const highQualityEnabled =
     enableHighQualityPlayback &&
     !isLive &&
@@ -70,6 +68,8 @@ export function usePlayerError(
     provider === "bilibili"
       ? bilibiliVariantCount(stream.videoOnlyStreams ?? [], stream.audioStreams ?? [])
       : 0;
+  const sabrSelected = provider === "youtube" && !isLive && playbackMode === "sabr";
+  const sabrEnabled = sabrSelected && hasSabrPlayback(stream);
 
   const fallbackSrc = resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
     preferNativeManifest,
@@ -80,9 +80,9 @@ export function usePlayerError(
     allowServerManifests: preferServerManifests,
     bilibiliVariant,
   });
-  const manifestSrc = sabrEnabled ? SABR_PLACEHOLDER_SRC : fallbackSrc;
+  const manifestSrc: MediaSrc = sabrSelected ? { src: "", type: "video/mp4" } : fallbackSrc;
   const handleError = useCallback(() => {
-    if (sabrEnabled) {
+    if (sabrSelected) {
       recordClientEvent("player.sabr_failed", { video: debugVideo });
       setPlayerFailed(true);
     } else if (hlsEnabled && !hlsFailed) {
@@ -121,7 +121,7 @@ export function usePlayerError(
     debugVideo,
     hlsEnabled,
     hlsFailed,
-    sabrEnabled,
+    sabrSelected,
     hasLegacyPlaybackFallback,
     provider,
     bilibiliVariant,
@@ -147,13 +147,9 @@ export function usePlayerError(
     setRetryKey((k) => k + 1);
   }, []);
 
-  const clearFailed = useCallback(() => {
-    setPlayerFailed(false);
-  }, []);
-
-  const handleSeeking = useCallback(() => undefined, []);
+  const clearFailed = useCallback(() => setPlayerFailed(false), []);
   useEffect(() => {
-    if (streamId.length === 0) return;
+    if (playbackSourceId.length === 0) return;
     setHlsFailed(false);
     setHighQualityFailed(false);
     setNativeFailed(false);
@@ -162,7 +158,7 @@ export function usePlayerError(
     setBilibiliVariant(0);
     setPlayerFailed(false);
     setRetryKey(0);
-  }, [streamId]);
+  }, [playbackSourceId]);
 
   return {
     manifestSrc,
@@ -172,7 +168,7 @@ export function usePlayerError(
     qualityFailed,
     clearFailed,
     handleError,
-    handleSeeking,
+    handleSeeking: () => undefined,
     reset,
     retryKey,
     seekStartTime: null,

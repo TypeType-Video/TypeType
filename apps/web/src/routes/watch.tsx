@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/use-auth";
 import { useDocumentTitle } from "../hooks/use-document-title";
 import { useHistory } from "../hooks/use-history";
 import { useInstance } from "../hooks/use-instance";
+import { usePlaybackMode } from "../hooks/use-playback-mode";
 import { useProgress } from "../hooks/use-progress";
 import { useSettings } from "../hooks/use-settings";
 import {
@@ -45,6 +46,7 @@ function WatchPage() {
   const { authReady, isAuthed } = useAuth();
   const { data: instance, isPending: instancePending } = useInstance();
   const { settings, settingsReady } = useSettings();
+  const { playbackMode } = usePlaybackMode();
   const useAuthenticatedStream =
     isAuthed && (settings.accessMode === "allow_list" || instance?.guestAllowed === false);
   const streamEnabled = authReady && !instancePending && (!isAuthed || settingsReady);
@@ -54,7 +56,7 @@ function WatchPage() {
     isError,
     error,
     refetch,
-  } = useStream(sourceUrl, useAuthenticatedStream, streamEnabled);
+  } = useStream(sourceUrl, useAuthenticatedStream, streamEnabled, playbackMode);
   const { add } = useHistory();
   const progressFetch = useProgress(sourceUrl);
   useDocumentTitle(stream?.title);

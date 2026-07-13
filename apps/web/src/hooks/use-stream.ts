@@ -6,17 +6,25 @@ import {
   isMemberOnlyApiError as isMemberOnlyApiResponse,
   MEMBER_ONLY_MESSAGE,
 } from "../lib/member-only";
+import { type PlaybackMode, readPlaybackMode } from "../lib/playback-mode";
+import { streamQueryKey } from "../lib/stream-request";
 
 export { MEMBER_ONLY_MESSAGE };
 
-export function streamQueryOptions(url: string, useAuthenticatedStream = false, enabled = true) {
+export function streamQueryOptions(
+  url: string,
+  useAuthenticatedStream = false,
+  enabled = true,
+  playbackMode: PlaybackMode = readPlaybackMode(),
+) {
   return queryOptions({
-    queryKey: ["stream", url, useAuthenticatedStream ? "auth" : "anon"],
+    queryKey: streamQueryKey(url, useAuthenticatedStream, playbackMode),
     queryFn: ({ signal }) =>
       fetchStream(
         url,
         useAuthenticatedStream ? "authenticated_first" : "anonymous_first",
         signal,
+        playbackMode,
       ).then((r) => mapStreamResponse(r, url)),
     enabled: enabled && url.startsWith("http"),
     staleTime: 3 * 60 * 1000,
@@ -51,9 +59,14 @@ export function isMemberOnlyApiError(error: unknown): boolean {
   return isMemberOnlyApiResponse(error);
 }
 
-export function useStream(url: string, useAuthenticatedStream = false, enabled = true) {
+export function useStream(
+  url: string,
+  useAuthenticatedStream = false,
+  enabled = true,
+  playbackMode: PlaybackMode = readPlaybackMode(),
+) {
   return useQuery({
-    ...streamQueryOptions(url, useAuthenticatedStream, enabled),
+    ...streamQueryOptions(url, useAuthenticatedStream, enabled, playbackMode),
     placeholderData: keepPreviousData,
   });
 }
