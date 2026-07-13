@@ -43,12 +43,11 @@ function WatchPage() {
   const sourceUrl = toWatchSourceUrl(v);
   const publicParam = toPublicWatchParam(sourceUrl);
   const { authReady, isAuthed } = useAuth();
-  const { data: instance } = useInstance();
+  const { data: instance, isPending: instancePending } = useInstance();
   const { settings, settingsReady } = useSettings();
   const useAuthenticatedStream =
-    isAuthed &&
-    (!settingsReady || settings.accessMode === "allow_list" || instance?.guestAllowed === false);
-  const streamEnabled = authReady;
+    isAuthed && (settings.accessMode === "allow_list" || instance?.guestAllowed === false);
+  const streamEnabled = authReady && !instancePending && (!isAuthed || settingsReady);
   const {
     data: stream,
     isLoading,
