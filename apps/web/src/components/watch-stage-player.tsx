@@ -15,6 +15,7 @@ type Props = {
   sabrConfig: SabrPlaybackConfig | null;
   isLive: boolean;
   startTime: number;
+  seekIntervalSeconds?: number;
   subtitles?: SubtitleItem[];
   sponsorBlockSegments?: SponsorBlockSegmentItem[];
   autoSkipSegments?: SponsorBlockSegmentItem[];
@@ -60,6 +61,7 @@ export function WatchStagePlayer(props: Props) {
         poster={props.poster}
         streamType={props.isLive ? "live" : "on-demand"}
         startTime={props.startTime}
+        seekIntervalSeconds={props.seekIntervalSeconds}
         subtitles={props.subtitles}
         sponsorBlockSegments={props.sponsorBlockSegments}
         autoSkipSponsorBlock={Boolean(props.autoSkipSegments)}

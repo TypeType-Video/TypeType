@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 import { useSabrPlayerState } from "../hooks/use-sabr-player-state";
 import { isIosDevice } from "../lib/ios-device";
-import { adaptiveSourceNeedsVideoProvider } from "../lib/media-source-view-type";
+import { mediaSourceViewType } from "../lib/media-source-view-type";
 import { SABR_VIDEO_PROVIDER_LOADERS, sabrMediaSrc } from "../lib/sabr-vidstack-loader";
 import { MediaPlayer, MediaProvider } from "../lib/vidstack";
 import { patchVidstackProviderLoaders } from "../lib/vidstack-provider-loader-patch";
 import { AudioCenterToggle } from "./audio-center-toggle";
 import { AudioOnlyPoster } from "./audio-only-poster";
 import { CaptionStyleRestorer } from "./caption-style-restorer";
+import { FragmentBoundarySeeker } from "./fragment-boundary-seeker";
 import { MediaProgressEvents } from "./media-progress-events";
 import { MediaSessionSync } from "./media-session-sync";
 import { SeekBridge } from "./player-internals";
@@ -30,6 +31,7 @@ export function VideoPlayer({
   poster,
   streamType = "on-demand",
   startTime = 0,
+  seekIntervalSeconds,
   subtitles,
   sponsorBlockSegments,
   autoSkipSponsorBlockSegments,
@@ -68,7 +70,7 @@ export function VideoPlayer({
   const sabrVideoId = sabrConfig?.videoId;
   const sabrSrc = useMemo(() => (sabrVideoId ? sabrMediaSrc(sabrVideoId) : null), [sabrVideoId]);
   const activeSrc = sabrSrc ?? src;
-  const viewType = audioOnly && !adaptiveSourceNeedsVideoProvider(activeSrc) ? "audio" : "video";
+  const viewType = mediaSourceViewType(audioOnly, Boolean(sabrConfig), activeSrc);
   const { handleProviderChange, handleError, handleEnded } = useVideoPlayerEvents({
     src: activeSrc,
     onError,
@@ -145,6 +147,7 @@ export function VideoPlayer({
         onNextVideo={onNextVideo}
       />
       {!sabrConfig && <PlayerSeeker startTime={startTime} />}
+      {!sabrConfig && <FragmentBoundarySeeker intervalSeconds={seekIntervalSeconds} />}
       <VolumeRestorer
         initialVolume={initialVolume}
         initialMuted={initialMuted}

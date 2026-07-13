@@ -11,6 +11,7 @@ export type VideoPlayerProps = {
   poster?: string;
   streamType?: "on-demand" | "live";
   startTime?: number;
+  seekIntervalSeconds?: number;
   subtitles?: SubtitleItem[];
   sponsorBlockSegments?: SponsorBlockSegmentItem[];
   autoSkipSponsorBlockSegments?: SponsorBlockSegmentItem[];

@@ -5,3 +5,11 @@ export function adaptiveSourceNeedsVideoProvider(src: MediaSrc): boolean {
   const type = String(src.type).toLowerCase();
   return type.includes("mpegurl") || type.includes("dash+xml");
 }
+
+export function mediaSourceViewType(
+  audioOnly: boolean,
+  sabr: boolean,
+  src: MediaSrc,
+): "audio" | "video" {
+  return audioOnly && !sabr && !adaptiveSourceNeedsVideoProvider(src) ? "audio" : "video";
+}

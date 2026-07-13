@@ -22,6 +22,7 @@ type Props = {
   audioOnly: boolean;
   playerKey: string;
   startTime: number;
+  seekIntervalSeconds?: number;
   isLive: boolean;
   settingsReady: boolean;
   autoplay: boolean;
@@ -67,6 +68,7 @@ export function WatchStage({
   audioOnly,
   playerKey,
   startTime,
+  seekIntervalSeconds,
   isLive,
   settingsReady,
   autoplay,
@@ -139,6 +141,7 @@ export function WatchStage({
             sabrConfig={sabrConfig}
             isLive={isLive}
             startTime={startTime}
+            seekIntervalSeconds={seekIntervalSeconds}
             subtitles={stream.subtitles}
             sponsorBlockSegments={sponsorBlockSegments}
             autoSkipSegments={autoSkipSegments}

@@ -127,6 +127,7 @@ export function WatchLayout({
         audioOnly={audioOnly.active}
         playerKey={sourceState.playerKey}
         startTime={player.seekStartTime ?? sourceState.startTime}
+        seekIntervalSeconds={isNicoNico ? 6 : undefined}
         isLive={isLive}
         settingsReady={settingsReady}
         autoplay={sourceState.autoplay}
