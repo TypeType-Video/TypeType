@@ -28,8 +28,7 @@
   }
 
   .vds-video-layout .vds-pip-button,
-  .vds-video-layout .vds-cinema-button,
-  .vds-video-layout .typetype-mobile-volume-control {
+  .vds-video-layout .vds-cinema-button {
     display: none;
   }
 }
