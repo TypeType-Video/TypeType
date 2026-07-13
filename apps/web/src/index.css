@@ -7,6 +7,7 @@
 @import "./styles/player-menu-overrides.css";
 @import "./styles/audio-only-player.css";
 @import "./styles/audio-only-controls.css";
+@import "./styles/adaptive-audio-layout.css";
 @import "./styles/audio-only-player-mobile.css";
 @import "./styles/player-mode-transition.css";
 @import "./styles/player-volume-controls.css";

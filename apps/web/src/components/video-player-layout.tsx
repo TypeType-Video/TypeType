@@ -34,27 +34,20 @@ export function VideoPlayerLayout({
   onNextVideo,
 }: Props) {
   if (audioOnly) {
-    const slots = {
-      captionButton: null,
-      endTime: (
-        <div className="typetype-audio-time-pair">
-          <Time type="current" />
-          <span>/</span>
-          <Time type="duration" />
-        </div>
-      ),
-      timeSlider: <AudioTimeSlider disabled={seeking} video={sabrVideo} />,
-      seekBackwardButton: (
-        <AudioSeekButton direction="backward" disabled={seeking} video={sabrVideo} />
-      ),
-      playButton: <AudioPlayButton video={sabrVideo} />,
-      seekForwardButton: (
-        <AudioSeekButton direction="forward" disabled={seeking} video={sabrVideo} />
-      ),
-      beforeCaptionButton: <PlayerTrackButton direction="previous" onClick={onPreviousVideo} />,
-      afterCaptionButton: <PlayerTrackButton direction="next" onClick={onNextVideo} />,
-      beforeSettingsMenu: <PlayerVolumeControl />,
-    };
+    const timePair = (
+      <div className="typetype-audio-time-pair">
+        <Time type="current" />
+        <span>/</span>
+        <Time type="duration" />
+      </div>
+    );
+    const backwardButton = (
+      <AudioSeekButton direction="backward" disabled={seeking} video={sabrVideo} />
+    );
+    const forwardButton = (
+      <AudioSeekButton direction="forward" disabled={seeking} video={sabrVideo} />
+    );
+    const timeSlider = <AudioTimeSlider disabled={seeking} video={sabrVideo} />;
     if (audioUsesVideoProvider) {
       return (
         <DefaultVideoLayout
@@ -63,7 +56,19 @@ export function VideoPlayerLayout({
           smallLayoutWhen={false}
           translations={{ Captions: "Subtitles" }}
           slots={{
-            ...slots,
+            captionButton: null,
+            currentTime: null,
+            timeDivider: null,
+            endTime: timePair,
+            timeSlider,
+            beforePlayButton: backwardButton,
+            playButton: <AudioPlayButton video={sabrVideo} />,
+            afterPlayButton: forwardButton,
+            beforeCaptionButton: (
+              <PlayerTrackButton direction="previous" onClick={onPreviousVideo} />
+            ),
+            afterCaptionButton: <PlayerTrackButton direction="next" onClick={onNextVideo} />,
+            beforeSettingsMenu: <PlayerVolumeControl />,
             fullscreenButton: null,
             pipButton: null,
             title: null,
@@ -77,7 +82,17 @@ export function VideoPlayerLayout({
         icons={defaultLayoutIcons}
         smallLayoutWhen={false}
         translations={{ Captions: "Subtitles" }}
-        slots={slots}
+        slots={{
+          captionButton: null,
+          endTime: timePair,
+          timeSlider,
+          seekBackwardButton: backwardButton,
+          playButton: <AudioPlayButton video={sabrVideo} />,
+          seekForwardButton: forwardButton,
+          beforeCaptionButton: <PlayerTrackButton direction="previous" onClick={onPreviousVideo} />,
+          afterCaptionButton: <PlayerTrackButton direction="next" onClick={onNextVideo} />,
+          beforeSettingsMenu: <PlayerVolumeControl />,
+        }}
       />
     );
   }

@@ -1,4 +1,4 @@
-.typetype-audio-only-player .vds-controls-group {
+.typetype-audio-only-player .vds-audio-layout .vds-controls-group {
   display: grid;
   grid-template-columns: auto auto auto 1fr auto auto auto;
   grid-template-rows: 1.25rem 2.25rem;

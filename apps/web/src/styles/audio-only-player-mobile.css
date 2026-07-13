@@ -36,7 +36,8 @@
     animation: typetype-audio-title-marquee 16s linear infinite;
   }
 
-  .typetype-audio-only-player .vds-audio-layout {
+  .typetype-audio-only-player .vds-audio-layout,
+  .typetype-audio-only-player .typetype-adaptive-audio-layout .vds-controls {
     height: 3.85rem;
     align-items: stretch;
   }
@@ -51,7 +52,7 @@
     display: none;
   }
 
-  .typetype-audio-only-player .vds-controls-group {
+  .typetype-audio-only-player .vds-audio-layout .vds-controls-group {
     height: 100%;
     grid-template-columns: auto auto auto 1fr auto auto;
     grid-template-rows: 1.25rem 2.2rem;

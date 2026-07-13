@@ -33,8 +33,10 @@
   mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent);
 }
 
-.typetype-audio-only-player .vds-audio-layout {
+.typetype-audio-only-player .vds-audio-layout,
+.typetype-audio-only-player .typetype-adaptive-audio-layout .vds-controls {
   position: absolute;
+  top: auto;
   right: 0;
   bottom: 0;
   left: 0;
@@ -58,7 +60,8 @@
   color: white;
 }
 
-.typetype-audio-only-player .vds-audio-layout .vds-title {
+.typetype-audio-only-player .vds-audio-layout .vds-title,
+.typetype-audio-only-player .typetype-adaptive-audio-layout .vds-title {
   display: none;
 }
 
