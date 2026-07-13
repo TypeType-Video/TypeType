@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { defaultSabrAudioTrackId, sabrAudioOptions } from "../lib/sabr-audio";
-import { bestSabrItag, browserSabrCodecProbe } from "../lib/sabr-codec-capabilities";
 import {
   automaticSabrQuality,
   defaultSabrItag,
@@ -22,7 +21,7 @@ export function useSabrPlaybackConfig(
 ): SabrPlaybackConfig | null {
   const authScope = useAuthStore((state) => (state.token ? (state.me?.id ?? "auth") : "guest"));
   const selectedItag = useSabrQualityStore((state) =>
-    state.streamId === stream.id ? state.selectedItag : null,
+    state.streamId === stream.id && state.manuallySelected ? state.selectedItag : null,
   );
   const setOptions = useSabrQualityStore((state) => state.setOptions);
   const selectedTrackId = useSabrAudioStore((state) =>
@@ -36,21 +35,12 @@ export function useSabrPlaybackConfig(
     [defaultAudioLanguage, stream],
   );
   const effectiveTrackId = selectedTrackId ?? fallbackTrackId;
-  const startupItag = useMemo(() => defaultSabrItag(options, "720p"), [options]);
-  const [defaultItag, setDefaultItag] = useState<number | null>(null);
-  const effectiveItag = selectedItag ?? defaultItag ?? startupItag;
-  useEffect(() => {
-    let active = true;
-    if (!enabled) return;
-    setDefaultItag(null);
-    const quality = resolvePreferredQuality(defaultQuality);
-    void bestSabrItag(options, quality, browserSabrCodecProbe()).then((itag) => {
-      if (active) setDefaultItag(itag);
-    });
-    return () => {
-      active = false;
-    };
-  }, [defaultQuality, enabled, options]);
+  const preferredQuality = resolvePreferredQuality(defaultQuality);
+  const defaultItag = useMemo(
+    () => defaultSabrItag(options, preferredQuality),
+    [options, preferredQuality],
+  );
+  const effectiveItag = selectedItag ?? defaultItag;
   useEffect(() => {
     if (!enabled || defaultItag === null) return;
     setOptions(stream.id, options, defaultItag);
