@@ -166,7 +166,7 @@ function RootLayout() {
       {watchCinemaPage ? !isMobile && <Sidebar overlay /> : <Sidebar />}
       <main className={mainClasses} style={topPadding}>
         <Outlet />
-        {!watchCinemaPage && <AppFooter />}
+        <AppFooter />
       </main>
       {showTabBar && <MobileTabBar />}
     </div>

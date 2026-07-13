@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { Heart, Search } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { useAuthToasts } from "../hooks/use-auth-toasts";
@@ -19,6 +19,8 @@ const SearchOverlay = lazy(() =>
     default: module.SearchOverlay,
   })),
 );
+
+const SPONSOR_URL = "https://github.com/sponsors/Priveetee";
 
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -61,6 +63,17 @@ export function Navbar() {
               TYPETYPE
             </span>
           </Link>
+          <a
+            href={SPONSOR_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Support TypeType"
+            title="Support TypeType"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-fg-muted hover:bg-surface-strong hover:text-fg"
+          >
+            <Heart size={15} />
+            <span className="hidden sm:inline">Support</span>
+          </a>
         </div>
 
         {canOpenSearch && isMobile && (

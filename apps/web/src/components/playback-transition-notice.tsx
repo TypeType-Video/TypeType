@@ -104,17 +104,19 @@ export function PlaybackTransitionNotice() {
           </ul>
 
           <div className="border-l-2 border-accent pl-4">
-            <p className="text-sm font-medium text-fg">SABR is the recommended mode.</p>
+            <p className="text-sm font-medium text-fg">
+              SABR is TypeType&apos;s supported and recommended mode.
+            </p>
             <p className="mt-1 text-sm leading-6 text-fg-muted">
-              It follows YouTube&apos;s current delivery path. TypeType keeps Classic available
-              while it still works, but it may stop working for individual videos or entire
-              instances.
+              It follows YouTube&apos;s current delivery path and is the playback path actively
+              maintained and optimized by TypeType. Classic remains available while it still works,
+              but it may stop working for individual videos or entire instances.
             </p>
           </div>
 
           <p className="text-sm leading-6 text-fg-muted">
-            If SABR breaks on a video, please report it on GitHub with the video URL and what
-            happened. Those reports directly help improve this release.
+            SABR should work across supported YouTube videos. If you find an unexpected playback
+            issue, report the video URL and what happened on GitHub so it can be fixed.
           </p>
         </div>
 
