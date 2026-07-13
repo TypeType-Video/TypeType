@@ -8,6 +8,19 @@ export function isInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
+export function isPlayerSeekShortcutTarget(
+  target: EventTarget | null,
+  player: HTMLElement | null,
+): boolean {
+  if (!isInteractiveTarget(target)) return true;
+  if (!(target instanceof HTMLElement) || !player?.contains(target)) return false;
+  const slider = target.closest<HTMLElement>("[role='slider']");
+  if (slider && !slider.classList.contains("vds-time-slider")) return false;
+  return !target.closest(
+    "input, textarea, select, [contenteditable='true'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option']",
+  );
+}
+
 export function clampTime(value: number, duration: number): number {
   const max = duration > 0 ? duration : Number.POSITIVE_INFINITY;
   return Math.min(max, Math.max(0, value));

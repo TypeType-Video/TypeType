@@ -3,15 +3,17 @@ import {
   clampTime,
   consumeEvent,
   isInteractiveTarget,
+  isPlayerSeekShortcutTarget,
   keyboardSeekOffset,
 } from "../components/player-hotkeys-utils";
 import { requestSabrSeek } from "../lib/sabr-vidstack-bridge";
-import { useMediaRemote, useMediaState } from "../lib/vidstack";
+import { useMediaPlayer, useMediaRemote, useMediaState } from "../lib/vidstack";
 import { useHoldFastForward } from "./use-hold-fast-forward";
 
 const FRAME_STEP_SECONDS = 1 / 30;
 
 export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement | null = null) {
+  const player = useMediaPlayer();
   const remote = useMediaRemote();
   const currentTime = useMediaState("currentTime");
   const duration = useMediaState("duration");
@@ -49,6 +51,12 @@ export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement 
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      const seekOffset = keyboardSeekOffset(event.code);
+      if (seekOffset !== null && isPlayerSeekShortcutTarget(event.target, player?.el ?? null)) {
+        consumeEvent(event);
+        seekBy(seekOffset);
+        return;
+      }
       if (isInteractiveTarget(event.target)) return;
       if (event.code === "Space") {
         consumeEvent(event);
@@ -56,12 +64,6 @@ export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement 
           spaceStartedRef.current = true;
           start();
         }
-        return;
-      }
-      const seekOffset = keyboardSeekOffset(event.code);
-      if (seekOffset !== null) {
-        consumeEvent(event);
-        seekBy(seekOffset);
         return;
       }
       if (event.key === "," || event.code === "Comma") {
@@ -99,7 +101,7 @@ export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement 
       window.removeEventListener("blur", onBlur);
       restore(false);
     };
-  }, [canSeek, remote, sabrVideo, start, restore, isActive]);
+  }, [canSeek, player, remote, sabrVideo, start, restore, isActive]);
 
   return holding;
 }

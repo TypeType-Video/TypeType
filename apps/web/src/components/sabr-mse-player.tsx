@@ -6,7 +6,7 @@ import { useSabrQualitySwitch } from "../hooks/use-sabr-quality-switch";
 import { recordClientEvent } from "../lib/client-debug-log";
 import { toAbsoluteApiUrl } from "../lib/env";
 import { isAbortError } from "../lib/sabr-playback-retry";
-import { positionMs, runSabrSeek } from "../lib/sabr-player-seek";
+import { cancelPendingSabrSeek, positionMs, runSabrSeek } from "../lib/sabr-player-seek";
 import { registerSabrVidstackControls } from "../lib/sabr-vidstack-bridge";
 import { useAuthStore } from "../stores/auth-store";
 import type { SabrMsePlayerProps } from "./sabr-mse-player-types";
@@ -172,6 +172,7 @@ export function SabrMsePlayer({
       pendingPlayRef.current = false;
       autoplayStartedRef.current = false;
       autoplayConfirmedRef.current = false;
+      cancelPendingSabrSeek(seekingRef);
       seekingRef.current = false;
       latestHandlers().onSeekStateChange(false);
       video.autoplay = false;

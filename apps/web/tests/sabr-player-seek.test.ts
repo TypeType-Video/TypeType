@@ -9,15 +9,15 @@ test("converts vidstack slider percentages to media seconds", () => {
   expect(secondsFromSliderPercent(Number.NaN, 44)).toBeNull();
 });
 
-test("blocks concurrent sabr seeks until the active seek completes", async () => {
-  let finishSeek: (() => void) | undefined;
+test("queues the latest sabr seek until the active seek completes", async () => {
+  const finishSeeks: Array<() => void> = [];
   const positions: number[] = [];
   const states: boolean[] = [];
   const player = {
     seek: (position: number) => {
       positions.push(position);
       return new Promise<void>((resolve) => {
-        finishSeek = resolve;
+        finishSeeks.push(resolve);
       });
     },
   } as TypeTypeMsePlayer;
@@ -42,10 +42,19 @@ test("blocks concurrent sabr seeks until the active seek completes", async () =>
   expect(flag.current).toBe(true);
   expect(states).toEqual([true]);
 
-  finishSeek?.();
+  finishSeeks.shift()?.();
+  await Bun.sleep(110);
+  await Promise.resolve();
+  await Promise.resolve();
+
+  expect(positions).toEqual([60_000, 120_000]);
+  expect(flag.current).toBe(true);
+  expect(states).toEqual([true, false, true]);
+
+  finishSeeks.shift()?.();
   await Promise.resolve();
   await Promise.resolve();
 
   expect(flag.current).toBe(false);
-  expect(states).toEqual([true, false]);
+  expect(states).toEqual([true, false, true, false]);
 });
