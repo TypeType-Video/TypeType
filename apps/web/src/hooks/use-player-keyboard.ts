@@ -4,7 +4,9 @@ import {
   consumeEvent,
   isInteractiveTarget,
   isPlayerSeekShortcutTarget,
+  type KeyboardSeekTarget,
   keyboardSeekOffset,
+  nextKeyboardSeekTarget,
 } from "../components/player-hotkeys-utils";
 import { requestSabrSeek } from "../lib/sabr-vidstack-bridge";
 import { useMediaPlayer, useMediaRemote, useMediaState } from "../lib/vidstack";
@@ -23,6 +25,10 @@ export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement 
   const durationRef = useRef(0);
   const pausedRef = useRef(true);
   const spaceStartedRef = useRef(false);
+  const seekTargetRef = useRef<KeyboardSeekTarget>({
+    position: 0,
+    updatedAt: Number.NEGATIVE_INFINITY,
+  });
 
   currentTimeRef.current = Number.isFinite(currentTime) ? currentTime : 0;
   durationRef.current = Number.isFinite(duration) ? duration : 0;
@@ -43,10 +49,16 @@ export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement 
 
     function seekBy(seconds: number) {
       if (!canSeek) return;
-      const target = clampTime(currentTimeRef.current + seconds, durationRef.current);
-      currentTimeRef.current = target;
-      if (sabrVideo && requestSabrSeek(sabrVideo, target)) return;
-      remote.seek(target);
+      seekTargetRef.current = nextKeyboardSeekTarget(
+        currentTimeRef.current,
+        durationRef.current,
+        seconds,
+        seekTargetRef.current,
+        performance.now(),
+      );
+      currentTimeRef.current = seekTargetRef.current.position;
+      if (sabrVideo && requestSabrSeek(sabrVideo, seekTargetRef.current.position)) return;
+      remote.seek(seekTargetRef.current.position);
     }
 
     function onKeyDown(event: KeyboardEvent) {
@@ -88,6 +100,7 @@ export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement 
 
     function onBlur() {
       spaceStartedRef.current = false;
+      seekTargetRef.current.updatedAt = Number.NEGATIVE_INFINITY;
       restore();
     }
 

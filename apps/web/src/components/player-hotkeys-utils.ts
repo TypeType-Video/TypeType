@@ -32,6 +32,22 @@ export function keyboardSeekOffset(code: string): number | null {
   return null;
 }
 
+export type KeyboardSeekTarget = {
+  position: number;
+  updatedAt: number;
+};
+
+export function nextKeyboardSeekTarget(
+  currentTime: number,
+  duration: number,
+  offset: number,
+  previous: KeyboardSeekTarget,
+  now: number,
+): KeyboardSeekTarget {
+  const base = now - previous.updatedAt <= 1_000 ? previous.position : currentTime;
+  return { position: clampTime(base + offset, duration), updatedAt: now };
+}
+
 export function consumeEvent(event: KeyboardEvent) {
   event.preventDefault();
   event.stopImmediatePropagation();
