@@ -104,6 +104,9 @@ function videoRepresentation(stream: VideoCandidate): string | null {
     ` width="${dimensions.width}" height="${dimensions.height}"${frameRate}` +
     ` codecs="${escapeXml(stream.codec)}">` +
     `<BaseURL>${escapeXml(proxyUrl(stream.url))}</BaseURL>` +
+    `<SegmentBase indexRange="${stream.indexStart}-${stream.indexEnd}">` +
+    `<Initialization range="${stream.initStart}-${stream.initEnd}"/>` +
+    `</SegmentBase>` +
     `</Representation>`
   );
 }
@@ -117,6 +120,9 @@ function audioRepresentation(stream: AudioCandidate): string {
     ` schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"` +
     ` value="2"/>` +
     `<BaseURL>${escapeXml(proxyUrl(stream.url))}</BaseURL>` +
+    `<SegmentBase indexRange="${stream.indexStart}-${stream.indexEnd}">` +
+    `<Initialization range="${stream.initStart}-${stream.initEnd}"/>` +
+    `</SegmentBase>` +
     `</Representation>`
   );
 }

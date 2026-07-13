@@ -2,6 +2,8 @@ import type { AudioStreamItem, VideoStreamItem } from "../types/api";
 import { proxyUrl } from "./proxy";
 
 const AUDIO_GROUP_ID = "audio";
+const AUDIO_CODEC = "mp4a.40.2";
+const VIDEO_CODEC = "avc1.4d4020";
 const FALLBACK_VIDEO_BANDWIDTHS = [
   [1080, 5_000_000],
   [720, 2_500_000],
@@ -91,6 +93,7 @@ function streamInfo(stream: VideoStreamItem, audio: AudioStreamItem | undefined)
   const attributes = [
     `BANDWIDTH=${bandwidth}`,
     resolution ? `RESOLUTION=${resolution}` : null,
+    `CODECS="${VIDEO_CODEC}${audio ? `,${AUDIO_CODEC}` : ""}"`,
     audio ? `AUDIO="${AUDIO_GROUP_ID}"` : null,
   ].filter((attribute) => attribute !== null);
   return `#EXT-X-STREAM-INF:${attributes.join(",")}`;
@@ -105,7 +108,12 @@ export function buildNicoHlsManifest(
   if (videos.length === 0) return null;
 
   const primaryAudio = audios[0];
-  const lines = ["#EXTM3U", "#EXT-X-VERSION:6", ...audios.map(audioMedia)];
+  const lines = [
+    "#EXTM3U",
+    "#EXT-X-VERSION:6",
+    "#EXT-X-INDEPENDENT-SEGMENTS",
+    ...audios.map(audioMedia),
+  ];
   for (const video of videos) {
     lines.push(streamInfo(video, primaryAudio), proxyUrl(video.url));
   }
