@@ -14,12 +14,26 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
   build-and-push:
+    needs: verify
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+      image: ${{ steps.build-info.outputs.image }}
+      release-tag: ${{ steps.build-info.outputs.release-tag }}
+      revision: ${{ github.sha }}
+      version: ${{ steps.build-info.outputs.version }}
 
     steps:
       - name: Checkout
@@ -32,13 +46,25 @@ jobs:
       - name: Resolve build metadata
         id: build-info
         run: |
-          base_version="$(bun -e 'console.log(require("./apps/web/package.json").version)')"
+          base_version="$(bun -e 'console.log(require("./package.json").version)')"
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             version="${GITHUB_REF_NAME#v}"
+            release_tag="$GITHUB_REF_NAME"
+            image="${REGISTRY}/${GITHUB_REPOSITORY,,}"
+          elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            version="$base_version"
+            release_tag="v$base_version"
+            image="${REGISTRY}/${GITHUB_REPOSITORY,,}"
           else
-            channel="${GITHUB_REF_NAME//[^0-9A-Za-z-]/-}"
-            version="$base_version-$channel.$GITHUB_RUN_NUMBER"
+            version="$base_version-beta.$GITHUB_RUN_NUMBER"
+            release_tag="v$version"
+            image="${REGISTRY}/${GITHUB_REPOSITORY,,}-beta"
           fi
+          IFS=. read -r major minor _ <<< "$base_version"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "major=$major" >> "$GITHUB_OUTPUT"
+          echo "major-minor=$major.$minor" >> "$GITHUB_OUTPUT"
+          echo "release-tag=$release_tag" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "build-time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
 
@@ -62,6 +88,9 @@ jobs:
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ steps.build-info.outputs.version }}
+            type=raw,value=${{ steps.build-info.outputs.major-minor }},enable=${{ github.ref_name == 'main' }}
+            type=raw,value=${{ steps.build-info.outputs.major }},enable=${{ github.ref_name == 'main' }}
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=latest,enable=${{ github.ref_name == 'dev' }}
             type=raw,value=beta,enable=${{ github.ref_name == 'dev' }}
@@ -76,6 +105,7 @@ jobs:
         uses: docker/setup-buildx-action@v4.0.0
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v7.1.0
         with:
           context: .
@@ -96,6 +126,8 @@ jobs:
     if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     environment: stable
+    outputs:
+      deployed: ${{ steps.deploy-result.outputs.deployed }}
     steps:
       - name: Checkout deployment source
         uses: actions/checkout@v6.0.2
@@ -149,11 +181,18 @@ jobs:
           curl --fail --silent --show-error https://watch.typetype.video/api/health
           curl --fail --silent --show-error https://watch.typetype.video/api/downloader/health
 
+      - name: Record stable deployment
+        id: deploy-result
+        if: steps.deploy-config.outputs.configured == 'true'
+        run: echo "deployed=true" >> "$GITHUB_OUTPUT"
+
   deploy-beta:
     needs: build-and-push
     if: github.ref_name == 'dev'
     runs-on: ubuntu-latest
     environment: beta
+    outputs:
+      deployed: ${{ steps.deploy-result.outputs.deployed }}
     steps:
       - name: Check deployment configuration
         id: deploy-config
@@ -192,3 +231,73 @@ jobs:
           ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" "/usr/local/sbin/typetype-beta-update"
           curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/health
           curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/downloader/health
+
+      - name: Record beta deployment
+        id: deploy-result
+        if: steps.deploy-config.outputs.configured == 'true'
+        run: echo "deployed=true" >> "$GITHUB_OUTPUT"
+
+  prerelease:
+    needs: [build-and-push, deploy-beta]
+    if: github.ref_name == 'dev' && needs.deploy-beta.outputs.deployed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
+          IMAGE_NAME: ${{ needs.build-and-push.outputs.image }}
+          RELEASE_TAG: ${{ needs.build-and-push.outputs.release-tag }}
+          RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
+          REVISION: ${{ needs.build-and-push.outputs.revision }}
+        run: |
+          existing_tag="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null || true)"
+          if [[ -n "$existing_tag" && "$existing_tag" != "$REVISION" ]]; then
+            echo "$RELEASE_TAG already targets another commit"
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$REVISION" \
+            --title "TypeType $RELEASE_VERSION" \
+            --prerelease \
+            --latest=false \
+            --generate-notes \
+            --notes "Container image: \`$IMAGE_NAME@$IMAGE_DIGEST\`"
+
+  release:
+    needs: [build-and-push, deploy-stable]
+    if: github.ref_name == 'main' && needs.deploy-stable.outputs.deployed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
+          IMAGE_NAME: ${{ needs.build-and-push.outputs.image }}
+          RELEASE_TAG: ${{ needs.build-and-push.outputs.release-tag }}
+          RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
+          REVISION: ${{ needs.build-and-push.outputs.revision }}
+        run: |
+          existing_tag="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null || true)"
+          if [[ -n "$existing_tag" && "$existing_tag" != "$REVISION" ]]; then
+            echo "$RELEASE_TAG already targets another commit; bump the product version"
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$REVISION" \
+            --title "TypeType $RELEASE_VERSION" \
+            --latest \
+            --generate-notes \
+            --notes "Container image: \`$IMAGE_NAME@$IMAGE_DIGEST\`"

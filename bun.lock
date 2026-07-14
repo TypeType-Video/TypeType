@@ -4,6 +4,7 @@
   "workspaces": {
     "": {
       "name": "typetype",
+      "version": "1.0.0",
       "devDependencies": {
         "@biomejs/biome": "^2.5.3",
         "knip": "^6.25.0",
@@ -12,7 +13,7 @@
     },
     "apps/web": {
       "name": "@typetype/web",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@tanstack/react-query": "^5.101.2",
         "@tanstack/react-router": "^1.170.17",
