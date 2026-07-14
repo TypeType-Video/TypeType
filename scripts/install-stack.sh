@@ -10,6 +10,7 @@ BETA_STACK=0
 AUTO_APPROVE=0
 REF_SET=0
 INSTALL_DIR_SET=0
+ENV_FILE_CREATED=0
 
 DEFAULT_DOWNLOADER_S3_ACCESS_KEY="SET_ME_ACCESS_KEY"
 DEFAULT_DOWNLOADER_S3_SECRET_KEY="SET_ME_SECRET_KEY"
@@ -301,6 +302,10 @@ choose_stack_port() {
   local label="$4"
   local configured
   configured="$(get_env_var "${env_file}" "${key}")"
+  if is_valid_port "${configured}" && [[ ${ENV_FILE_CREATED} -eq 0 ]]; then
+    echo "${configured}"
+    return
+  fi
   if ! is_valid_port "${configured}"; then
     configured="${fallback}"
   fi
@@ -390,6 +395,7 @@ fi
 
 if [[ ! -f "${INSTALL_DIR}/.env" ]]; then
   cp "${INSTALL_DIR}/.env.example" "${INSTALL_DIR}/.env"
+  ENV_FILE_CREATED=1
   echo "[install] Created ${INSTALL_DIR}/.env from .env.example"
 fi
 
@@ -450,7 +456,7 @@ echo "[install] Pulling Docker images..."
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" pull
 
 echo "[install] Starting stack..."
-docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" up -d
+docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" up -d --wait --wait-timeout 180
 
 echo "[install] Bootstrapping Garage..."
 (

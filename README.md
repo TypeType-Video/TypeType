@@ -285,12 +285,18 @@ For a controlled update, set `TYPETYPE_WEB_IMAGE`, `TYPETYPE_SERVER_IMAGE`, `TYP
 Update the whole stack:
 
 ```sh
+curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash -s -- --yes
 cd ~/typetype-stack
-./scripts/bootstrap-env.sh
-docker compose pull
-docker compose up -d --wait --wait-timeout 180
 docker compose ps
 ```
+
+Running the installer again updates the Compose and configuration files, keeps the
+existing `.env` and data volumes, pulls the new images, recreates changed services,
+and provisions any newly added Garage resources. Existing configured ports are kept.
+
+For a script-free update, first replace `docker-compose.yml`, `nginx.conf`, and
+`garage.toml` with their current release versions while keeping `.env`, then run the
+manual update and Garage provisioning steps from the self-hosting guide.
 
 Update only the web client:
 

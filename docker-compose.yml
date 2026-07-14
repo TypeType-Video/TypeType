@@ -12,7 +12,7 @@ services:
   typetype-server:
     image: ${TYPETYPE_SERVER_IMAGE:-ghcr.io/priveetee/typetype-server:latest}
     ports:
-      - "${HOST_PORT_SERVER:-8080}:8080"
+      - "${HOST_BIND_SERVER:-127.0.0.1}:${HOST_PORT_SERVER:-8080}:8080"
     environment:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8082,http://127.0.0.1:8082,http://localhost:5173,http://127.0.0.1:5173}
       DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-typetype}}
@@ -59,14 +59,22 @@ services:
         }
         ensure_secret() {
           file="$$1"
-          if [ ! -s "$$file" ]; then
+          value="$$2"
+          placeholder="$$3"
+          legacy_placeholder="$$4"
+          if [ -n "$$value" ] && [ "$$value" != "$$placeholder" ] && [ "$$value" != "$$legacy_placeholder" ]; then
+            printf '%s' "$$value" > "$$file"
+          elif [ ! -s "$$file" ]; then
             generate_secret > "$$file"
           fi
           chmod 0444 "$$file"
         }
         mkdir -p /run/typetype-secrets
-        ensure_secret /run/typetype-secrets/youtube_remote_login_internal_token
-        ensure_secret /run/typetype-secrets/youtube_session_encryption_key
+        ensure_secret /run/typetype-secrets/youtube_remote_login_internal_token "$$YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN" SET_ME_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN SET_ME_SHARED_SECRET
+        ensure_secret /run/typetype-secrets/youtube_session_encryption_key "$$YOUTUBE_SESSION_ENCRYPTION_KEY" SET_ME_YOUTUBE_SESSION_ENCRYPTION_KEY SET_ME_SHARED_SECRET
+    environment:
+      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
+      YOUTUBE_SESSION_ENCRYPTION_KEY: ${YOUTUBE_SESSION_ENCRYPTION_KEY:-}
     volumes:
       - typetype_secrets:/run/typetype-secrets
     restart: "no"
@@ -110,7 +118,7 @@ services:
   typetype-token:
     image: ${TYPETYPE_TOKEN_IMAGE:-ghcr.io/priveetee/typetype-token:latest}
     ports:
-      - "${HOST_PORT_TOKEN:-8081}:8081"
+      - "${HOST_BIND_TOKEN:-127.0.0.1}:${HOST_PORT_TOKEN:-8081}:8081"
     init: true
     ipc: host
     environment:
@@ -175,7 +183,7 @@ services:
   garage:
     image: dxflrs/garage:v2.2.0
     ports:
-      - "${HOST_PORT_GARAGE_S3:-3900}:3900"
+      - "${HOST_BIND_GARAGE_S3:-127.0.0.1}:${HOST_PORT_GARAGE_S3:-3900}:3900"
     environment:
       GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-}
     volumes:

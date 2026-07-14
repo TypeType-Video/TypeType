@@ -13,7 +13,7 @@ services:
   typetype-server:
     image: ${TYPETYPE_SERVER_BETA_IMAGE:-ghcr.io/priveetee/typetype-server-beta:latest}
     ports:
-      - "${HOST_PORT_SERVER_BETA:-18080}:8080"
+      - "${HOST_BIND_SERVER_BETA:-127.0.0.1}:${HOST_PORT_SERVER_BETA:-18080}:8080"
     env_file: .env
     environment:
       DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-typetype}}
@@ -44,7 +44,7 @@ services:
   typetype-downloader:
     image: ${TYPETYPE_DOWNLOADER_BETA_IMAGE:-ghcr.io/priveetee/typetype-downloader-beta:latest}
     ports:
-      - "${HOST_PORT_DOWNLOADER_BETA:-19093}:18093"
+      - "${HOST_BIND_DOWNLOADER_BETA:-127.0.0.1}:${HOST_PORT_DOWNLOADER_BETA:-19093}:18093"
     environment:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
@@ -84,7 +84,7 @@ services:
   typetype-token:
     image: ${TYPETYPE_TOKEN_BETA_IMAGE:-ghcr.io/priveetee/typetype-token-beta:latest}
     ports:
-      - "${HOST_PORT_TOKEN_BETA:-18081}:8081"
+      - "${HOST_BIND_TOKEN_BETA:-127.0.0.1}:${HOST_PORT_TOKEN_BETA:-18081}:8081"
     init: true
     ipc: host
     environment:
@@ -144,7 +144,7 @@ services:
   garage:
     image: dxflrs/garage:v2.2.0
     ports:
-      - "${HOST_PORT_GARAGE_S3_BETA:-3900}:3900"
+      - "${HOST_BIND_GARAGE_S3_BETA:-127.0.0.1}:${HOST_PORT_GARAGE_S3_BETA:-3900}:3900"
     environment:
       GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-}
     volumes:
