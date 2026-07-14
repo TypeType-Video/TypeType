@@ -20,7 +20,6 @@ const POLL_MS = 1_500;
 
 export function useDownloaderJob() {
   const [eventJob, setEventJob] = useState<DownloaderJobResponse | null>(null);
-  const [sseUnavailable, setSseUnavailable] = useState(false);
 
   const create = useMutation({
     mutationFn: (payload: DownloaderCreateJobRequest) => createDownloaderJob(payload),
@@ -35,11 +34,10 @@ export function useDownloaderJob() {
 
   useEffect(() => {
     if (!jobId) return;
-    setSseUnavailable(false);
     return subscribeDownloaderEvents(jobId, {
       onMessage: (next) =>
         setEventJob((current) => (current?.id === next.id ? { ...current, ...next } : next)),
-      onError: () => setSseUnavailable(true),
+      onError: () => undefined,
     });
   }, [jobId]);
 
@@ -48,15 +46,15 @@ export function useDownloaderJob() {
     enabled: typeof jobId === "string" && jobId.length > 0,
     queryFn: () => fetchDownloaderJob(jobId ?? ""),
     refetchInterval: (query) => {
-      if (
-        !sseUnavailable &&
-        eventJob &&
-        (eventJob.status === "queued" || eventJob.status === "running")
-      ) {
-        return false;
-      }
       const current = query.state.data?.status;
-      return current === "queued" || current === "running" ? POLL_MS : false;
+      if (current === "done" || current === "failed") return false;
+      const eventStatus = eventJob?.status;
+      const active =
+        current === "queued" ||
+        current === "running" ||
+        eventStatus === "queued" ||
+        eventStatus === "running";
+      return active ? POLL_MS : false;
     },
   });
   const job = useMemo(() => {
@@ -111,7 +109,6 @@ export function useDownloaderJob() {
 
   function start(payload: DownloaderCreateJobRequest) {
     setEventJob(null);
-    setSseUnavailable(false);
     create.reset();
     create.mutate(payload);
   }
@@ -128,7 +125,6 @@ export function useDownloaderJob() {
 
   function reset() {
     setEventJob(null);
-    setSseUnavailable(false);
     cancel.reset();
     create.reset();
   }
