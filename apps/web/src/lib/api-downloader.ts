@@ -1,3 +1,4 @@
+import { useAuthStore } from "../stores/auth-store";
 import type {
   DownloaderCreateJobRequest,
   DownloaderCreateJobResponse,
@@ -50,12 +51,19 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function downloaderHeaders(init?: HeadersInit): Headers {
+  const headers = new Headers(init);
+  const token = useAuthStore.getState().token;
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return headers;
+}
+
 export async function createDownloaderJob(
   payload: DownloaderCreateJobRequest,
 ): Promise<DownloaderCreateJobResponse> {
   const res = await fetch(`${BASE}/downloader/jobs`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: downloaderHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(payload),
   });
   const body = await readJson(res);
@@ -66,7 +74,9 @@ export async function createDownloaderJob(
 }
 
 export async function fetchDownloaderJob(jobId: string): Promise<DownloaderJobResponse> {
-  const res = await fetch(`${BASE}/downloader/jobs/${encodeURIComponent(jobId)}`);
+  const res = await fetch(`${BASE}/downloader/jobs/${encodeURIComponent(jobId)}`, {
+    headers: downloaderHeaders(),
+  });
   const body = await readJson(res);
   if (!res.ok) {
     throw new ApiError(readErrorMessage(body, "Failed to fetch download job"), res.status);
@@ -77,6 +87,7 @@ export async function fetchDownloaderJob(jobId: string): Promise<DownloaderJobRe
 export async function cancelDownloaderJob(jobId: string): Promise<DownloaderJobResponse> {
   const res = await fetch(`${BASE}/downloader/jobs/${encodeURIComponent(jobId)}/cancel`, {
     method: "POST",
+    headers: downloaderHeaders(),
   });
   const body = await readJson(res);
   if (!res.ok) {
@@ -93,6 +104,7 @@ export async function cancelDownloaderJob(jobId: string): Promise<DownloaderJobR
 export async function deleteDownloaderJob(jobId: string): Promise<void> {
   const res = await fetch(`${BASE}/downloader/jobs/${encodeURIComponent(jobId)}`, {
     method: "DELETE",
+    headers: downloaderHeaders(),
   });
   if (res.ok || res.status === 404) return;
   const body = await readJson(res);

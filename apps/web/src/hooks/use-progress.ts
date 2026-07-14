@@ -20,11 +20,11 @@ export function useSaveProgress(videoUrl: string) {
   const { authReady, isAuthed } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (position: number) => {
+    mutationFn: ({ position, keepalive }: { position: number; keepalive: boolean }) => {
       const token = useAuthStore.getState().token;
-      return token ? updateProgress(videoUrl, position) : Promise.resolve();
+      return token ? updateProgress(videoUrl, position, keepalive) : Promise.resolve();
     },
-    onSuccess: (_, position) => {
+    onSuccess: (_, { position }) => {
       if (!authReady || !isAuthed || !useAuthStore.getState().token) return;
       const next: ProgressItem = {
         videoUrl,

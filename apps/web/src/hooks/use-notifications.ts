@@ -21,8 +21,8 @@ export function useNotifications(open: boolean) {
     enabled,
     refetchInterval: enabled ? 90_000 : false,
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const query = useInfiniteQuery({
@@ -33,8 +33,8 @@ export function useNotifications(open: boolean) {
     enabled: enabled && open,
     staleTime: 30_000,
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const markAllRead = useMutation({

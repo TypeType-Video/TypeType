@@ -2,6 +2,7 @@ import type * as dashjs from "dashjs";
 import { useRef } from "react";
 import { useDashPlayerSnapshot } from "../lib/dash-player-store";
 import { dashQualityOptions, selectDashTrack, selectedDashHeight } from "../lib/dash-video";
+import { sabrResolutionOptions } from "../lib/sabr-quality-selection";
 import type { DefaultLayoutIcon, MenuInstance } from "../lib/vidstack";
 import {
   ClipIcon,
@@ -10,6 +11,7 @@ import {
   Menu,
   useVideoQualityOptions,
 } from "../lib/vidstack";
+import { useSabrQualityStore } from "../stores/sabr-quality-store";
 
 const qualityIcon: DefaultLayoutIcon = (props) => <ClipIcon {...props} />;
 const MENU_ITEMS_CLASS =
@@ -44,6 +46,39 @@ export function QualitySelector() {
   const menuRef = useRef<MenuInstance>(null);
   const { player, selectedVideoTrack } = useDashPlayerSnapshot();
   const options = useVideoQualityOptions(QUALITY_OPTIONS);
+  const sabrStreamId = useSabrQualityStore((state) => state.streamId);
+  const sabrOptions = useSabrQualityStore((state) => state.options);
+  const sabrSelectedItag = useSabrQualityStore((state) => state.selectedItag);
+  const selectSabrQuality = useSabrQualityStore((state) => state.selectQuality);
+
+  if (sabrStreamId && sabrOptions.length > 0) {
+    const streamId = sabrStreamId;
+    const selected =
+      sabrOptions.find((option) => option.itag === sabrSelectedItag) ?? sabrOptions[0];
+    const resolutionOptions = sabrResolutionOptions(sabrOptions, selected);
+    if (resolutionOptions.length <= 1) return null;
+    function onSabrChange(value: string) {
+      const itag = Number(value);
+      if (!Number.isInteger(itag)) return;
+      selectSabrQuality(streamId, itag);
+      menuRef.current?.close();
+    }
+    return (
+      <Menu.Root ref={menuRef} className="vds-quality-menu vds-menu">
+        <DefaultMenuButton label="Quality" hint={selected.label} Icon={qualityIcon} />
+        <Menu.Items className={MENU_ITEMS_CLASS}>
+          <DefaultMenuRadioGroup
+            value={String(selected.itag)}
+            options={resolutionOptions.map((option) => ({
+              label: option.label,
+              value: String(option.itag),
+            }))}
+            onChange={onSabrChange}
+          />
+        </Menu.Items>
+      </Menu.Root>
+    );
+  }
 
   const dashTrack = player ? activeDashTrack(player, selectedVideoTrack) : null;
   if (player && dashTrack) {

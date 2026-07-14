@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useClientLocale } from "../hooks/use-client-locale";
-import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { formatPublishedDate } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
 import { watchRouteSearch } from "../lib/watch-url";
@@ -19,7 +19,11 @@ export function NotificationRow({ item, onOpen }: Props) {
       ? item.publishedAt
       : item.video.publishedAt;
   const createdText = formatPublishedDate(publishedAt ?? undefined, undefined, locale) || "recent";
-  const prefetch = useWatchPrefetch(videoId);
+  const branding = useDeArrowBranding(
+    videoId,
+    item.video.title,
+    proxyImage(item.video.thumbnailUrl),
+  );
 
   return (
     <Link
@@ -27,17 +31,15 @@ export function NotificationRow({ item, onOpen }: Props) {
       search={watchRouteSearch(videoId)}
       className="grid grid-cols-[96px_1fr] gap-3 rounded-lg px-2 py-2 hover:bg-surface-strong [animation:card-pop-in_0.24s_ease-out]"
       onClick={onOpen}
-      onMouseEnter={prefetch.onMouseEnter}
-      onMouseLeave={prefetch.onMouseLeave}
     >
       <img
-        src={proxyImage(item.video.thumbnailUrl)}
-        alt={item.video.title}
+        src={branding.thumbnail}
+        alt={branding.title}
         className="h-[54px] w-24 rounded object-cover"
         loading="lazy"
       />
       <div className="min-w-0">
-        <p className="line-clamp-2 text-sm font-medium leading-tight text-fg">{item.video.title}</p>
+        <p className="line-clamp-2 text-sm font-medium leading-tight text-fg">{branding.title}</p>
         <div className="mt-1 flex items-center gap-1.5">
           <img
             src={proxyImage(item.channelAvatarUrl)}

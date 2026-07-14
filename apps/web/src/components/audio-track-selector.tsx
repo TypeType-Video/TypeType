@@ -7,6 +7,7 @@ import {
   Menu,
   useAudioOptions,
 } from "../lib/vidstack";
+import { useSabrAudioStore } from "../stores/sabr-audio-store";
 import { includesOriginal, normalizeLanguageTag } from "./player-language";
 
 const languageIcon: DefaultLayoutIcon = (props) => <LanguageIcon {...props} />;
@@ -15,11 +16,26 @@ const MENU_ITEMS_CLASS =
 
 type Props = {
   originalLocale?: string | null;
+  sabr?: boolean;
 };
 
-export function AudioTrackSelector({ originalLocale }: Props) {
+export function AudioTrackSelector({ originalLocale, sabr = false }: Props) {
   const menuRef = useRef<MenuInstance>(null);
-  const options = useAudioOptions();
+  const nativeOptions = useAudioOptions();
+  const sabrStreamId = useSabrAudioStore((state) => state.streamId);
+  const sabrOptions = useSabrAudioStore((state) => state.options);
+  const selectedTrackId = useSabrAudioStore((state) => state.selectedTrackId);
+  const selectSabrTrack = useSabrAudioStore((state) => state.selectTrack);
+  const options = sabr
+    ? sabrOptions.map((option) => ({
+        label: option.label,
+        selected: option.id === selectedTrackId,
+        track: { language: option.language },
+        select: () => {
+          if (sabrStreamId) selectSabrTrack(sabrStreamId, option.id);
+        },
+      }))
+    : nativeOptions;
 
   if (options.length <= 1) return null;
 
@@ -30,7 +46,9 @@ export function AudioTrackSelector({ originalLocale }: Props) {
     normalizeLanguageTag(selectedOption?.track.language) === normalizeLanguageTag(originalLocale);
   const selectedIsOriginal = selectedTrackLooksOriginal || selectedMatchesOriginalLocale;
   const currentHint = selectedIsOriginal
-    ? `${selectedOption?.label} (original)`
+    ? includesOriginal(selectedOption?.label)
+      ? selectedOption?.label
+      : `${selectedOption?.label} (original)`
     : selectedOption?.label;
 
   const radioOptions = options.map((o, index) => {
@@ -39,7 +57,7 @@ export function AudioTrackSelector({ originalLocale }: Props) {
       (originalLocale != null &&
         normalizeLanguageTag(o.track.language) === normalizeLanguageTag(originalLocale));
     return {
-      label: isOriginal ? `${o.label} (original)` : o.label,
+      label: isOriginal && !includesOriginal(o.label) ? `${o.label} (original)` : o.label,
       value: `${o.label}-${o.track.language ?? "und"}-${index}`,
     };
   });

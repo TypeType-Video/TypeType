@@ -147,7 +147,6 @@ export function ShortsVideoPlayer({
           initialVolume={initialVolume}
           initialMuted={initialMuted}
           settingsReady={settingsReady}
-          autoplay={autoplay}
           onVolumeChange={onVolumeChange}
         />
         <MediaSessionSync title={title} artwork={poster} />

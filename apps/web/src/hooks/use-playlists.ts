@@ -4,7 +4,6 @@ import {
   addVideoToPlaylist,
   createPlaylist,
   deletePlaylist,
-  fetchPlaylist,
   fetchPlaylists,
   removeVideoFromPlaylist,
   reorderPlaylist,
@@ -83,15 +82,18 @@ export function usePlaylists() {
       await qc.cancelQueries({ queryKey: KEY });
       const snapshot = qc.getQueryData<PlaylistItem[]>(KEY);
       qc.setQueryData<PlaylistItem[]>(KEY, (old) =>
-        (old ?? []).map((p) =>
-          p.id === playlistId
-            ? {
-                ...p,
-                videos: [
-                  ...p.videos,
+        (old ?? []).map((p) => {
+          if (p.id !== playlistId) return p;
+          const videos = p.videos ?? [];
+          return {
+            ...p,
+            videoCount: (p.videoCount ?? videos.length) + 1,
+            videos: p.videos
+              ? [
+                  ...videos,
                   {
-                    id: "",
-                    position: p.videos.length,
+                    id: video.url,
+                    position: videos.length,
                     channelName: "",
                     channelUrl: "",
                     channelAvatar: "",
@@ -101,10 +103,10 @@ export function usePlaylists() {
                     progressUpdatedAt: 0,
                     ...video,
                   },
-                ],
-              }
-            : p,
-        ),
+                ]
+              : undefined,
+          };
+        }),
       );
       return { snapshot };
     },
@@ -121,9 +123,15 @@ export function usePlaylists() {
       await qc.cancelQueries({ queryKey: KEY });
       const snapshot = qc.getQueryData<PlaylistItem[]>(KEY);
       qc.setQueryData<PlaylistItem[]>(KEY, (old) =>
-        (old ?? []).map((p) =>
-          p.id === playlistId ? { ...p, videos: p.videos.filter((v) => v.url !== videoUrl) } : p,
-        ),
+        (old ?? []).map((p) => {
+          if (p.id !== playlistId) return p;
+          const videos = p.videos?.filter((v) => v.url !== videoUrl);
+          return {
+            ...p,
+            videoCount: Math.max(0, (p.videoCount ?? p.videos?.length ?? 1) - 1),
+            videos,
+          };
+        }),
       );
       return { snapshot };
     },
@@ -141,7 +149,7 @@ export function usePlaylists() {
       await qc.cancelQueries({ queryKey: detailKey });
       const snapshot = qc.getQueryData<PlaylistItem>(detailKey);
       qc.setQueryData<PlaylistItem>(detailKey, (old) =>
-        old ? { ...old, videos: reorderByUrl(old.videos, order) } : old,
+        old ? { ...old, videos: reorderByUrl(old.videos ?? [], order) } : old,
       );
       return { snapshot, detailKey };
     },
@@ -154,16 +162,8 @@ export function usePlaylists() {
   function isInPlaylist(playlistId: string, videoUrl: string): boolean {
     if (!isAuthed) return false;
     const pl = (query.data ?? []).find((p) => p.id === playlistId);
-    return pl?.videos.some((v) => v.url === videoUrl) ?? false;
+    return pl?.videos?.some((v) => v.url === videoUrl) ?? false;
   }
 
   return { query, create, remove, rename, addVideo, removeVideo, reorder, isInPlaylist };
-}
-
-export function usePlaylist(id: string) {
-  return useQuery({
-    queryKey: [...KEY, id],
-    queryFn: () => fetchPlaylist(id),
-    enabled: id.length > 0,
-  });
 }

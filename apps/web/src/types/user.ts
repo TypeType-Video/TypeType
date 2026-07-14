@@ -2,6 +2,9 @@ export type ServiceId = 0 | 5 | 6;
 export type SponsorBlockMode = "auto_skip" | "mark_only" | "disabled";
 export type SponsorBlockCategoryAction = "auto_skip" | "mark_only" | "disabled";
 export type AccessMode = "unrestricted" | "allow_list";
+export type DeArrowTitleMode = "original" | "dearrow";
+export type DeArrowThumbnailMode = "original" | "dearrow" | "random" | "dearrow_or_random";
+export type DeArrowTrustMode = "accepted" | "locked";
 type SponsorBlockCategoryActions = Record<string, SponsorBlockCategoryAction>;
 
 export type HistoryItem = {
@@ -16,6 +19,8 @@ export type HistoryItem = {
   duration: number;
   progress: number;
   watchedAt: number;
+  publishedAt?: number;
+  viewCount?: number;
 };
 
 export type SubscriptionItem = {
@@ -47,7 +52,8 @@ export type PlaylistItem = {
   id: string;
   name: string;
   description: string;
-  videos: PlaylistVideoItem[];
+  videos?: PlaylistVideoItem[];
+  videoCount?: number;
   createdAt: number;
 };
 
@@ -100,6 +106,9 @@ export type SettingsItem = {
   defaultLandingPage: string;
   defaultQuality: string;
   autoplay: boolean;
+  autoplayCountdownSeconds: number;
+  skipPlaylistAutoplayScreen: boolean;
+  audioOnlyPlayback: boolean;
   volume: number;
   muted: boolean;
   subtitlesEnabled: boolean;
@@ -117,6 +126,10 @@ export type SettingsItem = {
   sponsorBlockSkipNonMusicOnlyOnMusicVideos: boolean;
   sponsorBlockMuteInsteadOfSkip: boolean;
   disableWatchHistory: boolean;
+  deArrowEnabled: boolean;
+  deArrowTitleMode: DeArrowTitleMode;
+  deArrowThumbnailMode: DeArrowThumbnailMode;
+  deArrowTrustMode: DeArrowTrustMode;
   hideContinueWatching: boolean;
   hideHomeRecommendations: boolean;
   hideRelatedVideos: boolean;

@@ -12,3 +12,7 @@ export function toApiUrl(pathOrUrl: string): string {
   }
   return joinPath(API_BASE, pathOrUrl);
 }
+
+export function toAbsoluteApiUrl(pathOrUrl: string): string {
+  return new URL(toApiUrl(pathOrUrl), window.location.origin).href;
+}

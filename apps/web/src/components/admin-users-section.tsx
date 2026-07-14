@@ -112,6 +112,7 @@ export function AdminUsersSection({ enabled, currentUserId, onToast }: Props) {
             <AdminUserDetailPanel
               user={selectedUser}
               busy={busy}
+              onMessage={onToast}
               onRole={(id, nextRole) => {
                 role.mutate(
                   { id, role: nextRole },

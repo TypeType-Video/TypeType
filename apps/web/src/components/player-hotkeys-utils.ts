@@ -8,9 +8,44 @@ export function isInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
+export function isPlayerSeekShortcutTarget(
+  target: EventTarget | null,
+  player: HTMLElement | null,
+): boolean {
+  if (!isInteractiveTarget(target)) return true;
+  if (!(target instanceof HTMLElement) || !player?.contains(target)) return false;
+  const slider = target.closest<HTMLElement>("[role='slider']");
+  if (slider && !slider.classList.contains("vds-time-slider")) return false;
+  return !target.closest(
+    "input, textarea, select, [contenteditable='true'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option']",
+  );
+}
+
 export function clampTime(value: number, duration: number): number {
   const max = duration > 0 ? duration : Number.POSITIVE_INFINITY;
   return Math.min(max, Math.max(0, value));
+}
+
+export function keyboardSeekOffset(code: string): number | null {
+  if (code === "ArrowLeft") return -10;
+  if (code === "ArrowRight") return 10;
+  return null;
+}
+
+export type KeyboardSeekTarget = {
+  position: number;
+  updatedAt: number;
+};
+
+export function nextKeyboardSeekTarget(
+  currentTime: number,
+  duration: number,
+  offset: number,
+  previous: KeyboardSeekTarget,
+  now: number,
+): KeyboardSeekTarget {
+  const base = now - previous.updatedAt <= 1_000 ? previous.position : currentTime;
+  return { position: clampTime(base + offset, duration), updatedAt: now };
 }
 
 export function consumeEvent(event: KeyboardEvent) {

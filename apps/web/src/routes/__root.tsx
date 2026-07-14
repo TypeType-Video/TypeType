@@ -1,29 +1,30 @@
 import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { AppFooter } from "../components/app-footer";
+import { AuthBackdrop } from "../components/auth-backdrop";
+import { GuestDisabledScreen } from "../components/guest-disabled-screen";
 import { MobileTabBar } from "../components/mobile-tab-bar";
 import { Navbar } from "../components/navbar";
+import { PlaybackTransitionNotice } from "../components/playback-transition-notice";
 import { Sidebar } from "../components/sidebar";
 import { useAuth } from "../hooks/use-auth";
+import { useInstance } from "../hooks/use-instance";
 import { useMobile } from "../hooks/use-mobile";
+import { useRegisterStatus } from "../hooks/use-register-status";
 import { useSessionActivityReporting } from "../hooks/use-session-activity-reporting";
 import { isAdminRoute, isAuthPage, requiresAuth } from "../lib/auth-routes";
 import { bootstrapSession } from "../lib/auth-session";
 import { applyTheme } from "../lib/theme";
+import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
 import { useUiStore } from "../stores/ui-store";
 import { useWatchLayoutStore } from "../stores/watch-layout-store";
 
 function AuthShell() {
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-app via-surface to-app text-fg">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 -left-16 h-80 w-80 rounded-full bg-sky-700/15 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
-      </div>
-      <main className="relative z-10 min-h-screen px-4 py-8 flex items-center justify-center">
-        <Outlet />
-      </main>
-    </div>
+    <AuthBackdrop contentClassName="flex min-h-screen items-center justify-center px-4 py-8">
+      <Outlet />
+    </AuthBackdrop>
   );
 }
 
@@ -34,7 +35,10 @@ function RootLayout() {
   const closeMobileSidebar = useUiStore((s) => s.closeMobileSidebar);
   const theme = useThemeStore((s) => s.theme);
   const cinemaMode = useWatchLayoutStore((s) => s.cinemaMode);
-  const { isAuthed, isAdmin, status } = useAuth();
+  const { isAuthed, isAdmin, isGuest, status } = useAuth();
+  const setSignedOut = useAuthStore((s) => s.setSignedOut);
+  const { data: instance } = useInstance();
+  const registerStatus = useRegisterStatus(status !== "loading");
   const location = useRouterState({ select: (state) => state.location });
   const pathname = location.pathname;
   const pathWithSearch = `${pathname}${location.searchStr}`;
@@ -71,6 +75,16 @@ function RootLayout() {
 
   useEffect(() => {
     if (status === "loading") return;
+    if (registerStatus.data?.bootstrapAvailable) {
+      setSignedOut();
+      if (pathname !== "/register") {
+        const redirect = isAuthPage(pathname)
+          ? ""
+          : `?redirect=${encodeURIComponent(pathWithSearch)}`;
+        window.location.replace(`/register${redirect}`);
+      }
+      return;
+    }
     if (!isAuthed && isAdminRoute(pathname)) {
       const redirect = encodeURIComponent(pathWithSearch);
       window.location.replace(`/login?redirect=${redirect}`);
@@ -85,7 +99,15 @@ function RootLayout() {
       window.location.replace("/");
       return;
     }
-  }, [isAuthed, isAdmin, status, pathname, pathWithSearch]);
+  }, [
+    isAuthed,
+    isAdmin,
+    registerStatus.data?.bootstrapAvailable,
+    status,
+    pathname,
+    pathWithSearch,
+    setSignedOut,
+  ]);
 
   if (status === "loading" && (requiresAuth(pathname) || isAdminRoute(pathname))) {
     return (
@@ -96,6 +118,10 @@ function RootLayout() {
   }
 
   const authPage = isAuthPage(pathname);
+
+  if (instance?.guestAllowed === false && (!isAuthed || isGuest) && !authPage) {
+    return <GuestDisabledScreen />;
+  }
 
   if (authPage) {
     return <AuthShell />;
@@ -113,6 +139,7 @@ function RootLayout() {
     return (
       <div className="min-h-screen bg-app text-fg">
         <Navbar />
+        <PlaybackTransitionNotice />
         <Sidebar />
         <main style={{ paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}>
           <Outlet />
@@ -135,9 +162,11 @@ function RootLayout() {
   return (
     <div className="min-h-screen bg-app text-fg">
       <Navbar />
+      <PlaybackTransitionNotice />
       {watchCinemaPage ? !isMobile && <Sidebar overlay /> : <Sidebar />}
       <main className={mainClasses} style={topPadding}>
         <Outlet />
+        <AppFooter />
       </main>
       {showTabBar && <MobileTabBar />}
     </div>

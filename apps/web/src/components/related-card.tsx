@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { memo } from "react";
-import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
-import { formatDuration, formatViews } from "../lib/format";
+import { useClientLocale } from "../hooks/use-client-locale";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
+import { formatDuration, formatPublishedDate, formatViews } from "../lib/format";
 import { watchRouteSearch } from "../lib/watch-url";
+import { useWatchNavigationStore } from "../stores/watch-navigation-store";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
@@ -12,23 +14,33 @@ import { VerifiedBadgeIcon } from "./watch-icons";
 
 type Props = {
   stream: VideoStream;
+  relatedStreams?: VideoStream[];
 };
 
-function RelatedCardComponent({ stream }: Props) {
-  const prefetch = useWatchPrefetch(stream.id);
+function RelatedCardComponent({ stream, relatedStreams }: Props) {
+  const locale = useClientLocale();
+  const setNavigation = useWatchNavigationStore((state) => state.setNavigation);
+  const { title, thumbnail } = useDeArrowBranding(
+    stream.id,
+    stream.title,
+    stream.thumbnail,
+    stream.duration,
+  );
+  const publishedText = formatPublishedDate(stream.publishedAt, undefined, locale);
+  const metadata = [formatViews(stream.views), publishedText].filter(Boolean).join(" · ");
 
   return (
-    <div className="flex gap-2 group">
+    <article className="flex gap-2 group">
       <Link
         to="/watch"
         search={watchRouteSearch(stream.id)}
+        preload="intent"
         className="relative w-40 aspect-video rounded-md overflow-hidden bg-surface-strong flex-shrink-0"
-        onMouseEnter={prefetch.onMouseEnter}
-        onMouseLeave={prefetch.onMouseLeave}
+        onClick={() => setNavigation(stream, relatedStreams)}
       >
         <img
-          src={stream.thumbnail}
-          alt={stream.title}
+          src={thumbnail}
+          alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           loading="lazy"
           decoding="async"
@@ -53,11 +65,11 @@ function RelatedCardComponent({ stream }: Props) {
         <Link
           to="/watch"
           search={watchRouteSearch(stream.id)}
+          preload="intent"
           className="text-xs font-medium text-fg line-clamp-2 leading-snug hover:text-fg-strong"
-          onMouseEnter={prefetch.onMouseEnter}
-          onMouseLeave={prefetch.onMouseLeave}
+          onClick={() => setNavigation(stream, relatedStreams)}
         >
-          {stream.title}
+          {title}
         </Link>
         {stream.channelUrl ? (
           <ChannelRouteLink
@@ -87,10 +99,10 @@ function RelatedCardComponent({ stream }: Props) {
             </span>
           </div>
         )}
-        <p className="text-xs text-fg-soft">{formatViews(stream.views)}</p>
+        <p className="text-xs text-fg-soft">{metadata}</p>
       </div>
       <VideoCardFeedbackMenu stream={stream} />
-    </div>
+    </article>
   );
 }
 

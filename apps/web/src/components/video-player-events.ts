@@ -6,7 +6,7 @@ import { onProviderChange } from "./video-player-core";
 
 type Args = {
   src: MediaSrc;
-  onError?: () => void;
+  onError?: (positionMs?: number) => void;
   onEnded?: () => void;
 };
 

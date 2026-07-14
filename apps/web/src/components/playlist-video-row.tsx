@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { GripVertical } from "lucide-react";
 import type { DragEvent } from "react";
-import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { formatDuration, formatViews } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
 import { isVideoWatched } from "../lib/watch-progress";
@@ -43,9 +43,10 @@ type Props = {
 };
 
 export function PlaylistVideoRow({ video, onRemove, reorderable, listId, onDragStart }: Props) {
-  const prefetch = useWatchPrefetch(video.url);
   const rawThumbnail = video.thumbnail.trim();
-  const thumbnail = rawThumbnail.length > 0 ? proxyImage(rawThumbnail) : null;
+  const fallbackThumbnail = rawThumbnail.length > 0 ? proxyImage(rawThumbnail) : "";
+  const branding = useDeArrowBranding(video.url, video.title, fallbackThumbnail, video.duration);
+  const thumbnail = branding.thumbnail || null;
   const watched = video.watched || isVideoWatched(video.watchPosition, video.duration);
   const rawChannelName = video.channelName?.trim() ?? "";
   const rawChannelUrl = video.channelUrl?.trim() ?? "";
@@ -73,18 +74,12 @@ export function PlaylistVideoRow({ video, onRemove, reorderable, listId, onDragS
 
   return (
     <div className="flex flex-col gap-2 group relative">
-      <Link
-        to="/watch"
-        search={watchSearch}
-        className="block"
-        onMouseEnter={prefetch.onMouseEnter}
-        onMouseLeave={prefetch.onMouseLeave}
-      >
+      <Link to="/watch" search={watchSearch} className="block">
         <div className="relative aspect-video rounded-xl overflow-hidden bg-surface-strong">
           {thumbnail && (
             <img
               src={thumbnail}
-              alt={video.title}
+              alt={branding.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
               loading="lazy"
               decoding="async"
@@ -126,14 +121,9 @@ export function PlaylistVideoRow({ video, onRemove, reorderable, listId, onDragS
           )}
         </div>
       </Link>
-      <Link
-        to="/watch"
-        search={watchSearch}
-        onMouseEnter={prefetch.onMouseEnter}
-        onMouseLeave={prefetch.onMouseLeave}
-      >
+      <Link to="/watch" search={watchSearch}>
         <p className="text-sm font-medium text-fg line-clamp-2 leading-snug group-hover:text-fg-strong transition-colors">
-          {video.title}
+          {branding.title}
         </p>
       </Link>
       <div className="flex min-w-0 items-start justify-between gap-2">

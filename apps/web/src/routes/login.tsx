@@ -62,7 +62,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-4">
+    <div className="flex w-full items-center justify-center px-4">
       <Toast message={toast} />
       <AuthCard title="Sign in" subtitle="Use your account credentials to continue.">
         <AuthErrorBanner message={error} />

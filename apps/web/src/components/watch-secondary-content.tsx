@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
 import type { VideoStream } from "../types/stream";
 import { RelatedVideos } from "./related-videos";
 import { WatchMeta } from "./watch-meta";
@@ -10,6 +11,7 @@ type Props = {
   showComments: boolean;
   playlistPanel?: ReactNode;
   onSeekTimestamp: (seconds: number) => void;
+  audioOnly: WatchAudioOnlyControls;
 };
 
 export function WatchSecondaryContent({
@@ -19,6 +21,7 @@ export function WatchSecondaryContent({
   showComments,
   playlistPanel,
   onSeekTimestamp,
+  audioOnly,
 }: Props) {
   const hasPlaylistPanel = Boolean(playlistPanel);
   const hasRelatedStreams = relatedStreams.length > 0;
@@ -37,7 +40,12 @@ export function WatchSecondaryContent({
   return (
     <div className="mx-auto flex w-full max-w-[1700px] flex-col gap-6 px-4 lg:flex-row lg:items-start">
       <div className="min-w-0 flex-[2] max-w-[1200px] flex flex-col gap-4">
-        <WatchMeta stream={stream} showComments={showComments} onSeekTimestamp={onSeekTimestamp} />
+        <WatchMeta
+          stream={stream}
+          showComments={showComments}
+          onSeekTimestamp={onSeekTimestamp}
+          audioOnly={audioOnly}
+        />
       </div>
       {(hasPlaylistPanel || hasRelatedStreams) && (
         <div className="w-full lg:flex-1 lg:min-w-64 flex flex-col gap-6">

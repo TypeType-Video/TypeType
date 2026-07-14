@@ -26,11 +26,16 @@ export async function fetchProgress(videoUrl: string): Promise<ProgressItem> {
   return body as ProgressItem;
 }
 
-export async function updateProgress(videoUrl: string, position: number): Promise<void> {
+export async function updateProgress(
+  videoUrl: string,
+  position: number,
+  keepalive = false,
+): Promise<void> {
   const res = await authed(`${BASE}/progress/${encodeURIComponent(videoUrl)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ position: Math.round(position) }),
+    keepalive,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "update failed" }));
@@ -107,6 +112,15 @@ export async function disallowChannel(url: string): Promise<void> {
 
 export function fetchFavorites(): Promise<FavoriteItem[]> {
   return authedJson(`${BASE}/favorites`);
+}
+
+export async function fetchFavorite(videoUrl: string): Promise<FavoriteItem | null> {
+  const res = await authed(`${BASE}/favorites/${encodeURIComponent(videoUrl)}`, undefined, {
+    silentStatuses: [404],
+  });
+  if (res.status === 404) return null;
+  await throwIfFailed(res, "favorite lookup failed");
+  return (await res.json()) as FavoriteItem;
 }
 
 export function addFavorite(videoUrl: string): Promise<FavoriteItem> {

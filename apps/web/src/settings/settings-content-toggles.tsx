@@ -4,6 +4,7 @@ import { useSettings } from "../hooks/use-settings";
 import { allowHideEverything } from "../lib/hide-everything";
 import type { SettingsItem } from "../types/user";
 import { HideEverythingToggle } from "./hide-everything-toggle";
+import { SettingsDeArrowOptions } from "./settings-dearrow-options";
 import { ROW, ToggleSwitch } from "./settings-toggle-switch";
 
 const HIDE_KEYS = [
@@ -31,6 +32,7 @@ function useHideEverythingTrigger() {
 type ToggleKey = Extract<
   keyof SettingsItem,
   | "autoplay"
+  | "deArrowEnabled"
   | "hideContinueWatching"
   | "hideHomeRecommendations"
   | "hideRelatedVideos"
@@ -52,21 +54,15 @@ const WATCH_OPTIONS: ToggleOption[] = [
     description: "Automatically continue with the first item in the suggestions column.",
     area: "Watch",
   },
-  {
-    key: "hideRelatedVideos",
-    label: "Related videos",
-    description: "Hide the suggestions column on watch pages.",
-    area: "Watch",
-  },
-  {
-    key: "hideComments",
-    label: "Comments and danmaku",
-    description: "Stop loading watch comments, Shorts comments, and bullet comments.",
-    area: "Watch + Shorts",
-  },
 ];
 
 const DISCOVERY_OPTIONS: ToggleOption[] = [
+  {
+    key: "deArrowEnabled",
+    label: "DeArrow titles and thumbnails",
+    description: "Use community-written titles and representative thumbnails for YouTube videos.",
+    area: "YouTube",
+  },
   {
     key: "hideContinueWatching",
     label: "Continue watching",
@@ -78,6 +74,18 @@ const DISCOVERY_OPTIONS: ToggleOption[] = [
     label: "Home recommendations",
     description: "Hide personalized recommendations from the home page.",
     area: "Home",
+  },
+  {
+    key: "hideRelatedVideos",
+    label: "Related videos",
+    description: "Hide the suggestions column on watch pages.",
+    area: "Watch",
+  },
+  {
+    key: "hideComments",
+    label: "Comments and danmaku",
+    description: "Stop loading watch comments, Shorts comments, and bullet comments.",
+    area: "Watch + Shorts",
   },
   {
     key: "hideShorts",
@@ -128,6 +136,7 @@ export function SettingsDiscoveryToggles() {
         Discovery surfaces
       </div>
       <ToggleRows options={DISCOVERY_OPTIONS} />
+      <SettingsDeArrowOptions />
       <HideEverythingToggle />
     </>
   );

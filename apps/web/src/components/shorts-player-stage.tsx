@@ -82,7 +82,7 @@ export function ShortsPlayerStage({
 }: Props) {
   const shouldAutoplay = autoplay && !streamError;
   const playerSrc = stream
-    ? resolveManifestSrc(stream, false, false, false, {
+    ? resolveManifestSrc(stream, false, false, {
         compactAudioTracks: true,
         preferredAudioLanguage: preferOriginalLanguage ? undefined : defaultAudioLanguage,
         preferOriginalLanguage,

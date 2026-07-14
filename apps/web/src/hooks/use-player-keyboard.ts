@@ -1,11 +1,21 @@
 import { useEffect, useRef } from "react";
-import { clampTime, consumeEvent, isInteractiveTarget } from "../components/player-hotkeys-utils";
-import { useMediaRemote, useMediaState } from "../lib/vidstack";
+import {
+  clampTime,
+  consumeEvent,
+  isInteractiveTarget,
+  isPlayerSeekShortcutTarget,
+  type KeyboardSeekTarget,
+  keyboardSeekOffset,
+  nextKeyboardSeekTarget,
+} from "../components/player-hotkeys-utils";
+import { requestSabrSeek } from "../lib/sabr-vidstack-bridge";
+import { useMediaPlayer, useMediaRemote, useMediaState } from "../lib/vidstack";
 import { useHoldFastForward } from "./use-hold-fast-forward";
 
 const FRAME_STEP_SECONDS = 1 / 30;
 
-export function usePlayerKeyboard(canSeek: boolean) {
+export function usePlayerKeyboard(canSeek: boolean, sabrVideo: HTMLVideoElement | null = null) {
+  const player = useMediaPlayer();
   const remote = useMediaRemote();
   const currentTime = useMediaState("currentTime");
   const duration = useMediaState("duration");
@@ -15,6 +25,10 @@ export function usePlayerKeyboard(canSeek: boolean) {
   const durationRef = useRef(0);
   const pausedRef = useRef(true);
   const spaceStartedRef = useRef(false);
+  const seekTargetRef = useRef<KeyboardSeekTarget>({
+    position: 0,
+    updatedAt: Number.NEGATIVE_INFINITY,
+  });
 
   currentTimeRef.current = Number.isFinite(currentTime) ? currentTime : 0;
   durationRef.current = Number.isFinite(duration) ? duration : 0;
@@ -33,8 +47,28 @@ export function usePlayerKeyboard(canSeek: boolean) {
       );
     }
 
+    function seekBy(seconds: number) {
+      if (!canSeek) return;
+      seekTargetRef.current = nextKeyboardSeekTarget(
+        currentTimeRef.current,
+        durationRef.current,
+        seconds,
+        seekTargetRef.current,
+        performance.now(),
+      );
+      currentTimeRef.current = seekTargetRef.current.position;
+      if (sabrVideo && requestSabrSeek(sabrVideo, seekTargetRef.current.position)) return;
+      remote.seek(seekTargetRef.current.position);
+    }
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      const seekOffset = keyboardSeekOffset(event.code);
+      if (seekOffset !== null && isPlayerSeekShortcutTarget(event.target, player?.el ?? null)) {
+        consumeEvent(event);
+        seekBy(seekOffset);
+        return;
+      }
       if (isInteractiveTarget(event.target)) return;
       if (event.code === "Space") {
         consumeEvent(event);
@@ -66,6 +100,7 @@ export function usePlayerKeyboard(canSeek: boolean) {
 
     function onBlur() {
       spaceStartedRef.current = false;
+      seekTargetRef.current.updatedAt = Number.NEGATIVE_INFINITY;
       restore();
     }
 
@@ -79,7 +114,7 @@ export function usePlayerKeyboard(canSeek: boolean) {
       window.removeEventListener("blur", onBlur);
       restore(false);
     };
-  }, [canSeek, remote, start, restore, isActive]);
+  }, [canSeek, player, remote, sabrVideo, start, restore, isActive]);
 
   return holding;
 }

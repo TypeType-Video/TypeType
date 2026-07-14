@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
-import { useFavoritesPlaylist } from "../hooks/use-favorites-playlist";
+import { useFavoriteStatus } from "../hooks/use-favorite-status";
 import { useShareUrl } from "../hooks/use-share-url";
+import type { WatchAudioOnlyControls } from "../hooks/use-watch-audio-only-playback";
+import { prepareAudioSpectrum } from "../lib/audio-spectrum";
 import { detectProvider } from "../lib/provider";
 import { goto } from "../lib/route-redirect";
 import { toPublicWatchUrl } from "../lib/watch-url";
@@ -12,28 +14,38 @@ import { PlaylistAddDropdown } from "./playlist-add-dropdown";
 import { ReportBugModal } from "./report-bug-modal";
 import { Toast } from "./toast";
 import { WatchActionButton } from "./watch-action-button";
-import { BugIcon, DownloadIcon, ListPlusIcon, ShareIcon, StarIcon } from "./watch-icons";
+import {
+  BugIcon,
+  DownloadIcon,
+  HeadphonesIcon,
+  ListPlusIcon,
+  ShareIcon,
+  StarIcon,
+} from "./watch-icons";
 import { WatchMoreActions } from "./watch-more-actions";
 
 type Props = {
   stream: VideoStream;
+  audioOnly: WatchAudioOnlyControls;
 };
-export function WatchActions({ stream }: Props) {
+export function WatchActions({ stream, audioOnly }: Props) {
   const { copied, share } = useShareUrl();
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [toastLabel, setToastLabel] = useState<string | null>(null);
   const saveAnchorRef = useRef<HTMLButtonElement>(null);
-  const { isAuthed } = useAuth();
+  const { authReady, isAuthed } = useAuth();
   const {
     add: addFavorite,
     remove: removeFavorite,
-    isInFavorites,
+    isFavorite: favorited,
     isPending: favPending,
-  } = useFavoritesPlaylist();
-  const favorited = isInFavorites(stream.id);
+  } = useFavoriteStatus(stream.id);
   const isNicoNico = detectProvider(stream.id) === "nicovideo";
+  const isLive = stream.streamType === "live_stream" || stream.streamType === "audio_live_stream";
+  const audioOnlyAvailable = !isLive;
+  const audioOnlyDisabled = !authReady || audioOnly.loading;
 
   function handleSaved(label: string) {
     setToastLabel(label);
@@ -45,21 +57,21 @@ export function WatchActions({ stream }: Props) {
       return;
     }
     if (favorited) {
-      await removeFavorite(stream.id);
+      await removeFavorite();
       handleSaved("Removed from Favorites");
     } else {
-      await addFavorite({
-        url: stream.id,
-        title: stream.title,
-        thumbnail: stream.thumbnail,
-        duration: stream.duration,
-      });
+      await addFavorite();
       handleSaved("Saved to Favorites");
     }
   }
 
   function handleDownloadMock() {
     setDownloadOpen(true);
+  }
+
+  function handleAudioOnly() {
+    if (!audioOnly.active) prepareAudioSpectrum();
+    audioOnly.onToggle();
   }
 
   const showSave = true;
@@ -81,6 +93,17 @@ export function WatchActions({ stream }: Props) {
         <DownloadIcon />
         Download
       </WatchActionButton>
+      {audioOnlyAvailable && (
+        <WatchActionButton
+          onClick={handleAudioOnly}
+          disabled={audioOnlyDisabled}
+          pressed={audioOnly.active}
+          active={audioOnly.active}
+        >
+          <HeadphonesIcon />
+          {audioOnly.loading ? "Loading audio..." : "Audio only"}
+        </WatchActionButton>
+      )}
       <WatchActionButton onClick={() => share(toPublicWatchUrl(stream.id, window.location.origin))}>
         <ShareIcon />
         Share

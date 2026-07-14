@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AuthRole, AuthUser } from "../types/auth";
 import { AdminUserAvatar } from "./admin-user-avatar";
+import { AdminUserIdentityForm } from "./admin-user-identity-form";
 
 type AdminUserDetailPanelProps = {
   user: AuthUser;
@@ -8,6 +9,7 @@ type AdminUserDetailPanelProps = {
   onRole: (id: string, role: AuthRole) => void;
   onSuspend: (id: string, suspended: boolean) => void;
   onReset: (id: string, email: string) => void;
+  onMessage: (message: string) => void;
 };
 
 const ROLE_OPTIONS: AuthRole[] = ["user", "moderator", "admin"];
@@ -23,6 +25,7 @@ export function AdminUserDetailPanel({
   onRole,
   onSuspend,
   onReset,
+  onMessage,
 }: AdminUserDetailPanelProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
   const suspendClass = user.suspended
@@ -39,6 +42,7 @@ export function AdminUserDetailPanel({
         </div>
       </div>
       <p className="mt-2 text-[11px] text-fg-soft break-all">{user.id}</p>
+      <AdminUserIdentityForm user={user} disabled={busy} onMessage={onMessage} />
 
       <div className="mt-4 grid grid-cols-3 gap-1 rounded-xl border border-border bg-app p-1">
         {ROLE_OPTIONS.map((role) => (

@@ -30,7 +30,7 @@ Install and start the stack with one command:
 curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash
 ```
 
-The installer creates `~/typetype-stack`, generates local downloader and YouTube remote login secrets, selects available ports when defaults are busy, starts the services, and bootstraps Garage.
+The installer creates `~/typetype-stack`, generates local downloader and YouTube remote login secrets, selects available ports when defaults are busy, starts the services, and bootstraps Garage. On `arm64`/`aarch64` hosts, including Raspberry Pi 4, it automatically adds the ARM64 Compose override that uses `redis:7-alpine` as the Redis-compatible cache service instead of Dragonfly.
 
 After install:
 
@@ -59,6 +59,39 @@ Download the stack files without starting Docker:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash -s -- --download-only
+```
+
+Install and start only the beta stack automatically:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/dev/scripts/install-stack.sh | bash -s -- --beta --yes
+```
+
+The beta installer creates `~/typetype-beta-stack`, downloads `docker-compose.dev.yml`, pulls only the beta images, starts only that Compose stack, and bootstraps Garage.
+
+Beta endpoints:
+
+| Service | URL |
+|---|---|
+| Web app | `http://localhost:18082` |
+| API backend | `http://localhost:18080` |
+| Token service | `http://localhost:18081` |
+| Garage S3 | `http://localhost:3900` |
+
+Update only the beta stack:
+
+```sh
+cd ~/typetype-beta-stack
+docker compose -f docker-compose.dev.yml --env-file .env pull
+docker compose -f docker-compose.dev.yml --env-file .env up -d --wait --wait-timeout 180
+docker compose -f docker-compose.dev.yml --env-file .env ps
+```
+
+On ARM64 hosts, include the override when running Compose manually:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml --env-file .env up -d
+docker compose -f docker-compose.dev.yml -f docker-compose.arm64.yml --env-file .env up -d
 ```
 
 ## Screenshots
@@ -223,25 +256,47 @@ Manual Docker Compose flow:
 ```sh
 cp .env.example .env
 ./scripts/bootstrap-env.sh
+docker compose config -q
 docker compose pull
 ./scripts/bootstrap-garage.sh
-docker compose up -d
+docker compose up -d --wait --wait-timeout 180
 docker compose ps
 ```
 
+The script-free guide gives the equivalent one-time secret generation and Garage provisioning commands. Once Garage is provisioned, updates and verification only require Docker Compose and curl:
+
+```sh
+docker compose config -q
+docker compose pull
+docker compose up -d --wait --wait-timeout 180
+docker compose ps
+curl -fsS http://localhost:8080/health
+curl -fsS http://localhost:8081/health
+curl -fsS "http://localhost:8081/potoken?videoId=dQw4w9WgXcQ"
+curl -fsS http://localhost:8082/api/downloader/health/deep
+```
+
 If you do the manual flow, edit `.env` before exposing the stack outside localhost. In particular, keep the generated downloader S3 access key, downloader S3 secret key, Garage RPC secret, YouTube remote login token, and YouTube session encryption key private.
+
+For a controlled update, set `TYPETYPE_WEB_IMAGE`, `TYPETYPE_SERVER_IMAGE`, `TYPETYPE_DOWNLOADER_IMAGE`, and `TYPETYPE_TOKEN_IMAGE` in `.env` to immutable `sha-<commit>` image tags. Keep the previous four values before changing them. Restoring those values and running `docker compose up -d --wait --wait-timeout 180` rolls the application services back without changing the data volumes. Beta uses the corresponding variables ending in `_BETA_IMAGE`.
 
 ## Updating
 
 Update the whole stack:
 
 ```sh
+curl -fsSL https://raw.githubusercontent.com/Priveetee/TypeType/main/scripts/install-stack.sh | bash -s -- --yes
 cd ~/typetype-stack
-./scripts/bootstrap-env.sh
-docker compose pull
-docker compose up -d --force-recreate
 docker compose ps
 ```
+
+Running the installer again updates the Compose and configuration files, keeps the
+existing `.env` and data volumes, pulls the new images, recreates changed services,
+and provisions any newly added Garage resources. Existing configured ports are kept.
+
+For a script-free update, first replace `docker-compose.yml`, `nginx.conf`, and
+`garage.toml` with their current release versions while keeping `.env`, then run the
+manual update and Garage provisioning steps from the self-hosting guide.
 
 Update only the web client:
 

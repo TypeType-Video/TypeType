@@ -6,9 +6,11 @@ import { PlaylistActions } from "../components/playlist-actions";
 import { PlaylistGrid } from "../components/playlist-grid";
 import { PlaylistRenameModal } from "../components/playlist-rename-modal";
 import { PlaylistSortMenu } from "../components/playlist-sort-menu";
-import { usePlaylist, usePlaylists } from "../hooks/use-playlists";
+import { usePlaylist } from "../hooks/use-playlist";
+import { usePlaylists } from "../hooks/use-playlists";
 import { randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
 import { type PlaylistSortMode, sortPlaylistVideos } from "../lib/playlist-sort";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import { toPublicWatchParam } from "../lib/watch-url";
 import type { PlaylistVideoItem } from "../types/user";
 
@@ -43,8 +45,9 @@ function PlaylistDetailPage() {
     );
   }
 
-  const count = playlist.videos.length;
-  const sortedVideos = sortPlaylistVideos(playlist.videos, sortMode);
+  const videos = playlist.videos ?? [];
+  const count = videos.length;
+  const sortedVideos = sortPlaylistVideos(videos, sortMode);
   const reorderable = sortMode === "manual";
 
   function handleDelete() {
@@ -53,6 +56,7 @@ function PlaylistDetailPage() {
   }
   function playFrom(video: PlaylistVideoItem | undefined, shuffle?: string) {
     if (!video) return;
+    markWatchAutoplayIntent();
     navigate({
       to: "/watch",
       search: { v: toPublicWatchParam(video.url), list: id, ...(shuffle ? { shuffle } : {}) },
@@ -164,6 +168,4 @@ function PlaylistDetailPage() {
   );
 }
 
-export const Route = createFileRoute("/playlists_/$id")({
-  component: PlaylistDetailPage,
-});
+export const Route = createFileRoute("/playlists_/$id")({ component: PlaylistDetailPage });

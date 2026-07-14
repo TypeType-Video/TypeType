@@ -1,3 +1,5 @@
+type StreamDeliveryMethod = "progressive" | "dash" | "hls" | "sabr";
+
 export type VideoStreamItem = {
   url: string;
   format: string;
@@ -15,6 +17,9 @@ export type VideoStreamItem = {
   initEnd: number;
   indexStart: number;
   indexEnd: number;
+  deliveryMethod?: StreamDeliveryMethod;
+  manifestUrl?: string | null;
+  sabrSessionUrl?: string | null;
 };
 
 export type AudioStreamItem = {
@@ -34,6 +39,9 @@ export type AudioStreamItem = {
   initEnd: number;
   indexStart: number;
   indexEnd: number;
+  deliveryMethod?: StreamDeliveryMethod;
+  manifestUrl?: string | null;
+  sabrSessionUrl?: string | null;
 };
 
 export type SponsorBlockSegmentItem = {

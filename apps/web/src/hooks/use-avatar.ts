@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { fetchMe } from "../lib/api-auth";
-import { clearAvatar, setEmojiAvatar } from "../lib/api-profile-avatar";
+import { clearAvatar, setEmojiAvatar, uploadCustomAvatar } from "../lib/api-profile-avatar";
 import { useAuthStore } from "../stores/auth-store";
 
 async function refreshMeAfterAvatarChange(): Promise<void> {
@@ -21,5 +21,10 @@ export function useAvatar() {
     onSuccess: refreshMeAfterAvatarChange,
   });
 
-  return { emoji, clear };
+  const custom = useMutation({
+    mutationFn: (file: File) => uploadCustomAvatar(file),
+    onSuccess: refreshMeAfterAvatarChange,
+  });
+
+  return { emoji, custom, clear };
 }

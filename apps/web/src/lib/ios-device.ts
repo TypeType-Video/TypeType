@@ -5,7 +5,7 @@ function isTouchMac(): boolean {
   return desktopModeIpad || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
-function isWebKitEngine(): boolean {
+export function isWebKitBrowser(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
   const hasWebKit = /AppleWebKit/i.test(ua);
@@ -19,7 +19,7 @@ export function isIosDevice(): boolean {
 }
 
 export function isIosWebKitBrowser(): boolean {
-  return isIosDevice() && isWebKitEngine();
+  return isIosDevice() && isWebKitBrowser();
 }
 
 export function isIosStandaloneApp(): boolean {

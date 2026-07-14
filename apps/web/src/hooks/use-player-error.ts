@@ -1,100 +1,95 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { bilibiliVariantCount } from "../lib/bilibili-manifest";
 import { recordClientEvent } from "../lib/client-debug-log";
 import { sanitizeVideoContext } from "../lib/debug-sanitize";
 import { isIosDevice } from "../lib/ios-device";
 import { detectProvider } from "../lib/provider";
-import { resolveManifestSrc } from "../lib/stream-src";
+import { claimAutomaticSabrRecovery, resetAutomaticSabrRecovery } from "../lib/sabr-error-recovery";
+import {
+  hasLegacyDashPair,
+  hasSabrPlayback,
+  legacyProgressiveStreams,
+} from "../lib/stream-delivery";
+import { resolveManifestSrc, shouldUseClassicHls } from "../lib/stream-src";
 import type { MediaSrc } from "../lib/vidstack";
 import type { VideoStream } from "../types/stream";
+import { useInstance } from "./use-instance";
+import { usePlaybackMode } from "./use-playback-mode";
 
 type UsePlayerErrorReturn = {
   manifestSrc: MediaSrc;
+  manifestLoading: boolean;
+  sabrEnabled: boolean;
   playerFailed: boolean;
   qualityFailed: boolean;
+  clearFailed: () => void;
   handleError: () => void;
+  handleSeeking: (positionMs: number) => void;
   reset: () => void;
   retryKey: number;
+  seekStartTime: number | null;
 };
 
-function normalizeLanguageTag(value: string | null): string {
-  if (value === null || value.length === 0) return "";
-  const [base] = value.toLowerCase().split("-");
-  return base ?? "";
-}
-
-function hasMultipleAudioLanguages(stream: VideoStream): boolean {
-  const languages = new Set<string>();
-  for (const track of stream.audioStreams ?? []) {
-    const language = normalizeLanguageTag(track.audioLocale);
-    if (!language) continue;
-    languages.add(language);
-    if (languages.size > 1) return true;
-  }
-  return false;
-}
-
-export function usePlayerError(
-  stream: VideoStream,
-  isLive: boolean,
-  enableHighQualityPlayback = false,
-): UsePlayerErrorReturn {
-  const streamId = stream.id;
-  const debugVideo = sanitizeVideoContext(streamId) ?? "unknown";
+export function usePlayerError(stream: VideoStream, isLive: boolean): UsePlayerErrorReturn {
+  const debugVideo = sanitizeVideoContext(stream.id) ?? "unknown";
   const provider = detectProvider(stream.id);
   const iosDevice = isIosDevice();
-  const preferNativeManifest = !iosDevice && !hasMultipleAudioLanguages(stream);
-  const videoOnlyCount = stream.videoOnlyStreams?.length ?? 0;
+  const { data: instance } = useInstance();
+  const { playbackMode } = usePlaybackMode();
+  const playbackSourceId = stream.id.length === 0 ? "" : `${stream.id}:${playbackMode}`;
+  const preferServerManifests = instance?.guestAllowed !== false;
+  const legacyDashPair = hasLegacyDashPair(stream);
+  const hasLegacyPlaybackFallback = legacyDashPair || legacyProgressiveStreams(stream).length > 0;
   const highQualityEnabled =
-    enableHighQualityPlayback &&
     !isLive &&
     !iosDevice &&
+    preferServerManifests &&
     !stream.hlsUrl &&
-    videoOnlyCount > 0 &&
+    legacyDashPair &&
     provider === "youtube";
-  const nativeEnabled = !isLive && videoOnlyCount > 0 && preferNativeManifest;
+  const hlsEnabled = shouldUseClassicHls(stream.hlsUrl, isLive, false, legacyDashPair);
+  const [hlsFailed, setHlsFailed] = useState(false);
   const [highQualityFailed, setHighQualityFailed] = useState(false);
-  const [nativeFailed, setNativeFailed] = useState(false);
   const [qualityFailed, setQualityFailed] = useState(false);
   const [compatibilityFallback, setCompatibilityFallback] = useState(false);
   const [bilibiliVariant, setBilibiliVariant] = useState(0);
   const [playerFailed, setPlayerFailed] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const sabrRecoveryRef = useRef(false);
   const bilibiliVariants =
     provider === "bilibili"
       ? bilibiliVariantCount(stream.videoOnlyStreams ?? [], stream.audioStreams ?? [])
       : 0;
+  const sabrSelected = provider === "youtube" && !isLive && playbackMode === "sabr";
+  const sabrEnabled = sabrSelected && hasSabrPlayback(stream);
 
-  const manifestSrc = useMemo(() => {
-    if (compatibilityFallback) {
-      return resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
-        preferNativeManifest,
-        compatibilityMode: true,
-        enableHighQualityPlayback: highQualityEnabled,
-        highQualityFailed,
-        bilibiliVariant,
-      });
-    }
-    return resolveManifestSrc(stream, isLive, nativeFailed, qualityFailed, {
-      preferNativeManifest,
-      enableHighQualityPlayback: highQualityEnabled,
-      highQualityFailed,
-      bilibiliVariant,
-    });
-  }, [
-    stream,
-    isLive,
-    nativeFailed,
-    qualityFailed,
-    preferNativeManifest,
-    compatibilityFallback,
-    highQualityEnabled,
+  const fallbackSrc = resolveManifestSrc(stream, isLive, qualityFailed, {
+    compatibilityMode: compatibilityFallback,
+    enableHighQualityPlayback: highQualityEnabled,
     highQualityFailed,
+    hlsFailed,
+    allowServerManifests: preferServerManifests,
     bilibiliVariant,
-  ]);
-
+  });
+  const manifestSrc: MediaSrc = sabrSelected ? { src: "", type: "video/mp4" } : fallbackSrc;
   const handleError = useCallback(() => {
-    if (provider === "bilibili" && bilibiliVariant < bilibiliVariants - 1) {
+    if (sabrSelected) {
+      if (claimAutomaticSabrRecovery(sabrRecoveryRef)) {
+        recordClientEvent("player.sabr_recovering", { video: debugVideo });
+        setRetryKey((k) => k + 1);
+        return;
+      }
+      recordClientEvent("player.sabr_failed", { video: debugVideo });
+      setPlayerFailed(true);
+    } else if (hlsEnabled && !hlsFailed) {
+      recordClientEvent("player.hls_failed", { video: debugVideo });
+      if (!hasLegacyPlaybackFallback) {
+        setPlayerFailed(true);
+        return;
+      }
+      setHlsFailed(true);
+      setRetryKey((k) => k + 1);
+    } else if (provider === "bilibili" && bilibiliVariant < bilibiliVariants - 1) {
       recordClientEvent("player.bilibili_variant_failed", { video: debugVideo });
       setBilibiliVariant((variant) => variant + 1);
       setRetryKey((k) => k + 1);
@@ -102,15 +97,11 @@ export function usePlayerError(
       recordClientEvent("player.high_quality_failed", { video: debugVideo });
       setHighQualityFailed(true);
       setRetryKey((k) => k + 1);
-    } else if (nativeEnabled && !nativeFailed) {
-      recordClientEvent("player.native_manifest_failed", { video: debugVideo });
-      setNativeFailed(true);
-      setRetryKey((k) => k + 1);
-    } else if (!qualityFailed) {
+    } else if (legacyDashPair && !qualityFailed) {
       recordClientEvent("player.quality_failed", { video: debugVideo });
       setQualityFailed(true);
       setRetryKey((k) => k + 1);
-    } else if (!isLive && !compatibilityFallback) {
+    } else if (!isLive && hasLegacyPlaybackFallback && !compatibilityFallback) {
       recordClientEvent("player.compatibility_fallback", { video: debugVideo });
       setCompatibilityFallback(true);
       setRetryKey((k) => k + 1);
@@ -120,38 +111,56 @@ export function usePlayerError(
     }
   }, [
     debugVideo,
+    hlsEnabled,
+    hlsFailed,
+    sabrSelected,
+    hasLegacyPlaybackFallback,
     provider,
     bilibiliVariant,
     bilibiliVariants,
     highQualityEnabled,
     highQualityFailed,
-    nativeEnabled,
-    nativeFailed,
+    legacyDashPair,
     qualityFailed,
     compatibilityFallback,
     isLive,
   ]);
 
   const reset = useCallback(() => {
+    setHlsFailed(false);
     setHighQualityFailed(false);
-    setNativeFailed(false);
     setQualityFailed(false);
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
+    resetAutomaticSabrRecovery(sabrRecoveryRef);
     setRetryKey((k) => k + 1);
   }, []);
 
+  const clearFailed = useCallback(() => setPlayerFailed(false), []);
   useEffect(() => {
-    if (streamId.length === 0) return;
+    if (playbackSourceId.length === 0) return;
+    setHlsFailed(false);
     setHighQualityFailed(false);
-    setNativeFailed(false);
     setQualityFailed(false);
     setCompatibilityFallback(false);
     setBilibiliVariant(0);
     setPlayerFailed(false);
+    resetAutomaticSabrRecovery(sabrRecoveryRef);
     setRetryKey(0);
-  }, [streamId]);
+  }, [playbackSourceId]);
 
-  return { manifestSrc, playerFailed, qualityFailed, handleError, reset, retryKey };
+  return {
+    manifestSrc,
+    manifestLoading: false,
+    sabrEnabled,
+    playerFailed,
+    qualityFailed,
+    clearFailed,
+    handleError,
+    handleSeeking: () => undefined,
+    reset,
+    retryKey,
+    seekStartTime: null,
+  };
 }

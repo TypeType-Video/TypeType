@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { AccountIdentitySettings } from "../components/account-identity-settings";
 import { ProfileAvatar } from "../components/profile-avatar";
 import { ProfileAvatarSettings } from "../components/profile-avatar-settings";
 import { Toast } from "../components/toast";
@@ -126,6 +127,10 @@ function ProfilePage() {
           </button>
         </div>
       </section>
+      <AccountIdentitySettings
+        enabled={Boolean(me && !me.id.startsWith("guest:"))}
+        onMessage={setToast}
+      />
       {me && !me.id.startsWith("guest:") && (
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

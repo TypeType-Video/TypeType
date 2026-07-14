@@ -57,6 +57,9 @@ export function useChannel(
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: ChannelPage | undefined) => last?.nextpage ?? undefined,
     enabled: channelUrl.length > 0,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const pages = channelQuery.data?.pages ?? [];

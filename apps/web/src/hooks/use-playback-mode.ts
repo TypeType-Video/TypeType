@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import {
   type PlaybackMode,
   readPlaybackMode,
-  setPlaybackMode,
+  requestPlaybackMode,
   subscribePlaybackMode,
 } from "../lib/playback-mode";
 
@@ -18,6 +18,6 @@ export function usePlaybackMode(): {
 
   return {
     playbackMode,
-    setMode: setPlaybackMode,
+    setMode: requestPlaybackMode,
   };
 }

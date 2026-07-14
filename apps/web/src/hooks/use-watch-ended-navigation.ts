@@ -1,10 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import type { WatchPlaylistItem } from "../types/playlist";
 import type { VideoStream } from "../types/stream";
 
-const AUTOPLAY_DELAY_SECONDS = 10;
-const AUTOPLAY_DELAY_MS = AUTOPLAY_DELAY_SECONDS * 1000;
+const DEFAULT_AUTOPLAY_DELAY_SECONDS = 10;
 
 type WatchSearch = {
   v: string;
@@ -17,6 +17,7 @@ export type AutoplayTarget = {
   title: string;
   thumbnail: string;
   channelName: string;
+  source: "playlist" | "related";
   duration?: number;
   search: WatchSearch;
 };
@@ -30,6 +31,8 @@ export type AutoplayState = {
 type Params = {
   settingsReady: boolean;
   autoplay: boolean;
+  countdownSeconds: number;
+  skipPlaylistAutoplayScreen: boolean;
   hideRelatedVideos: boolean;
   nextParam: string | null;
   nextVideo?: WatchPlaylistItem | null;
@@ -41,6 +44,8 @@ type Params = {
 export function useWatchEndedNavigation({
   settingsReady,
   autoplay,
+  countdownSeconds,
+  skipPlaylistAutoplayScreen,
   hideRelatedVideos,
   nextParam,
   nextVideo,
@@ -49,70 +54,60 @@ export function useWatchEndedNavigation({
   related,
 }: Params) {
   const navigate = useNavigate();
+  const delaySeconds = Math.min(60, Math.max(0, Math.round(countdownSeconds)));
+  const delayMs = delaySeconds * 1000;
   const [target, setTarget] = useState<AutoplayTarget | null>(null);
   const [paused, setPaused] = useState(false);
-  const [remainingMs, setRemainingMs] = useState(AUTOPLAY_DELAY_MS);
+  const [remainingMs, setRemainingMs] = useState(DEFAULT_AUTOPLAY_DELAY_SECONDS * 1000);
   const startedAtRef = useRef(0);
   const dismissedTargetIdRef = useRef("");
-
-  const relatedVideo = hideRelatedVideos ? undefined : related?.[0];
-  const nextVideoTitle = nextVideo?.title ?? "Next video";
-  const nextVideoThumbnail = nextVideo?.thumbnail ?? "";
-  const nextVideoChannelName = nextVideo?.channelName ?? "";
-  const relatedVideoId = relatedVideo?.id ?? "";
-  const relatedVideoTitle = relatedVideo?.title ?? "";
-  const relatedVideoThumbnail = relatedVideo?.thumbnail ?? "";
-  const relatedVideoChannelName = relatedVideo?.channelName ?? "";
-  const relatedVideoDuration = relatedVideo?.duration;
 
   const nextTarget = useMemo<AutoplayTarget | null>(() => {
     if (nextParam) {
       return {
         id: nextParam,
-        title: nextVideoTitle,
-        thumbnail: nextVideoThumbnail,
-        channelName: nextVideoChannelName,
+        title: nextVideo?.title ?? "Next video",
+        thumbnail: nextVideo?.thumbnail ?? "",
+        channelName: nextVideo?.channelName ?? "",
+        source: "playlist",
         search: { v: nextParam, list, ...(shuffle ? { shuffle } : {}) },
       };
     }
     if (hideRelatedVideos) return null;
-    if (!relatedVideoId) return null;
+    const relatedVideo = related?.[0];
+    if (!relatedVideo) return null;
     return {
-      id: relatedVideoId,
-      title: relatedVideoTitle,
-      thumbnail: relatedVideoThumbnail,
-      channelName: relatedVideoChannelName,
-      duration: relatedVideoDuration,
-      search: { v: relatedVideoId },
+      id: relatedVideo.id,
+      title: relatedVideo.title,
+      thumbnail: relatedVideo.thumbnail,
+      channelName: relatedVideo.channelName,
+      source: "related",
+      duration: relatedVideo.duration,
+      search: { v: relatedVideo.id },
     };
-  }, [
-    nextParam,
-    nextVideoTitle,
-    nextVideoThumbnail,
-    nextVideoChannelName,
-    list,
-    shuffle,
-    hideRelatedVideos,
-    relatedVideoId,
-    relatedVideoTitle,
-    relatedVideoThumbnail,
-    relatedVideoChannelName,
-    relatedVideoDuration,
-  ]);
+  }, [nextParam, nextVideo, list, shuffle, hideRelatedVideos, related]);
   const nextTargetRef = useRef(nextTarget);
   nextTargetRef.current = nextTarget;
 
+  const navigateToTarget = useCallback(
+    (next: AutoplayTarget) => {
+      markWatchAutoplayIntent();
+      navigate({ to: "/watch", search: next.search });
+    },
+    [navigate],
+  );
+
   const playNow = useCallback(() => {
     if (!target) return;
-    navigate({ to: "/watch", search: target.search });
-  }, [target, navigate]);
+    navigateToTarget(target);
+  }, [target, navigateToTarget]);
 
   const cancel = useCallback(() => {
     if (target) dismissedTargetIdRef.current = target.id;
     setTarget(null);
     setPaused(false);
-    setRemainingMs(AUTOPLAY_DELAY_MS);
-  }, [target]);
+    setRemainingMs(delayMs);
+  }, [target, delayMs]);
 
   const togglePause = useCallback(() => {
     if (!target) return;
@@ -149,17 +144,26 @@ export function useWatchEndedNavigation({
     if (!settingsReady || !autoplay) return;
     const next = nextTargetRef.current;
     if (!next || dismissedTargetIdRef.current === next.id) return;
-    setRemainingMs(AUTOPLAY_DELAY_MS);
+    if (skipPlaylistAutoplayScreen && next.source === "playlist") {
+      navigateToTarget(next);
+      return;
+    }
+    if (delayMs <= 0) {
+      navigateToTarget(next);
+      return;
+    }
+    setRemainingMs(delayMs);
     setPaused(false);
     setTarget(next);
-  }, [settingsReady, autoplay]);
+  }, [settingsReady, autoplay, skipPlaylistAutoplayScreen, delayMs, navigateToTarget]);
 
   return {
+    nextTarget,
     handleEnded,
     autoplayState: target
       ? {
           target,
-          totalSeconds: AUTOPLAY_DELAY_SECONDS,
+          totalSeconds: delaySeconds,
           paused,
         }
       : null,

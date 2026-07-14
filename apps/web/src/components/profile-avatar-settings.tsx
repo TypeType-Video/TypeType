@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/use-auth";
 import { useAvatar } from "../hooks/use-avatar";
 import { getOpenMojiUrl } from "../lib/openmoji";
 import { OPENMOJI_CATALOG } from "../lib/openmoji-catalog";
+import { CustomAvatarUpload } from "./custom-avatar-upload";
 import { Toast } from "./toast";
 
 const CARD = "bg-surface rounded-xl border border-border overflow-hidden divide-y divide-border";
@@ -48,6 +49,7 @@ export function ProfileAvatarSettings() {
     <section className="flex flex-col gap-3">
       <p className="text-xs font-medium text-fg-soft uppercase tracking-wider px-1">Avatar</p>
       <div className={CARD}>
+        <CustomAvatarUpload onMessage={setToast} />
         <div className="px-4 py-4 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-fg">

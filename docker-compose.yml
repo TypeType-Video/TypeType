@@ -1,18 +1,18 @@
 services:
   typetype:
-    image: ghcr.io/priveetee/typetype:latest
+    image: ${TYPETYPE_WEB_IMAGE:-ghcr.io/priveetee/typetype:latest}
     ports:
       - "${HOST_PORT_WEB:-8082}:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - typetype-server
+      typetype-server:
+        condition: service_healthy
     restart: unless-stopped
-
   typetype-server:
-    image: ghcr.io/priveetee/typetype-server:latest
+    image: ${TYPETYPE_SERVER_IMAGE:-ghcr.io/priveetee/typetype-server:latest}
     ports:
-      - "${HOST_PORT_SERVER:-8080}:8080"
+      - "${HOST_BIND_SERVER:-127.0.0.1}:${HOST_PORT_SERVER:-8080}:8080"
     environment:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8082,http://127.0.0.1:8082,http://localhost:5173,http://127.0.0.1:5173}
       DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-typetype}}
@@ -39,11 +39,13 @@ services:
       postgres-init:
         condition: service_completed_successfully
       dragonfly:
-        condition: service_started
+        condition: service_healthy
       typetype-token:
-        condition: service_started
+        condition: service_healthy
       typetype-downloader:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health"]
     restart: unless-stopped
 
   typetype-secrets:
@@ -57,20 +59,28 @@ services:
         }
         ensure_secret() {
           file="$$1"
-          if [ ! -s "$$file" ]; then
+          value="$$2"
+          placeholder="$$3"
+          legacy_placeholder="$$4"
+          if [ -n "$$value" ] && [ "$$value" != "$$placeholder" ] && [ "$$value" != "$$legacy_placeholder" ]; then
+            printf '%s' "$$value" > "$$file"
+          elif [ ! -s "$$file" ]; then
             generate_secret > "$$file"
           fi
           chmod 0444 "$$file"
         }
         mkdir -p /run/typetype-secrets
-        ensure_secret /run/typetype-secrets/youtube_remote_login_internal_token
-        ensure_secret /run/typetype-secrets/youtube_session_encryption_key
+        ensure_secret /run/typetype-secrets/youtube_remote_login_internal_token "$$YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN" SET_ME_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN SET_ME_SHARED_SECRET
+        ensure_secret /run/typetype-secrets/youtube_session_encryption_key "$$YOUTUBE_SESSION_ENCRYPTION_KEY" SET_ME_YOUTUBE_SESSION_ENCRYPTION_KEY SET_ME_SHARED_SECRET
+    environment:
+      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
+      YOUTUBE_SESSION_ENCRYPTION_KEY: ${YOUTUBE_SESSION_ENCRYPTION_KEY:-}
     volumes:
       - typetype_secrets:/run/typetype-secrets
     restart: "no"
 
   typetype-downloader:
-    image: ghcr.io/priveetee/typetype-downloader:latest
+    image: ${TYPETYPE_DOWNLOADER_IMAGE:-ghcr.io/priveetee/typetype-downloader:latest}
     environment:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
@@ -88,7 +98,7 @@ services:
       MUXER: avformat
       STORAGE_BACKEND: s3
       S3_ENDPOINT: http://garage:3900
-      S3_PUBLIC_ENDPOINT: ${DOWNLOADER_S3_PUBLIC_ENDPOINT:-}
+      S3_PUBLIC_ENDPOINT: http://garage:3900
       S3_REGION: garage
       S3_BUCKET: typetype-downloads
       S3_ACCESS_KEY: ${DOWNLOADER_S3_ACCESS_KEY:-}
@@ -98,17 +108,17 @@ services:
       postgres-init:
         condition: service_completed_successfully
       dragonfly:
-        condition: service_started
+        condition: service_healthy
       garage:
         condition: service_started
       typetype-token:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   typetype-token:
-    image: ghcr.io/priveetee/typetype-token:latest
+    image: ${TYPETYPE_TOKEN_IMAGE:-ghcr.io/priveetee/typetype-token:latest}
     ports:
-      - "${HOST_PORT_TOKEN:-8081}:8081"
+      - "${HOST_BIND_TOKEN:-127.0.0.1}:${HOST_PORT_TOKEN:-8081}:8081"
     init: true
     ipc: host
     environment:
@@ -125,6 +135,8 @@ services:
     depends_on:
       typetype-secrets:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8081/health > /dev/null"]
     restart: unless-stopped
 
   postgres:
@@ -135,13 +147,17 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-typetype}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 30
     restart: unless-stopped
 
   postgres-init:
     image: postgres:17
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-typetype}
       POSTGRES_USER: ${POSTGRES_USER:-typetype}
@@ -161,11 +177,13 @@ services:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
     ulimits:
       memlock: -1
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
     restart: unless-stopped
   garage:
     image: dxflrs/garage:v2.2.0
     ports:
-      - "${HOST_PORT_GARAGE_S3:-3900}:3900"
+      - "${HOST_BIND_GARAGE_S3:-127.0.0.1}:${HOST_PORT_GARAGE_S3:-3900}:3900"
     environment:
       GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-}
     volumes:

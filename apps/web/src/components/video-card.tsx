@@ -1,11 +1,11 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { useClientLocale } from "../hooks/use-client-locale";
-import { isMemberOnlyApiError, streamQueryOptions } from "../hooks/use-stream";
-import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
+import { useVideoCardPreview } from "../hooks/use-video-card-preview";
 import { formatDuration, formatPublishedDate, formatViews } from "../lib/format";
 import { watchListSearch } from "../lib/watch-url";
+import { useWatchNavigationStore } from "../stores/watch-navigation-store";
 import type { VideoStream } from "../types/stream";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelRouteLink } from "./channel-route-link";
@@ -19,19 +19,26 @@ type Props = {
   onOpen?: () => void;
   onImpression?: () => void;
   listId?: string;
+  relatedStreams?: VideoStream[];
 };
 
-function VideoCardComponent({ stream, onOpen, onImpression, listId }: Props) {
+function VideoCardComponent({ stream, onOpen, onImpression, listId, relatedStreams }: Props) {
   const locale = useClientLocale();
-  const queryClient = useQueryClient();
   const rootRef = useRef<HTMLElement | null>(null);
-  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [previewStream, setPreviewStream] = useState<VideoStream | undefined>(undefined);
-  const [showPreview, setShowPreview] = useState(false);
-  const [memberOnly, setMemberOnly] = useState(false);
-  const prefetch = useWatchPrefetch(stream.id);
+  const setNavigation = useWatchNavigationStore((state) => state.setNavigation);
+  const preview = useVideoCardPreview(stream);
+  const { title, thumbnail } = useDeArrowBranding(
+    stream.id,
+    stream.title,
+    stream.thumbnail,
+    stream.duration,
+  );
   const publishedText = formatPublishedDate(stream.publishedAt, undefined, locale);
   const watchSearch = watchListSearch(stream.id, listId);
+  const handleOpen = useCallback(() => {
+    setNavigation(stream, relatedStreams);
+    onOpen?.();
+  }, [onOpen, relatedStreams, setNavigation, stream]);
 
   useEffect(() => {
     if (!onImpression || typeof IntersectionObserver === "undefined") return;
@@ -53,67 +60,32 @@ function VideoCardComponent({ stream, onOpen, onImpression, listId }: Props) {
     return () => observer.disconnect();
   }, [onImpression]);
 
-  const fetchStreamData = useCallback(async () => {
-    const cached = queryClient.getQueryData<VideoStream>(["stream", stream.id]);
-    if (cached?.videoOnlyStreams?.length) {
-      setMemberOnly(false);
-      setPreviewStream(cached);
-      return;
-    }
-    try {
-      const data = await queryClient.fetchQuery(streamQueryOptions(stream.id));
-      setMemberOnly(Boolean(data.requiresMembership));
-      if (data?.videoOnlyStreams?.length) setPreviewStream(data);
-    } catch (error) {
-      if (isMemberOnlyApiError(error)) {
-        setMemberOnly(true);
-      }
-    }
-  }, [queryClient, stream.id]);
-
-  const handleMouseEnter = () => {
-    prefetch.onMouseEnter();
-    previewTimer.current = setTimeout(() => {
-      void fetchStreamData().then(() => setShowPreview(true));
-    }, 5000);
-  };
-
-  const handleMouseLeave = () => {
-    prefetch.onMouseLeave();
-    if (previewTimer.current) {
-      clearTimeout(previewTimer.current);
-      previewTimer.current = null;
-    }
-    setShowPreview(false);
-  };
-
-  const isMemberOnly = memberOnly || stream.requiresMembership === true;
-
   return (
     <article
       ref={rootRef}
       className="group flex flex-col gap-2"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={preview.onMouseEnter}
+      onMouseLeave={preview.onMouseLeave}
     >
       <Link
         to="/watch"
         search={watchSearch}
+        preload="intent"
         className="block"
-        onMouseDown={onOpen}
-        onTouchStart={onOpen}
-        onClick={onOpen}
+        onMouseDown={handleOpen}
+        onTouchStart={handleOpen}
+        onClick={handleOpen}
       >
         <div className="relative aspect-video overflow-hidden rounded-xl bg-surface-strong sm:rounded-lg">
           <img
-            src={stream.thumbnail}
-            alt={stream.title}
+            src={thumbnail}
+            alt={title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             loading="lazy"
             decoding="async"
           />
-          <VideoPreview stream={previewStream} show={showPreview} />
-          {isMemberOnly && (
+          <VideoPreview stream={preview.previewStream} show={preview.showPreview} />
+          {preview.memberOnly && (
             <span className="absolute left-1.5 top-1.5 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-black">
               Members only
             </span>
@@ -146,12 +118,13 @@ function VideoCardComponent({ stream, onOpen, onImpression, listId }: Props) {
           <Link
             to="/watch"
             search={watchSearch}
+            preload="intent"
             className="text-sm font-medium text-fg line-clamp-2 leading-snug hover:text-fg-strong"
-            onMouseDown={onOpen}
-            onTouchStart={onOpen}
-            onClick={onOpen}
+            onMouseDown={handleOpen}
+            onTouchStart={handleOpen}
+            onClick={handleOpen}
           >
-            {stream.title}
+            {title}
           </Link>
           {stream.channelUrl ? (
             <ChannelRouteLink

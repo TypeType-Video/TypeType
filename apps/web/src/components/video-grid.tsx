@@ -33,6 +33,7 @@ export function VideoGrid({ streams, onCardOpen, onCardImpression, listId }: Vid
             onOpen={onCardOpen ? () => onCardOpen(stream) : undefined}
             onImpression={onCardImpression ? () => onCardImpression(stream) : undefined}
             listId={listId}
+            relatedStreams={unique}
           />
         </div>
       ))}

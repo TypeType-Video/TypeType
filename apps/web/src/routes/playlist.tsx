@@ -12,6 +12,7 @@ import { usePublicPlaylist } from "../hooks/use-public-playlist";
 import { useSavedPlaylists } from "../hooks/use-saved-playlists";
 import { randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
 import { playlistListId } from "../lib/playlist-url";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import { toPublicWatchParam } from "../lib/watch-url";
 
 function PublicPlaylistPage() {
@@ -56,6 +57,7 @@ function PublicPlaylistPage() {
   const info = data.pages[0]?.playlist;
   function playFrom(url: string | undefined, shuffle?: string) {
     if (!url) return;
+    markWatchAutoplayIntent();
     navigate({
       to: "/watch",
       search: {

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
 import { formatDuration } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
 import { isVideoWatched } from "../lib/watch-progress";
@@ -45,25 +45,24 @@ function formatWatchedAt(timestamp: number): string {
 
 export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
   const delay = Math.min(index * 45, 270);
-  const prefetch = useWatchPrefetch(item.url);
   const watched = isVideoWatched(item.progress, item.duration);
+  const branding = useDeArrowBranding(
+    item.url,
+    item.title,
+    proxyImage(item.thumbnail),
+    item.duration,
+  );
 
   return (
     <div
       className="group relative grid animate-card-pop-in grid-cols-[8.75rem_minmax(0,1fr)] gap-3 rounded-2xl border border-border bg-surface/45 p-2.5 sm:flex sm:flex-col sm:gap-2 sm:border-0 sm:bg-transparent sm:p-0"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <Link
-        to="/watch"
-        search={watchRouteSearch(item.url)}
-        className="block min-w-0 sm:w-full"
-        onMouseEnter={prefetch.onMouseEnter}
-        onMouseLeave={prefetch.onMouseLeave}
-      >
+      <Link to="/watch" search={watchRouteSearch(item.url)} className="block min-w-0 sm:w-full">
         <div className="relative aspect-video overflow-hidden rounded-xl bg-surface-strong sm:rounded-lg">
           <img
-            src={proxyImage(item.thumbnail)}
-            alt={item.title}
+            src={branding.thumbnail}
+            alt={branding.title}
             className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
             loading="lazy"
             decoding="async"
@@ -104,15 +103,9 @@ export function HistoryCard({ item, onRemove, index }: HistoryCardProps) {
           </span>
         )}
         <div className="flex min-w-0 flex-col gap-1.5 sm:gap-0.5">
-          <Link
-            to="/watch"
-            search={watchRouteSearch(item.url)}
-            onMouseEnter={prefetch.onMouseEnter}
-            onMouseLeave={prefetch.onMouseLeave}
-            className="min-w-0"
-          >
+          <Link to="/watch" search={watchRouteSearch(item.url)} className="min-w-0">
             <p className="line-clamp-2 text-sm font-semibold leading-snug text-fg sm:font-medium">
-              {item.title}
+              {branding.title}
             </p>
           </Link>
           {item.channelUrl ? (

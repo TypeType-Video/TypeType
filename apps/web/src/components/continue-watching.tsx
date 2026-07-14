@@ -10,15 +10,14 @@ export function ContinueWatching() {
     .filter((h) => isVideoInProgress(h.progress, h.duration))
     .sort((a, b) => b.watchedAt - a.watchedAt)
     .slice(0, MAX_ITEMS);
-
   if (displayed.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="mt-2 flex flex-col gap-3 sm:mt-3">
       <p className="text-xs font-medium text-fg-soft uppercase tracking-wider px-1">
         Continue watching
       </p>
-      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex gap-3 overflow-x-auto pb-3">
         {displayed.map((item, index) => (
           <div
             key={item.id}

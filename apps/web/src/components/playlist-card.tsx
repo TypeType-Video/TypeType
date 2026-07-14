@@ -55,8 +55,8 @@ function EmptyIcon() {
 }
 
 function ThumbnailContent({ playlist }: { playlist: PlaylistItem }) {
-  const thumbnail = playlist.videos[0]?.thumbnail;
-  const count = playlist.videos.length;
+  const thumbnail = playlist.videos?.[0]?.thumbnail;
+  const count = playlist.videoCount ?? playlist.videos?.length ?? 0;
   const label = `${count} video${count !== 1 ? "s" : ""}`;
   return (
     <div className="relative aspect-video rounded-xl overflow-hidden bg-surface-strong">
@@ -87,7 +87,7 @@ export function PlaylistCard({
   onToggleSelect,
   onDeleteRequest,
 }: Props) {
-  const count = playlist.videos.length;
+  const count = playlist.videoCount ?? playlist.videos?.length ?? 0;
   const label = `${count} video${count !== 1 ? "s" : ""}`;
 
   return (

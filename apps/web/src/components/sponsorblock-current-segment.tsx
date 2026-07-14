@@ -1,10 +1,16 @@
 import { BadgeInfo, SkipForward } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { seekSponsorBlockSegment } from "../lib/sponsorblock-seek";
 import {
   getSponsorBlockCategoryLabel,
   getSponsorBlockEndTime,
   getSponsorBlockStartTime,
 } from "../lib/sponsorblock-settings";
+import {
+  emitSponsorBlockSkip,
+  isSponsorBlockEndSkip,
+  sponsorBlockSkipTarget,
+} from "../lib/sponsorblock-skip";
 import { useMediaPlayer, useMediaRemote } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 
@@ -18,6 +24,7 @@ type Props = {
 type ActiveSegment = {
   segment: SponsorBlockSegmentItem;
   duration: number;
+  media: HTMLMediaElement;
 };
 
 function includesSegment(
@@ -57,7 +64,7 @@ export function SponsorBlockCurrentSegment({
       const nextKey = segment ? `${segment.category}:${segment.startTime}:${duration}` : "";
       if (nextKey === activeKeyRef.current) return;
       activeKeyRef.current = nextKey;
-      setActive(segment ? { segment, duration } : null);
+      setActive(segment ? { segment, duration, media } : null);
     }
 
     function attach() {
@@ -91,11 +98,25 @@ export function SponsorBlockCurrentSegment({
   }, [player, segments]);
 
   if (!active) return null;
-  const { segment: current, duration } = active;
+  const { segment: current, duration, media } = active;
   const autoSkip = includesSegment(autoSkipSegments, current);
   const canSkip = includesSegment(manualSkipSegments, current) || !autoSkip || muteInsteadOfSkip;
 
   const label = getSponsorBlockCategoryLabel(current.category);
+
+  function skipCurrentSegment() {
+    const endTime = getSponsorBlockEndTime(current, duration);
+    emitSponsorBlockSkip({
+      category: current.category,
+      automatic: false,
+      toEnd: isSponsorBlockEndSkip(endTime, duration),
+    });
+    seekSponsorBlockSegment(
+      media instanceof HTMLVideoElement ? media : null,
+      (seconds) => remote.seek(seconds),
+      sponsorBlockSkipTarget(endTime, duration),
+    );
+  }
 
   return (
     <div className="absolute left-3 top-3 z-40 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-xl border border-white/15 bg-black/75 px-2.5 py-2 text-xs text-white shadow-lg backdrop-blur sm:left-auto sm:right-4 sm:top-4 sm:max-w-[min(22rem,calc(100%-2rem))] sm:rounded-full sm:px-3">
@@ -109,7 +130,7 @@ export function SponsorBlockCurrentSegment({
       {canSkip && (
         <button
           type="button"
-          onClick={() => remote.seek(getSponsorBlockEndTime(current, duration))}
+          onClick={skipCurrentSegment}
           className="ml-1 inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-black transition-colors hover:bg-white/85"
         >
           <SkipForward className="h-3.5 w-3.5" aria-hidden="true" />

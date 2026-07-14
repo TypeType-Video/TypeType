@@ -53,6 +53,9 @@ export function useHistory(searchQuery = "") {
     },
     initialPageParam: 0,
     enabled: authReady && isAuthed,
+    staleTime: 30 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const add = useMutation({

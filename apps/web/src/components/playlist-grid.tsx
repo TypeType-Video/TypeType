@@ -36,7 +36,7 @@ export function PlaylistGrid({ videos, reorderable, listId, onRemove, onReorder 
     <ul className="grid list-none grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {videos.map((video, index) => (
         <li
-          key={video.id}
+          key={video.url}
           data-pl-card="true"
           className={`animate-card-pop-in rounded-xl ${
             reorderable && overIndex === index && dragIndex !== null ? "ring-2 ring-accent" : ""

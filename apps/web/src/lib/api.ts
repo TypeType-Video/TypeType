@@ -7,6 +7,7 @@ import { recordApiError } from "./api-error-log";
 import { extractRequestId, recordClientEvent } from "./client-debug-log";
 import { sanitizeDebugText, sanitizeRequestPath } from "./debug-sanitize";
 import { API_BASE as BASE } from "./env";
+import { optionalBearer } from "./optional-bearer";
 import { normalizeApiPayload } from "./text-normalize";
 
 export class ApiError extends Error {
@@ -109,7 +110,7 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
 export function fetchComments(url: string, nextpage?: string): Promise<CommentsPageResponse> {
   const params = new URLSearchParams({ url });
   if (nextpage) params.set("nextpage", nextpage);
-  return request(`${BASE}/comments?${params}`);
+  return request(`${BASE}/comments?${params}`, optionalBearer());
 }
 
 export function fetchCommentReplies(
@@ -117,13 +118,13 @@ export function fetchCommentReplies(
   repliesPage: string,
 ): Promise<CommentsPageResponse> {
   const params = new URLSearchParams({ url, repliesPage });
-  return request(`${BASE}/comments/replies?${params}`);
+  return request(`${BASE}/comments/replies?${params}`, optionalBearer());
 }
 
 export function fetchPodcasts(url: string, nextpage?: string): Promise<PodcastPageResponse> {
   const params = new URLSearchParams({ url });
   if (nextpage) params.set("nextpage", nextpage);
-  return request(`${BASE}/podcasts?${params}`);
+  return request(`${BASE}/podcasts?${params}`, optionalBearer());
 }
 
 export function fetchPodcastEpisodes(
@@ -132,5 +133,5 @@ export function fetchPodcastEpisodes(
 ): Promise<PodcastEpisodesResponse> {
   const params = new URLSearchParams({ url });
   if (nextpage) params.set("nextpage", nextpage);
-  return request(`${BASE}/podcasts/episodes?${params}`);
+  return request(`${BASE}/podcasts/episodes?${params}`, optionalBearer());
 }

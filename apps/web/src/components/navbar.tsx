@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { Heart, Search } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { useAuthToasts } from "../hooks/use-auth-toasts";
@@ -10,6 +10,7 @@ import { useUiStore } from "../stores/ui-store";
 import { NavbarAccountControls } from "./navbar-account-controls";
 import { NavbarLeadingControl } from "./navbar-leading-control";
 import { NavbarNotifications } from "./navbar-notifications";
+import { NavbarPlaybackMode } from "./navbar-playback-mode";
 import { NavbarSearch } from "./navbar-search";
 import { Toast } from "./toast";
 
@@ -18,6 +19,8 @@ const SearchOverlay = lazy(() =>
     default: module.SearchOverlay,
   })),
 );
+
+const SPONSOR_URL = "https://github.com/sponsors/Priveetee";
 
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -60,6 +63,17 @@ export function Navbar() {
               TYPETYPE
             </span>
           </Link>
+          <a
+            href={SPONSOR_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Support TypeType"
+            title="Support TypeType"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-fg-muted hover:bg-surface-strong hover:text-fg"
+          >
+            <Heart size={15} />
+            <span className="hidden sm:inline">Support</span>
+          </a>
         </div>
 
         {canOpenSearch && isMobile && (
@@ -76,6 +90,7 @@ export function Navbar() {
         {canOpenSearch && !isMobile && <NavbarSearch />}
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          <NavbarPlaybackMode />
           <NavbarNotifications />
           <NavbarAccountControls
             status={status}

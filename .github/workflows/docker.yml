@@ -14,16 +14,59 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
   build-and-push:
+    needs: verify
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+      image: ${{ steps.build-info.outputs.image }}
+      release-tag: ${{ steps.build-info.outputs.release-tag }}
+      revision: ${{ github.sha }}
+      version: ${{ steps.build-info.outputs.version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
+
+      - uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Resolve build metadata
+        id: build-info
+        run: |
+          base_version="$(bun -e 'console.log(require("./package.json").version)')"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            release_tag="$GITHUB_REF_NAME"
+            image="${REGISTRY}/${GITHUB_REPOSITORY,,}"
+          elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            version="$base_version"
+            release_tag="v$base_version"
+            image="${REGISTRY}/${GITHUB_REPOSITORY,,}"
+          else
+            version="$base_version-beta.$GITHUB_RUN_NUMBER"
+            release_tag="v$version"
+            image="${REGISTRY}/${GITHUB_REPOSITORY,,}-beta"
+          fi
+          IFS=. read -r major minor _ <<< "$base_version"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "major=$major" >> "$GITHUB_OUTPUT"
+          echo "major-minor=$major.$minor" >> "$GITHUB_OUTPUT"
+          echo "release-tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build-time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4.1.0
@@ -45,6 +88,9 @@ jobs:
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ steps.build-info.outputs.version }}
+            type=raw,value=${{ steps.build-info.outputs.major-minor }},enable=${{ github.ref_name == 'main' }}
+            type=raw,value=${{ steps.build-info.outputs.major }},enable=${{ github.ref_name == 'main' }}
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=latest,enable=${{ github.ref_name == 'dev' }}
             type=raw,value=beta,enable=${{ github.ref_name == 'dev' }}
@@ -59,9 +105,14 @@ jobs:
         uses: docker/setup-buildx-action@v4.0.0
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v7.1.0
         with:
           context: .
+          build-args: |
+            BUILD_VERSION=${{ steps.build-info.outputs.version }}
+            BUILD_REVISION=${{ github.sha }}
+            BUILD_TIME=${{ steps.build-info.outputs.build-time }}
           platforms: linux/amd64,linux/arm64
           push: true
           pull: true
@@ -69,3 +120,233 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-stable:
+    needs: build-and-push
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: stable
+    outputs:
+      deployed: ${{ steps.deploy-result.outputs.deployed }}
+    steps:
+      - name: Checkout deployment source
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check deployment configuration
+        id: deploy-config
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+          TYPE_TYPE_DEPLOY_SSH_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          if [ -z "$TYPE_TYPE_DEPLOY_HOST" ] || [ -z "$TYPE_TYPE_DEPLOY_PORT" ] || [ -z "$TYPE_TYPE_DEPLOY_USER" ] || [ -z "$TYPE_TYPE_DEPLOY_SSH_KEY" ]; then
+            echo "Deployment secrets are not configured; skipping deployment."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Configure SSH
+        if: steps.deploy-config.outputs.configured == 'true'
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_SSH_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/typetype_deploy_key
+          printf '%s\n' "$TYPE_TYPE_DEPLOY_SSH_KEY" > ~/.ssh/typetype_deploy_key
+          ssh-keyscan -p "$TYPE_TYPE_DEPLOY_PORT" "$TYPE_TYPE_DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy stable stack
+        if: steps.deploy-config.outputs.configured == 'true'
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+        run: |
+          tar -czf - \
+            .env.example \
+            docker-compose.yml \
+            docker-compose.arm64.yml \
+            garage.toml \
+            nginx.conf \
+            scripts/bootstrap-env.sh \
+            scripts/bootstrap-garage.sh \
+            scripts/deploy-stable.sh \
+            | ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" 'source_root=$(mktemp -d); trap '\''rm -rf "$source_root"'\'' EXIT; tar -xzf - -C "$source_root"; "$source_root/scripts/deploy-stable.sh" "$source_root"'
+          curl --fail --silent --show-error https://watch.typetype.video/api/health
+          curl --fail --silent --show-error https://watch.typetype.video/api/downloader/health
+
+      - name: Record stable deployment
+        id: deploy-result
+        if: steps.deploy-config.outputs.configured == 'true'
+        run: echo "deployed=true" >> "$GITHUB_OUTPUT"
+
+  deploy-beta:
+    needs: build-and-push
+    if: github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    environment: beta
+    outputs:
+      deployed: ${{ steps.deploy-result.outputs.deployed }}
+    steps:
+      - name: Check deployment configuration
+        id: deploy-config
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+          TYPE_TYPE_DEPLOY_SSH_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          if [ -z "$TYPE_TYPE_DEPLOY_HOST" ] || [ -z "$TYPE_TYPE_DEPLOY_PORT" ] || [ -z "$TYPE_TYPE_DEPLOY_USER" ] || [ -z "$TYPE_TYPE_DEPLOY_SSH_KEY" ]; then
+            echo "Deployment secrets are not configured; skipping deployment."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Configure SSH
+        if: steps.deploy-config.outputs.configured == 'true'
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_SSH_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/typetype_deploy_key
+          printf '%s\n' "$TYPE_TYPE_DEPLOY_SSH_KEY" > ~/.ssh/typetype_deploy_key
+          ssh-keyscan -p "$TYPE_TYPE_DEPLOY_PORT" "$TYPE_TYPE_DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy beta stack
+        if: steps.deploy-config.outputs.configured == 'true'
+        env:
+          TYPE_TYPE_DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          TYPE_TYPE_DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" "/usr/local/sbin/typetype-beta-update"
+          curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/health
+          curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/downloader/health
+
+      - name: Record beta deployment
+        id: deploy-result
+        if: steps.deploy-config.outputs.configured == 'true'
+        run: echo "deployed=true" >> "$GITHUB_OUTPUT"
+
+  prerelease:
+    needs: [build-and-push, deploy-beta]
+    if: github.ref_name == 'dev' && needs.deploy-beta.outputs.deployed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
+          IMAGE_NAME: ${{ needs.build-and-push.outputs.image }}
+          RELEASE_TAG: ${{ needs.build-and-push.outputs.release-tag }}
+          RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
+          REVISION: ${{ needs.build-and-push.outputs.revision }}
+        run: |
+          existing_tag=""
+          if resolved_tag="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null)"; then
+            existing_tag="$resolved_tag"
+          fi
+          if [[ -n "$existing_tag" && "$existing_tag" != "$REVISION" ]]; then
+            echo "$RELEASE_TAG already targets another commit"
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          previous_tag="$(
+            gh release list \
+              --repo "$GITHUB_REPOSITORY" \
+              --limit 100 \
+              --json tagName,isPrerelease,publishedAt \
+              --jq '[.[] | select(.isPrerelease)] | sort_by(.publishedAt) | reverse | .[0].tagName // ""'
+          )"
+          notes_file="$RUNNER_TEMP/prerelease-notes.md"
+          {
+            echo "## Beta build"
+            echo
+            echo "- Version: \`$RELEASE_VERSION\`"
+            echo "- Commit: [\`${REVISION:0:7}\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$REVISION)"
+            echo "- Container image: \`$IMAGE_NAME@$IMAGE_DIGEST\`"
+            echo
+            if [[ -n "$previous_tag" ]]; then
+              echo "## Changes since \`$previous_tag\`"
+              echo
+              gh api "repos/$GITHUB_REPOSITORY/compare/$previous_tag...$REVISION" \
+                --jq '.commits[] | [.sha, (.commit.message | split("\n")[0])] | @tsv' |
+                while IFS=$'\t' read -r commit_sha subject; do
+                  printf -- '- [`%.7s`](%s/%s/commit/%s) %s\n' \
+                    "$commit_sha" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$commit_sha" "$subject"
+                done
+            else
+              echo "## Changes"
+              echo
+              gh api "repos/$GITHUB_REPOSITORY/commits/$REVISION" \
+                --jq '[.sha, (.commit.message | split("\n")[0])] | @tsv' |
+                while IFS=$'\t' read -r commit_sha subject; do
+                  printf -- '- [`%.7s`](%s/%s/commit/%s) %s\n' \
+                    "$commit_sha" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$commit_sha" "$subject"
+                done
+            fi
+          } > "$notes_file"
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$REVISION" \
+            --title "TypeType $RELEASE_VERSION" \
+            --prerelease \
+            --latest=false \
+            --notes-file "$notes_file"
+
+  release:
+    needs: [build-and-push, deploy-stable]
+    if: github.ref_name == 'main' && needs.deploy-stable.outputs.deployed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
+          IMAGE_NAME: ${{ needs.build-and-push.outputs.image }}
+          RELEASE_TAG: ${{ needs.build-and-push.outputs.release-tag }}
+          RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
+          REVISION: ${{ needs.build-and-push.outputs.revision }}
+        run: |
+          existing_tag=""
+          if resolved_tag="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha' 2>/dev/null)"; then
+            existing_tag="$resolved_tag"
+          fi
+          if [[ -n "$existing_tag" && "$existing_tag" != "$REVISION" ]]; then
+            echo "$RELEASE_TAG already targets another commit; bump the product version"
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          notes_file="$RUNNER_TEMP/release-notes.md"
+          {
+            echo "## Release"
+            echo
+            echo "- Version: \`$RELEASE_VERSION\`"
+            echo "- Commit: [\`${REVISION:0:7}\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$REVISION)"
+            echo "- Container image: \`$IMAGE_NAME@$IMAGE_DIGEST\`"
+            echo
+            echo "For full release notes, go to [typetype.video/releases](https://typetype.video/releases)."
+          } > "$notes_file"
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$REVISION" \
+            --title "TypeType $RELEASE_VERSION" \
+            --latest \
+            --notes-file "$notes_file"

@@ -1,3 +1,5 @@
+import { normalizeClientLocale } from "./client-locale";
+
 export function formatViews(views: number): string {
   if (views < 0) return "";
   if (views >= 1_000_000_000) return `${(views / 1_000_000_000).toFixed(1)}B views`;
@@ -30,7 +32,7 @@ export function formatLikes(n: number): string {
 }
 
 function relativeLabel(unit: Intl.RelativeTimeFormatUnit, value: number, locale?: string): string {
-  const effective = locale && locale.trim().length > 0 ? locale : "en";
+  const effective = normalizeClientLocale(locale) ?? "en";
   const formatter = new Intl.RelativeTimeFormat(effective, { numeric: "auto" });
   return formatter.format(value, unit);
 }
@@ -54,7 +56,7 @@ export function formatPublishedDate(
   if (uploadDate) {
     const parsed = new Date(uploadDate);
     if (Number.isNaN(parsed.getTime())) return uploadDate;
-    return parsed.toLocaleDateString(locale, {
+    return parsed.toLocaleDateString(normalizeClientLocale(locale), {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -68,7 +70,7 @@ export function formatExactDate(publishedAt: number | undefined, locale?: string
   if (!publishedAt || publishedAt <= 0) return "";
   const parsed = new Date(publishedAt);
   if (Number.isNaN(parsed.getTime())) return "";
-  const effective = locale && locale.trim().length > 0 ? locale : undefined;
+  const effective = normalizeClientLocale(locale);
   return parsed.toLocaleDateString(effective, {
     year: "numeric",
     month: "short",

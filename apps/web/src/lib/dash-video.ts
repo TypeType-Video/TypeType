@@ -62,11 +62,18 @@ function activeRepresentationHeight(
 }
 
 function applyDashHeight(player: dashjs.MediaPlayerClass, height: number): void {
-  const representation = player
+  const representationIndex = player
     .getRepresentationsByType("video")
-    .find((candidate) => candidate.height === height);
-  if (!representation) return;
-  player.setRepresentationForTypeByIndex("video", representation.index, true);
+    .findIndex((candidate) => candidate.height === height);
+  if (representationIndex < 0) return;
+  player.updateSettings({
+    streaming: {
+      abr: {
+        autoSwitchBitrate: { video: false },
+      },
+    },
+  });
+  player.setRepresentationForTypeByIndex("video", representationIndex, true);
 }
 
 export function selectDashTrack(

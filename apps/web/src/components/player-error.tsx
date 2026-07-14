@@ -30,7 +30,7 @@ export function PlayerError({ onRetry }: Props) {
         <button
           type="button"
           onClick={onRetry}
-          className="px-5 py-2 rounded-full bg-fg hover:bg-white text-app text-sm font-medium transition-colors cursor-pointer"
+          className="px-5 py-2 rounded-full bg-fg text-app text-sm font-medium transition-opacity hover:opacity-85 cursor-pointer"
         >
           Retry
         </button>

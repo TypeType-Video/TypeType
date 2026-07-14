@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { useWatchPrefetch } from "../hooks/use-watch-prefetch";
-import { formatDuration } from "../lib/format";
+import { useClientLocale } from "../hooks/use-client-locale";
+import { useDeArrowBranding } from "../hooks/use-dearrow";
+import { formatDuration, formatPublishedDate, formatViews } from "../lib/format";
 import { proxyImage } from "../lib/proxy";
 import { watchRouteSearch } from "../lib/watch-url";
+import { useWatchNavigationStore } from "../stores/watch-navigation-store";
 import type { VideoStream } from "../types/stream";
 import type { HistoryItem } from "../types/user";
 import { ChannelRouteLink } from "./channel-route-link";
@@ -16,9 +18,19 @@ type ContinueCardProps = {
 };
 
 export function ContinueCard({ item }: ContinueCardProps) {
-  const prefetch = useWatchPrefetch(item.url);
+  const locale = useClientLocale();
+  const setNavigation = useWatchNavigationStore((state) => state.setNavigation);
   const uploaderVerified = item.uploaderVerified ?? false;
-  const thumbnail = proxyImage(item.thumbnail);
+  const branding = useDeArrowBranding(
+    item.url,
+    item.title,
+    proxyImage(item.thumbnail),
+    item.duration,
+  );
+  const thumbnail = branding.thumbnail;
+  const publishedText = formatPublishedDate(item.publishedAt, undefined, locale);
+  const viewsText = item.viewCount === undefined ? "" : formatViews(item.viewCount);
+  const metaText = [viewsText, publishedText].filter(Boolean).join(" · ");
   const menuStream: VideoStream = {
     id: item.url,
     title: item.title,
@@ -29,23 +41,24 @@ export function ContinueCard({ item }: ContinueCardProps) {
     channelUrl: item.channelUrl || undefined,
     channelAvatar: proxyImage(item.channelAvatar ?? ""),
     uploaderVerified,
-    views: 0,
+    views: item.viewCount ?? 0,
     duration: item.duration,
+    publishedAt: item.publishedAt,
   };
 
   return (
-    <div className="w-44 flex-shrink-0">
+    <div className="w-56 flex-shrink-0">
       <Link
         to="/watch"
         search={watchRouteSearch(item.url)}
+        preload="intent"
         className="group flex flex-col gap-2"
-        onMouseEnter={prefetch.onMouseEnter}
-        onMouseLeave={prefetch.onMouseLeave}
+        onClick={() => setNavigation(menuStream)}
       >
         <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-strong">
           <img
             src={thumbnail}
-            alt={item.title}
+            alt={branding.title}
             className="h-full w-full object-cover"
             loading="lazy"
             decoding="async"
@@ -55,33 +68,36 @@ export function ContinueCard({ item }: ContinueCardProps) {
           </span>
           <VideoProgressBar progress={item.progress} duration={item.duration} />
         </div>
-        <span className="line-clamp-2 text-fg text-xs leading-snug group-hover:text-fg-strong">
-          {item.title}
+        <span className="line-clamp-2 text-fg text-sm leading-snug group-hover:text-fg-strong">
+          {branding.title}
         </span>
       </Link>
-      <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <div className="mt-2 flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {item.channelUrl ? (
             <ChannelRouteLink url={item.channelUrl} className="flex-shrink-0">
-              <HistoryChannelAvatar item={item} className="h-5 w-5" />
+              <HistoryChannelAvatar item={item} className="h-7 w-7" />
             </ChannelRouteLink>
           ) : (
-            <HistoryChannelAvatar item={item} className="h-5 w-5" />
+            <HistoryChannelAvatar item={item} className="h-7 w-7" />
           )}
-          {item.channelUrl ? (
-            <ChannelRouteLink
-              url={item.channelUrl}
-              className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft transition-colors hover:text-fg"
-            >
-              <span className="min-w-0 truncate">{item.channelName}</span>
-              {uploaderVerified && <VerifiedBadgeIcon />}
-            </ChannelRouteLink>
-          ) : (
-            <span className="flex min-w-0 items-center gap-1 text-[10px] text-fg-soft">
-              <span className="min-w-0 truncate">{item.channelName}</span>
-              {uploaderVerified && <VerifiedBadgeIcon />}
-            </span>
-          )}
+          <div className="flex min-w-0 flex-col">
+            {item.channelUrl ? (
+              <ChannelRouteLink
+                url={item.channelUrl}
+                className="flex min-w-0 items-center gap-1 text-xs text-fg-soft transition-colors hover:text-fg"
+              >
+                <span className="min-w-0 truncate">{item.channelName}</span>
+                {uploaderVerified && <VerifiedBadgeIcon />}
+              </ChannelRouteLink>
+            ) : (
+              <span className="flex min-w-0 items-center gap-1 text-xs text-fg-soft">
+                <span className="min-w-0 truncate">{item.channelName}</span>
+                {uploaderVerified && <VerifiedBadgeIcon />}
+              </span>
+            )}
+            {metaText && <span className="text-xs text-fg-soft">{metaText}</span>}
+          </div>
         </div>
         <VideoCardFeedbackMenu stream={menuStream} />
       </div>

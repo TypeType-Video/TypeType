@@ -1,9 +1,18 @@
 @import "tailwindcss";
 @import "@vidstack/react/player/styles/default/theme.css";
+@import "@vidstack/react/player/styles/default/layouts/audio.css";
 @import "@vidstack/react/player/styles/default/layouts/video.css";
 @import "./styles/theme.css";
 @import "./styles/shorts-overrides.css";
 @import "./styles/player-menu-overrides.css";
+@import "./styles/audio-only-player.css";
+@import "./styles/audio-only-controls.css";
+@import "./styles/adaptive-audio-layout.css";
+@import "./styles/audio-only-player-mobile.css";
+@import "./styles/player-mode-transition.css";
+@import "./styles/player-volume-controls.css";
+@import "./styles/sabr-seek-state.css";
+@import "./styles/video-player-mobile.css";
 @import "./styles/player-hotkeys.css";
 @import "./styles/autoplay-overlay.css";
 @import "./styles/pixel-scene-enter.css";
@@ -56,6 +65,23 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes player-source-enter {
+  from {
+    opacity: 0.72;
+    transform: scale(1.006);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+.typetype-player-surface {
+  animation: player-source-enter 340ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes toast-fade-in {

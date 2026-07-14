@@ -1,3 +1,5 @@
+import { normalizeClientLocale } from "./client-locale";
+
 const SECOND_MS = 1000;
 const MINUTE_MS = 60 * SECOND_MS;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -7,8 +9,7 @@ const MONTH_MS = 30 * DAY_MS;
 const YEAR_MS = 365 * DAY_MS;
 
 function normalizedLocale(locale: string | undefined): string {
-  if (!locale || locale.trim().length === 0) return "en";
-  return locale;
+  return normalizeClientLocale(locale) ?? "en";
 }
 
 function relativeLabel(unit: Intl.RelativeTimeFormatUnit, value: number, locale: string): string {

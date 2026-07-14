@@ -3,10 +3,12 @@ import { type ReactNode, useCallback, useEffect } from "react";
 import { WatchPlaylistPanel } from "../components/watch-playlist-panel";
 import { applyCustomOrder, randomShuffleSeed, shuffleByKey } from "../lib/playlist-shuffle";
 import { isManagedPlaylistId } from "../lib/playlist-url";
+import { markWatchAutoplayIntent } from "../lib/watch-autoplay-intent";
 import { toPublicWatchParam } from "../lib/watch-url";
 import { usePlaylistOrderStore } from "../stores/playlist-order-store";
 import type { WatchPlaylistItem } from "../types/playlist";
-import { usePlaylist, usePlaylists } from "./use-playlists";
+import { usePlaylist } from "./use-playlist";
+import { usePlaylists } from "./use-playlists";
 import { usePublicPlaylist } from "./use-public-playlist";
 
 const MISSING_CURRENT_PREFETCH_LIMIT = 5;
@@ -71,6 +73,7 @@ export function useWatchPlaylist(
   const nextParam = nextVideo ? toPublicWatchParam(nextVideo.url) : null;
   const playPrevious = useCallback(() => {
     if (!previousParam) return;
+    markWatchAutoplayIntent();
     navigate({
       to: "/watch",
       search: { v: previousParam, list, ...(shuffle ? { shuffle } : {}) },
@@ -79,6 +82,7 @@ export function useWatchPlaylist(
   }, [previousParam, list, shuffle, navigate]);
   const playNext = useCallback(() => {
     if (!nextParam) return;
+    markWatchAutoplayIntent();
     navigate({
       to: "/watch",
       search: { v: nextParam, list, ...(shuffle ? { shuffle } : {}) },

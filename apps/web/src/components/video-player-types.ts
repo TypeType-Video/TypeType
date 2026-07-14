@@ -1,14 +1,17 @@
 import type { ReactNode } from "react";
+import type { SabrPlaybackConfig } from "../lib/sabr-source";
 import type { MediaSrc } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem, SubtitleItem } from "../types/api";
 import type { CaptionStyles } from "../types/user";
 
 export type VideoPlayerProps = {
   src: MediaSrc;
+  sabrConfig?: SabrPlaybackConfig | null;
   title?: string;
   poster?: string;
   streamType?: "on-demand" | "live";
   startTime?: number;
+  seekIntervalSeconds?: number;
   subtitles?: SubtitleItem[];
   sponsorBlockSegments?: SponsorBlockSegmentItem[];
   autoSkipSponsorBlockSegments?: SponsorBlockSegmentItem[];
@@ -22,16 +25,20 @@ export type VideoPlayerProps = {
   initialMuted?: boolean;
   settingsReady?: boolean;
   autoplay?: boolean;
+  audioOnly?: boolean;
   originalAudioLocale?: string | null;
   overlay?: ReactNode;
   captionStyles?: CaptionStyles;
   onCaptionStylesChange?: (styles: CaptionStyles) => void;
   onVolumeChange?: (volume: number, muted: boolean) => void;
   onTimeUpdate?: (positionMs: number) => void;
+  onPlay?: () => void;
   onPause?: () => void;
+  onSeeking?: (positionMs: number) => void;
   onSeeked?: () => void;
-  onError?: () => void;
+  onError?: (positionMs?: number) => void;
   onSeekReady?: (seek: (seconds: number) => void) => void;
+  onPositionReaderChange?: (reader: (() => number | null) | null) => void;
   onEnded?: () => void;
   onPreviousVideo?: () => void;
   onNextVideo?: () => void;

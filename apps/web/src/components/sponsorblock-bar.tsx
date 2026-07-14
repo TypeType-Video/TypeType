@@ -7,7 +7,7 @@ import {
 import { useMediaState } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 
-const TRACK_HEIGHT = 5;
+const TRACK_HEIGHT = 3;
 const THUMB_MARGIN = 7.5;
 
 type SegmentBarProps = {
@@ -24,6 +24,7 @@ function SegmentBar({ segment, duration }: SegmentBarProps) {
   const width = ((endTime - startTime) / duration) * 100;
   return (
     <div
+      className="typetype-sponsorblock-segment"
       style={{
         position: "absolute",
         left: `${left}%`,
@@ -76,6 +77,7 @@ export function SponsorBlockBar({ segments }: Props) {
     <>
       <div ref={anchorRef} style={{ display: "none" }} />
       <div
+        className="typetype-sponsorblock-bar"
         ref={overlayRef}
         style={{
           position: "absolute",

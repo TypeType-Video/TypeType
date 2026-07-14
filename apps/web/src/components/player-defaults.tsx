@@ -1,5 +1,10 @@
 import { useEffect, useRef } from "react";
-import { useAudioOptions, useMediaState, useVideoQualityOptions } from "../lib/vidstack";
+import {
+  useAudioOptions,
+  useMediaPlayer,
+  useMediaState,
+  useVideoQualityOptions,
+} from "../lib/vidstack";
 import { includesOriginal, normalizeLanguageTag } from "./player-language";
 
 const QUALITY_OPTIONS = { sort: "descending" } as const;
@@ -37,6 +42,7 @@ export function PlayerDefaults({
   defaultSubtitleLanguage,
 }: PlayerDefaultsProps) {
   const canPlay = useMediaState("canPlay");
+  const player = useMediaPlayer();
   const qualityOptions = useVideoQualityOptions(QUALITY_OPTIONS);
   const audioOptions = useAudioOptions();
   const textTracks = useMediaState("textTracks");
@@ -50,6 +56,12 @@ export function PlayerDefaults({
 
   useEffect(() => {
     if (!canPlay || qualityApplied.current || !defaultQuality) return;
+    const media = player?.el?.querySelector<HTMLMediaElement>("video,audio");
+    const currentTime = media && Number.isFinite(media.currentTime) ? media.currentTime : 0;
+    if (currentTime > 1.5) {
+      qualityApplied.current = true;
+      return;
+    }
     const defaultHeight = qualityLabelHeight(defaultQuality);
     const exactMatch = qualityOptions.find((o) => o.label === defaultQuality);
     const heightMatch = qualityOptions.find(
@@ -59,7 +71,7 @@ export function PlayerDefaults({
     if (!match) return;
     match.select();
     qualityApplied.current = true;
-  }, [canPlay, qualityOptions, defaultQuality]);
+  }, [canPlay, qualityOptions, defaultQuality, player]);
 
   useEffect(() => {
     const forceOriginal = requireOriginalLanguage || preferOriginalLanguage;

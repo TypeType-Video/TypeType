@@ -28,8 +28,15 @@ export default defineConfig(({ mode }) => {
         "/proxy": {
           target: apiTarget,
         },
+        "/streams/hls-manifest": {
+          target: apiTarget,
+        },
         "/streams/manifest": {
           target: apiTarget,
+        },
+        "/sabr": {
+          target: apiTarget,
+          ws: true,
         },
       },
     },

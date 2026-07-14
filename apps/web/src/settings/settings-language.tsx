@@ -17,10 +17,10 @@ function Toggle({ checked, onClick }: ToggleProps) {
       role="switch"
       aria-checked={checked}
       onClick={onClick}
-      className={`relative ml-6 h-5 w-10 flex-shrink-0 rounded-full transition-colors duration-200 ${checked ? "bg-fg" : "bg-surface-soft"}`}
+      className={`relative ml-6 h-5 w-10 flex-shrink-0 rounded-full border transition-colors duration-200 ${checked ? "border-fg bg-fg" : "border-border-strong bg-surface-strong"}`}
     >
       <span
-        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full transition-all duration-200 ${checked ? "translate-x-5 bg-surface" : "translate-x-0 bg-surface-soft"}`}
+        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full transition-all duration-200 ${checked ? "translate-x-5 bg-surface" : "translate-x-0 bg-fg-muted"}`}
       />
     </button>
   );

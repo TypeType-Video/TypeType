@@ -6,10 +6,12 @@ import { PageSpinner } from "./components/page-spinner";
 import { ApiError } from "./lib/api";
 import { installConsoleWarningFilter } from "./lib/console-warning-filter";
 import { initErrorCapture } from "./lib/error-capture";
+import { installWatchAutoplayIntent } from "./lib/watch-autoplay-intent";
 import { routeTree } from "./routeTree.gen";
 
 installConsoleWarningFilter();
 initErrorCapture();
+installWatchAutoplayIntent();
 
 const router = createRouter({
   routeTree,

@@ -37,7 +37,7 @@ export function RelatedVideos({ streams, isLoading = false }: Props) {
               className="animate-card-pop-in"
               style={{ animationDelay: `${Math.min(index * 35, 210)}ms` }}
             >
-              <RelatedCard stream={stream} />
+              <RelatedCard stream={stream} relatedStreams={visible} />
             </div>
           ))}
     </div>

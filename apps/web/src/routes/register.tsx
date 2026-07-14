@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AuthCard } from "../components/auth-card";
@@ -6,7 +7,7 @@ import { OidcSignInButton } from "../components/oidc-sign-in-button";
 import { Toast } from "../components/toast";
 import { useAuth } from "../hooks/use-auth";
 import { useOidcStatus } from "../hooks/use-oidc-status";
-import { useRegisterStatus } from "../hooks/use-register-status";
+import { REGISTER_STATUS_KEY, useRegisterStatus } from "../hooks/use-register-status";
 import { ApiError } from "../lib/api";
 import { sanitizeRedirect } from "../lib/auth-routes";
 import { registerSession } from "../lib/auth-session";
@@ -14,6 +15,7 @@ import { goto } from "../lib/route-redirect";
 
 function RegisterPage() {
   const { isAuthed, isGuest } = useAuth();
+  const queryClient = useQueryClient();
   const { redirect } = Route.useSearch();
   const target = sanitizeRedirect(redirect);
   const registerStatus = useRegisterStatus();
@@ -28,6 +30,7 @@ function RegisterPage() {
   const [pending, setPending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const postAuthTarget = redirect ? target : "/import";
+  const bootstrapAvailable = status?.bootstrapAvailable ?? false;
 
   useEffect(() => {
     if (!toast) return;
@@ -38,14 +41,14 @@ function RegisterPage() {
   const closedByPolicy = status ? !status.allowRegistration && !status.bootstrapAvailable : false;
   const subtitle = !localEnabled
     ? "Local registration is disabled."
-    : status?.bootstrapAvailable
-      ? "Fresh install detected. The first account will be admin."
+    : bootstrapAvailable
+      ? "First installation detected. Set up the administrator account."
       : closedByPolicy
         ? "Registrations are currently closed."
         : "Use your email to create an account. You can sign in with email or username.";
   const bannerMessage = error ?? (closedByPolicy ? "Registrations are currently closed." : null);
 
-  if (isAuthed && !isGuest) {
+  if (isAuthed && !isGuest && status && !bootstrapAvailable) {
     goto(postAuthTarget);
     return null;
   }
@@ -54,6 +57,9 @@ function RegisterPage() {
     e.preventDefault();
     setPending(true);
     setError(null);
+    if (bootstrapAvailable && status) {
+      queryClient.setQueryData(REGISTER_STATUS_KEY, { ...status, bootstrapAvailable: false });
+    }
     try {
       await registerSession({
         name: name.trim(),
@@ -63,8 +69,11 @@ function RegisterPage() {
       setToast("Account created");
       goto(postAuthTarget);
     } catch (error) {
+      await queryClient.invalidateQueries({ queryKey: REGISTER_STATUS_KEY });
       if (error instanceof ApiError && error.status === 403) {
-        setError("Registrations are currently closed.");
+        setError(
+          `Registration was rejected by the server. Add ${window.location.origin} to ALLOWED_ORIGINS without a trailing slash, then restart typetype-server.`,
+        );
       } else {
         setError("Unable to create account.");
       }
@@ -73,9 +82,12 @@ function RegisterPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center px-4">
+    <div className="flex w-full items-center justify-center px-4">
       <Toast message={toast} />
-      <AuthCard title="Create account" subtitle={subtitle}>
+      <AuthCard
+        title={bootstrapAvailable ? "Create admin account" : "Create account"}
+        subtitle={subtitle}
+      >
         <AuthErrorBanner message={bannerMessage} />
         {oidcEnabled && (
           <div className="mb-4">
@@ -99,7 +111,7 @@ function RegisterPage() {
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
+              placeholder={bootstrapAvailable ? "Administrator name" : "Name"}
               className="h-10 rounded-lg border border-border-strong bg-app px-3 text-sm text-fg"
               required
             />
@@ -130,15 +142,19 @@ function RegisterPage() {
                 ? "Registrations closed"
                 : pending
                   ? "Creating account..."
-                  : "Register"}
+                  : bootstrapAvailable
+                    ? "Create admin account"
+                    : "Register"}
             </button>
           </form>
         )}
-        <div className="mt-4 text-xs text-fg-soft">
-          <Link to="/login" search={{ redirect }} className="hover:text-fg-muted">
-            Already have an account? Sign in
-          </Link>
-        </div>
+        {!bootstrapAvailable && (
+          <div className="mt-4 text-xs text-fg-soft">
+            <Link to="/login" search={{ redirect }} className="hover:text-fg-muted">
+              Already have an account? Sign in
+            </Link>
+          </div>
+        )}
       </AuthCard>
     </div>
   );

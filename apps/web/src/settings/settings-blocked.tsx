@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type MouseEvent, useState } from "react";
 import { ChannelAvatar } from "../components/channel-avatar";
 import { useBlocked } from "../hooks/use-blocked";
 import type { BlockedItem } from "../types/user";
@@ -28,7 +28,7 @@ function XIcon() {
 type ChannelBubbleProps = {
   item: BlockedItem;
   onClick: () => void;
-  onRemove: () => void;
+  onRemove: (event: MouseEvent<HTMLButtonElement>) => void;
 };
 
 function ChannelBubble({ item, onClick, onRemove }: ChannelBubbleProps) {
@@ -123,7 +123,10 @@ export function SettingsBlocked() {
                 key={item.url}
                 item={item}
                 onClick={() => setSelected(item)}
-                onRemove={() => setSelected(item)}
+                onRemove={(event) => {
+                  event.stopPropagation();
+                  removeChannel.mutate(item.url);
+                }}
               />
             ))}
           </div>
