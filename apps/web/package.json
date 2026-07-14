@@ -1,7 +1,7 @@
 {
   "name": "@typetype/web",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.17",
-    "@typetype/mse": "0.1.30",
+    "@typetype/mse": "0.1.31",
     "@vidstack/react": "1.12.13",
     "dashjs": "^5.2.0",
     "hls.js": "1.6.16",
