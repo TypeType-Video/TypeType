@@ -26,6 +26,15 @@ export function sponsorBlockSkipTarget(endTime: number, duration: number) {
   return Math.max(0, endTime);
 }
 
+export function crossedSponsorBlockStart(
+  previousTime: number | null,
+  currentTime: number,
+  startTime: number,
+) {
+  if (previousTime === null || currentTime <= previousTime) return false;
+  return previousTime <= startTime + 0.5 && currentTime >= startTime;
+}
+
 export function emitSponsorBlockSkip(detail: SponsorBlockSkipNoticeDetail) {
   window.dispatchEvent(new CustomEvent(SPONSORBLOCK_SKIP_EVENT, { detail }));
 }

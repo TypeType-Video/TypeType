@@ -15,7 +15,6 @@ import { useMediaPlayer, useMediaRemote } from "../lib/vidstack";
 import type { SponsorBlockSegmentItem } from "../types/api";
 
 type Props = {
-  sabrVideo: HTMLVideoElement | null;
   segments: SponsorBlockSegmentItem[];
   autoSkipSegments?: SponsorBlockSegmentItem[];
   manualSkipSegments?: SponsorBlockSegmentItem[];
@@ -25,6 +24,7 @@ type Props = {
 type ActiveSegment = {
   segment: SponsorBlockSegmentItem;
   duration: number;
+  media: HTMLMediaElement;
 };
 
 function includesSegment(
@@ -37,7 +37,6 @@ function includesSegment(
 }
 
 export function SponsorBlockCurrentSegment({
-  sabrVideo,
   segments,
   autoSkipSegments,
   manualSkipSegments,
@@ -65,7 +64,7 @@ export function SponsorBlockCurrentSegment({
       const nextKey = segment ? `${segment.category}:${segment.startTime}:${duration}` : "";
       if (nextKey === activeKeyRef.current) return;
       activeKeyRef.current = nextKey;
-      setActive(segment ? { segment, duration } : null);
+      setActive(segment ? { segment, duration, media } : null);
     }
 
     function attach() {
@@ -99,7 +98,7 @@ export function SponsorBlockCurrentSegment({
   }, [player, segments]);
 
   if (!active) return null;
-  const { segment: current, duration } = active;
+  const { segment: current, duration, media } = active;
   const autoSkip = includesSegment(autoSkipSegments, current);
   const canSkip = includesSegment(manualSkipSegments, current) || !autoSkip || muteInsteadOfSkip;
 
@@ -113,7 +112,7 @@ export function SponsorBlockCurrentSegment({
       toEnd: isSponsorBlockEndSkip(endTime, duration),
     });
     seekSponsorBlockSegment(
-      sabrVideo,
+      media instanceof HTMLVideoElement ? media : null,
       (seconds) => remote.seek(seconds),
       sponsorBlockSkipTarget(endTime, duration),
     );

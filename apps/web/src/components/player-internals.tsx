@@ -3,6 +3,7 @@ import { isIosDevice } from "../lib/ios-device";
 import { seekSponsorBlockSegment } from "../lib/sponsorblock-seek";
 import { getSponsorBlockEndTime, getSponsorBlockStartTime } from "../lib/sponsorblock-settings";
 import {
+  crossedSponsorBlockStart,
   emitSponsorBlockSkip,
   isSponsorBlockEndSkip,
   sponsorBlockSkipTarget,
@@ -41,11 +42,9 @@ export function PlayerFocuser() {
 export function SponsorBlockSkipper({
   segments,
   muteInsteadOfSkip,
-  sabrVideo,
 }: {
   segments: SponsorBlockSegmentItem[];
   muteInsteadOfSkip: boolean;
-  sabrVideo: HTMLVideoElement | null;
 }) {
   const player = useMediaPlayer();
   const remote = useMediaRemote();
@@ -89,10 +88,7 @@ export function SponsorBlockSkipper({
           if (!muteInsteadOfSkip) {
             const key = `${seg.category}:${seg.startTime}:${seg.endTime}`;
             if (pendingSkipRef.current?.key === key) break;
-            const crossedStart =
-              previousTime === null
-                ? currentTime <= startTime + 0.5
-                : previousTime < startTime && previousTime <= currentTime;
+            const crossedStart = crossedSponsorBlockStart(previousTime, currentTime, startTime);
             if (!crossedStart) break;
             emitSponsorBlockSkip({
               category: seg.category,
@@ -101,7 +97,7 @@ export function SponsorBlockSkipper({
             });
             pendingSkipRef.current = { key, startTime, endTime };
             seekSponsorBlockSegment(
-              sabrVideo,
+              media instanceof HTMLVideoElement ? media : null,
               (seconds) => remote.seek(seconds),
               sponsorBlockSkipTarget(endTime, duration),
             );
@@ -156,6 +152,6 @@ export function SponsorBlockSkipper({
       observer.disconnect();
       cleanup?.();
     };
-  }, [canPlay, muteInsteadOfSkip, player, segments, remote, sabrVideo]);
+  }, [canPlay, muteInsteadOfSkip, player, segments, remote]);
   return null;
 }

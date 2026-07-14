@@ -27,14 +27,12 @@ export function VideoPlayerPlaybackTools(props: Props) {
         <SponsorBlockSkipper
           segments={props.autoSkipSegments}
           muteInsteadOfSkip={props.mutedSkip}
-          sabrVideo={props.sabrVideo}
         />
       )}
       {props.segments && <SponsorBlockBar segments={props.segments} />}
       {props.segments && <SponsorBlockSkipNotice />}
       {props.showCurrent && props.segments && (
         <SponsorBlockCurrentSegment
-          sabrVideo={props.sabrVideo}
           segments={props.segments}
           autoSkipSegments={props.autoSkipSegments}
           manualSkipSegments={props.manualSkipSegments}
