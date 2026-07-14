@@ -334,10 +334,19 @@ jobs:
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             exit 0
           fi
+          notes_file="$RUNNER_TEMP/release-notes.md"
+          {
+            echo "## Release"
+            echo
+            echo "- Version: \`$RELEASE_VERSION\`"
+            echo "- Commit: [\`${REVISION:0:7}\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$REVISION)"
+            echo "- Container image: \`$IMAGE_NAME@$IMAGE_DIGEST\`"
+            echo
+            echo "For full release notes, go to [typetype.video/releases](https://typetype.video/releases)."
+          } > "$notes_file"
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$REVISION" \
             --title "TypeType $RELEASE_VERSION" \
             --latest \
-            --generate-notes \
-            --notes "Container image: \`$IMAGE_NAME@$IMAGE_DIGEST\`"
+            --notes-file "$notes_file"
