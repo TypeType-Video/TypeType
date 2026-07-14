@@ -37,7 +37,7 @@ type Props = {
   onPause: () => void;
   onSeeking: (positionMs: number) => void;
   onSeeked: () => void;
-  onError: () => void;
+  onError: (positionMs?: number) => void;
   onPositionReaderChange: (reader: (() => number | null) | null) => void;
   onEnded: () => void;
   onPreviousVideo?: () => void;

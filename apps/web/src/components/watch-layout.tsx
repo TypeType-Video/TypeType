@@ -167,8 +167,8 @@ export function WatchLayout({
         onPositionReaderChange={(reader) => (positionReaderRef.current = reader)}
         onPreviousVideo={playlist.playPrevious}
         onNextVideo={playlist.playNext}
-        onError={() =>
-          audioOnly.fail() ? setToast("Audio only unavailable") : handlePlayerError()
+        onError={(positionMs) =>
+          audioOnly.fail() ? setToast("Audio only unavailable") : handlePlayerError(positionMs)
         }
         onReset={player.reset}
       />

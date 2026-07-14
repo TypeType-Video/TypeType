@@ -48,12 +48,15 @@ export function SabrMsePlayer({
     onVolumeChange,
   });
   const reportError = useCallback(
-    (error: unknown) => {
+    (error: unknown, recoveryPositionMs?: number) => {
       if (errorReportedRef.current) return;
       errorReportedRef.current = true;
       const message = error instanceof Error ? error.message : String(error);
-      recordClientEvent("player.sabr_engine_error", { error: message });
-      latestHandlers().onError();
+      recordClientEvent("player.sabr_engine_error", {
+        error: message,
+        recoveryPositionMs,
+      });
+      latestHandlers().onError(recoveryPositionMs);
     },
     [latestHandlers],
   );
@@ -92,7 +95,7 @@ export function SabrMsePlayer({
       audioTrackId: initialConfig.audioTrackId,
     };
     const offError = engine.on("error", (event) => {
-      if (event.type === "error") reportError(event.error);
+      if (event.type === "error") reportError(event.error, event.recoveryPositionMs);
     });
     const volumeChange = () => latestHandlers().onVolumeChange?.(video.volume, video.muted);
     video.addEventListener("volumechange", volumeChange);
@@ -131,13 +134,8 @@ export function SabrMsePlayer({
         return engine.pause();
       },
       seek: (seconds) => {
-        runSabrSeek(
-          engine,
-          Math.max(0, Math.round(seconds * 1000)),
-          seekingRef,
-          reportError,
-          latestHandlers().onSeekStateChange,
-        );
+        const targetMs = Math.max(0, Math.round(seconds * 1000));
+        runSabrSeek(engine, targetMs, seekingRef, reportError, latestHandlers().onSeekStateChange);
       },
     });
     void engine
@@ -150,15 +148,10 @@ export function SabrMsePlayer({
       .catch((error: unknown) => {
         if (!isAbortError(error)) reportError(error);
       });
-    latestHandlers().onSeekReady((seconds) =>
-      runSabrSeek(
-        engine,
-        Math.max(0, Math.round(seconds * 1000)),
-        seekingRef,
-        reportError,
-        latestHandlers().onSeekStateChange,
-      ),
-    );
+    latestHandlers().onSeekReady((seconds) => {
+      const targetMs = Math.max(0, Math.round(seconds * 1000));
+      runSabrSeek(engine, targetMs, seekingRef, reportError, latestHandlers().onSeekStateChange);
+    });
     latestHandlers().onPositionReaderChange(() => positionMs(video));
     return () => {
       offError();

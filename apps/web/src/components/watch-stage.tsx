@@ -55,7 +55,7 @@ type Props = {
   onPositionReaderChange: (reader: (() => number | null) | null) => void;
   onPreviousVideo?: () => void;
   onNextVideo?: () => void;
-  onError: () => void;
+  onError: (positionMs?: number) => void;
   onReset: () => void;
 };
 
