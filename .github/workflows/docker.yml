@@ -97,6 +97,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: stable
     steps:
+      - name: Checkout deployment source
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+
       - name: Check deployment configuration
         id: deploy-config
         env:
@@ -131,8 +136,18 @@ jobs:
           TYPE_TYPE_DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
           TYPE_TYPE_DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
         run: |
-          ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" "/usr/local/sbin/typetype-update"
+          tar -czf - \
+            .env.example \
+            docker-compose.yml \
+            docker-compose.arm64.yml \
+            garage.toml \
+            nginx.conf \
+            scripts/bootstrap-env.sh \
+            scripts/bootstrap-garage.sh \
+            scripts/deploy-stable.sh \
+            | ssh -i ~/.ssh/typetype_deploy_key -p "$TYPE_TYPE_DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$TYPE_TYPE_DEPLOY_USER@$TYPE_TYPE_DEPLOY_HOST" 'source_root=$(mktemp -d); trap '\''rm -rf "$source_root"'\'' EXIT; tar -xzf - -C "$source_root"; "$source_root/scripts/deploy-stable.sh" "$source_root"'
           curl --fail --silent --show-error https://watch.typetype.video/api/health
+          curl --fail --silent --show-error https://watch.typetype.video/api/downloader/health
 
   deploy-beta:
     needs: build-and-push
