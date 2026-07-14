@@ -279,6 +279,54 @@ else:
 PY
 }
 
+existing_stack_port() {
+  local key="$1"
+  local service
+  local target_port
+  local working_dir
+  local container
+  local published_port
+
+  case "${key}" in
+    HOST_PORT_WEB|HOST_PORT_WEB_BETA)
+      service="typetype"
+      target_port="80"
+      ;;
+    HOST_PORT_SERVER|HOST_PORT_SERVER_BETA)
+      service="typetype-server"
+      target_port="8080"
+      ;;
+    HOST_PORT_TOKEN|HOST_PORT_TOKEN_BETA)
+      service="typetype-token"
+      target_port="8081"
+      ;;
+    HOST_PORT_GARAGE_S3|HOST_PORT_GARAGE_S3_BETA)
+      service="garage"
+      target_port="3900"
+      ;;
+    HOST_PORT_DOWNLOADER_BETA)
+      service="typetype-downloader"
+      target_port="18093"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  working_dir="$(cd "${INSTALL_DIR}" && pwd)"
+  container="$(
+    docker ps -a -q \
+      --filter "label=com.docker.compose.project.working_dir=${working_dir}" \
+      --filter "label=com.docker.compose.service=${service}" \
+      | head -n 1
+  )"
+  [[ -n "${container}" ]] || return 1
+
+  published_port="$(docker port "${container}" "${target_port}/tcp" 2>/dev/null | head -n 1 | awk -F: '{print $NF}')"
+  is_valid_port "${published_port}" || return 1
+  echo "${published_port}"
+}
+
 is_arm64_host() {
   case "$(uname -m)" in
     aarch64|arm64) return 0 ;;
@@ -301,9 +349,16 @@ choose_stack_port() {
   local fallback="$3"
   local label="$4"
   local configured
+  local existing
   configured="$(get_env_var "${env_file}" "${key}")"
   if is_valid_port "${configured}" && [[ ${ENV_FILE_CREATED} -eq 0 ]]; then
     echo "${configured}"
+    return
+  fi
+  if [[ ${ENV_FILE_CREATED} -eq 0 ]] && existing="$(existing_stack_port "${key}")"; then
+    set_env_var "${env_file}" "${key}" "${existing}"
+    echo "[install] Preserving existing ${label} port ${existing}." >&2
+    echo "${existing}"
     return
   fi
   if ! is_valid_port "${configured}"; then
