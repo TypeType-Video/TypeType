@@ -13,7 +13,7 @@ fi
 main_revision=$(
   curl -fsSL \
     -H 'Accept: application/vnd.github+json' \
-    https://api.github.com/repos/Priveetee/TypeType/git/ref/heads/main \
+    https://api.github.com/repos/TypeType-Video/TypeType/git/ref/heads/main \
     | python3 -c 'import json, sys; print(json.load(sys.stdin)["object"]["sha"])'
 )
 if [[ "$revision" != "$main_revision" ]]; then
@@ -23,6 +23,6 @@ fi
 
 source_root=$(mktemp -d)
 trap 'rm -rf "$source_root"' EXIT
-curl -fsSL "https://codeload.github.com/Priveetee/TypeType/tar.gz/$revision" \
+curl -fsSL "https://codeload.github.com/TypeType-Video/TypeType/tar.gz/$revision" \
   | tar -xz -C "$source_root" --strip-components=1
 bash "$source_root/scripts/deploy-stable.sh" "$source_root"

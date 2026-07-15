@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="Priveetee/TypeType"
+REPO="TypeType-Video/TypeType"
 REF="main"
 INSTALL_DIR="${HOME}/typetype-stack"
 START_STACK=1

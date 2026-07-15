@@ -1,6 +1,6 @@
 services:
   typetype:
-    image: ${TYPETYPE_WEB_BETA_IMAGE:-ghcr.io/priveetee/typetype-beta:latest}
+    image: ${TYPETYPE_WEB_BETA_IMAGE:-ghcr.io/typetype-video/typetype-beta:latest}
     ports:
       - "${HOST_PORT_WEB_BETA:-18082}:80"
     volumes:
@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
 
   typetype-server:
-    image: ${TYPETYPE_SERVER_BETA_IMAGE:-ghcr.io/priveetee/typetype-server-beta:latest}
+    image: ${TYPETYPE_SERVER_BETA_IMAGE:-ghcr.io/typetype-video/typetype-server-beta:latest}
     ports:
       - "${HOST_BIND_SERVER_BETA:-127.0.0.1}:${HOST_PORT_SERVER_BETA:-18080}:8080"
     env_file: .env
@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
   typetype-downloader:
-    image: ${TYPETYPE_DOWNLOADER_BETA_IMAGE:-ghcr.io/priveetee/typetype-downloader-beta:latest}
+    image: ${TYPETYPE_DOWNLOADER_BETA_IMAGE:-ghcr.io/typetype-video/typetype-downloader-beta:latest}
     ports:
       - "${HOST_BIND_DOWNLOADER_BETA:-127.0.0.1}:${HOST_PORT_DOWNLOADER_BETA:-19093}:18093"
     environment:
@@ -82,7 +82,7 @@ services:
     restart: unless-stopped
 
   typetype-token:
-    image: ${TYPETYPE_TOKEN_BETA_IMAGE:-ghcr.io/priveetee/typetype-token-beta:latest}
+    image: ${TYPETYPE_TOKEN_BETA_IMAGE:-ghcr.io/typetype-video/typetype-token-beta:latest}
     ports:
       - "${HOST_BIND_TOKEN_BETA:-127.0.0.1}:${HOST_PORT_TOKEN_BETA:-18081}:8081"
     init: true

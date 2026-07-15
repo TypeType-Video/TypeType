@@ -1,6 +1,6 @@
 services:
   typetype:
-    image: ${TYPETYPE_WEB_IMAGE:-ghcr.io/priveetee/typetype:latest}
+    image: ${TYPETYPE_WEB_IMAGE:-ghcr.io/typetype-video/typetype:latest}
     ports:
       - "${HOST_PORT_WEB:-8082}:80"
     volumes:
@@ -10,7 +10,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
   typetype-server:
-    image: ${TYPETYPE_SERVER_IMAGE:-ghcr.io/priveetee/typetype-server:latest}
+    image: ${TYPETYPE_SERVER_IMAGE:-ghcr.io/typetype-video/typetype-server:latest}
     ports:
       - "${HOST_BIND_SERVER:-127.0.0.1}:${HOST_PORT_SERVER:-8080}:8080"
     environment:
@@ -19,7 +19,7 @@ services:
       DATABASE_USER: ${DATABASE_USER:-${POSTGRES_USER:-typetype}}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
       DRAGONFLY_URL: ${DRAGONFLY_URL:-redis://dragonfly:6379}
-      GITHUB_REPO: ${GITHUB_REPO:-Priveetee/TypeType-Server}
+      GITHUB_REPO: ${GITHUB_REPO:-TypeType-Video/TypeType-Server}
       GITHUB_ISSUE_TEMPLATE: ${GITHUB_ISSUE_TEMPLATE:-bug_report_backend.md}
       DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-true}
@@ -80,7 +80,7 @@ services:
     restart: "no"
 
   typetype-downloader:
-    image: ${TYPETYPE_DOWNLOADER_IMAGE:-ghcr.io/priveetee/typetype-downloader:latest}
+    image: ${TYPETYPE_DOWNLOADER_IMAGE:-ghcr.io/typetype-video/typetype-downloader:latest}
     environment:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
@@ -116,7 +116,7 @@ services:
     restart: unless-stopped
 
   typetype-token:
-    image: ${TYPETYPE_TOKEN_IMAGE:-ghcr.io/priveetee/typetype-token:latest}
+    image: ${TYPETYPE_TOKEN_IMAGE:-ghcr.io/typetype-video/typetype-token:latest}
     ports:
       - "${HOST_BIND_TOKEN:-127.0.0.1}:${HOST_PORT_TOKEN:-8081}:8081"
     init: true

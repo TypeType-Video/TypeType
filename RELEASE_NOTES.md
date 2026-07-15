@@ -13,6 +13,6 @@ TypeType runtime behavior, API contracts and self-hosting configuration are unch
 
 ## Updating
 
-Follow the [update guide](https://priveetee.github.io/Docs-TypeType/self-hosting/maintenance).
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
 
-If necessary, follow the [rollback guide](https://priveetee.github.io/Docs-TypeType/self-hosting/rollback).
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
