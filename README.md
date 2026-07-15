@@ -4,61 +4,75 @@
 
 # TypeType
 
-TypeType is a self-hosted web client for YouTube, with support for NicoNico and BiliBili. This repository is the central project repository: it contains the Docker Compose stack, installer, update and rollback tooling, release notes, and issue tracker.
+TypeType is a self-hosted video platform for YouTube, NicoNico, and BiliBili. It combines a web app, private accounts and libraries, playback, downloads, and instance administration in one stack that you control.
 
-> [!IMPORTANT]
-> The TypeType repositories moved from `Priveetee` to the [`TypeType-Video`](https://github.com/TypeType-Video) organization. GitHub redirects existing repository links. New installations use the organization container image paths; the previous image paths remain available during the transition.
+This is the central TypeType repository. It contains the Docker Compose stack, installer, update and rollback tools, release coordination, and the project issue tracker.
 
-## Install
+## Start here
+
+### Install TypeType
 
 Docker Engine and Docker Compose v2 are required.
 
-```bash
+```sh
 curl -fsSL https://raw.githubusercontent.com/TypeType-Video/TypeType/main/scripts/install-stack.sh | bash
 ```
 
-The installer creates `~/typetype-stack`, prompts before starting the stack, generates installation-specific secrets, and preserves the existing `.env` file during updates.
+The installer creates `~/typetype-stack`, generates installation-specific secrets, and asks before starting the stack.
 
-For manual installation and operating instructions, use the documentation:
-
-- [Self-hosting guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/introduction)
+- [Quick start](https://typetype-video.github.io/Docs-TypeType/self-hosting/quick-start)
 - [Manual Docker Compose setup](https://typetype-video.github.io/Docs-TypeType/self-hosting/docker-compose#manual-setup)
+- [Configuration](https://typetype-video.github.io/Docs-TypeType/self-hosting/configuration)
+
+### Use and maintain your instance
+
+- [User guide](https://typetype-video.github.io/Docs-TypeType/guide/)
 - [Update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance)
 - [Rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback)
-- [User guide](https://typetype-video.github.io/Docs-TypeType/guide/)
+- [Release notes](https://typetype.video/releases)
+- [Report a bug or request a feature](https://github.com/TypeType-Video/TypeType/issues)
 
-## Repositories
+## What TypeType includes
+
+- A responsive web client for YouTube, NicoNico, and BiliBili
+- Accounts, subscriptions, history, playlists, favorites, and watch progress
+- MSE and SABR playback with quality, audio-track, subtitle, and recovery controls
+- Video and audio downloads with local or S3-compatible storage
+- SponsorBlock, DeArrow, content blocking, imports, OIDC, and instance administration
+- No TypeType telemetry; the instance operator controls the deployment and its data
+
+## For developers
+
+Each component has its own repository, tests, release cycle, and license. Pull requests belong in the repository that owns the changed code. Bug reports and feature requests stay in the central issue tracker.
 
 | Repository | Responsibility | License |
 | --- | --- | --- |
-| [TypeType](https://github.com/TypeType-Video/TypeType) | Stack, releases, coordination, and issues | MIT |
+| [TypeType](https://github.com/TypeType-Video/TypeType) | Stack, installer, releases, coordination, and issues | MIT |
 | [TypeType-Frontend](https://github.com/TypeType-Video/TypeType-Frontend) | React web client | MIT |
-| [TypeType-Server](https://github.com/TypeType-Video/TypeType-Server) | Kotlin API and extraction backend | GPL-3.0 |
-| [TypeType-Player](https://github.com/TypeType-Video/TypeType-Player) | MSE and SABR playback package | MIT |
-| [TypeType-Token](https://github.com/TypeType-Video/TypeType-Token) | YouTube token and decoder service | MIT |
-| [TypeType-Downloader](https://github.com/TypeType-Video/TypeType-Downloader) | Download jobs and artifacts | GPL-3.0-or-later |
+| [TypeType-Server](https://github.com/TypeType-Video/TypeType-Server) | Kotlin API, extraction, and user data | GPL-3.0 |
+| [TypeType-Player](https://github.com/TypeType-Video/TypeType-Player) | Browser MSE and SABR playback package | MIT |
+| [TypeType-Token](https://github.com/TypeType-Video/TypeType-Token) | YouTube token, decoder, and session service | MIT |
+| [TypeType-Downloader](https://github.com/TypeType-Video/TypeType-Downloader) | Download jobs, muxing, and artifacts | GPL-3.0-or-later |
 | [Docs-TypeType](https://github.com/TypeType-Video/Docs-TypeType) | User and self-hosting documentation | MIT |
 
-Development changes land on each component's `dev` branch. Component images notify this repository with their exact digest. Component CI does not deploy beta or production instances.
+Development changes target each component's `dev` branch. `main` represents the stable release line.
 
-The public component repositories are also available here as Git submodules. Clone the complete source tree with:
+Clone the central stack and all public components with:
 
-```bash
+```sh
 git clone --recurse-submodules https://github.com/TypeType-Video/TypeType.git
 ```
 
-## Privacy And Disclaimer
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
-TypeType is designed to provide a private, self-hosted way to use supported media services. The project does not add telemetry or collect usage data. Instance operators control their own deployment, accounts, logs, storage, and network configuration.
+## Privacy and disclaimer
 
-TypeType and its contents are not affiliated with, funded, authorized, endorsed by, or associated with YouTube, Google LLC, NicoNico, BiliBili, or their affiliates. Trademarks, service marks, trade names, and other intellectual property belong to their respective owners.
+TypeType is designed to provide a private, self-hosted way to use supported media services. The project does not add telemetry or collect usage data. Instance operators control their own accounts, logs, storage, and network configuration.
+
+TypeType is not affiliated with, funded, authorized, endorsed by, or associated with YouTube, Google LLC, NicoNico, BiliBili, or their affiliates. Trademarks, service marks, trade names, and other intellectual property belong to their respective owners.
 
 TypeType is open source software built for learning and research purposes.
 
-## Contributing
-
-Use the [central issue tracker](https://github.com/TypeType-Video/TypeType/issues) for bug reports and feature requests. Pull requests belong in the repository that owns the affected component.
-
 ## License
 
-The files in this repository are licensed under the [MIT License](LICENSE). Components keep their own licenses; in particular, TypeType-Server and other GPL components remain under GPL-3.0.
+The orchestration files in this repository are licensed under the [MIT License](LICENSE). Each component keeps the license shown in the repository table.
