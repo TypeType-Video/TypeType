@@ -36,6 +36,7 @@ import { Route as SubscriptionsChannelsRouteImport } from './routes/subscription
 import { Route as PlaylistsIdRouteImport } from './routes/playlists_.$id'
 import { Route as ImportYoutubeRouteImport } from './routes/import/youtube'
 import { Route as ImportPipepipeRouteImport } from './routes/import/pipepipe'
+import { Route as EmbedVideoIdRouteImport } from './routes/embed_.$videoId'
 import { Route as ChannelChannelIdRouteImport } from './routes/channel_.$channelId'
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth.oidc.callback'
 
@@ -174,6 +175,11 @@ const ImportPipepipeRoute = ImportPipepipeRouteImport.update({
   path: '/pipepipe',
   getParentRoute: () => ImportRoute,
 } as any)
+const EmbedVideoIdRoute = EmbedVideoIdRouteImport.update({
+  id: '/embed_/$videoId',
+  path: '/embed/$videoId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
   id: '/channel_/$channelId',
   path: '/channel/$channelId',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/watch-later': typeof WatchLaterRoute
   '/youtube-session': typeof YoutubeSessionRoute
   '/channel/$channelId': typeof ChannelChannelIdRoute
+  '/embed/$videoId': typeof EmbedVideoIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/watch-later': typeof WatchLaterRoute
   '/youtube-session': typeof YoutubeSessionRoute
   '/channel/$channelId': typeof ChannelChannelIdRoute
+  '/embed/$videoId': typeof EmbedVideoIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists/$id': typeof PlaylistsIdRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/watch-later': typeof WatchLaterRoute
   '/youtube-session': typeof YoutubeSessionRoute
   '/channel_/$channelId': typeof ChannelChannelIdRoute
+  '/embed_/$videoId': typeof EmbedVideoIdRoute
   '/import/pipepipe': typeof ImportPipepipeRoute
   '/import/youtube': typeof ImportYoutubeRoute
   '/playlists_/$id': typeof PlaylistsIdRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/watch-later'
     | '/youtube-session'
     | '/channel/$channelId'
+    | '/embed/$videoId'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
@@ -334,6 +344,7 @@ export interface FileRouteTypes {
     | '/watch-later'
     | '/youtube-session'
     | '/channel/$channelId'
+    | '/embed/$videoId'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists/$id'
@@ -365,6 +376,7 @@ export interface FileRouteTypes {
     | '/watch-later'
     | '/youtube-session'
     | '/channel_/$channelId'
+    | '/embed_/$videoId'
     | '/import/pipepipe'
     | '/import/youtube'
     | '/playlists_/$id'
@@ -397,6 +409,7 @@ export interface RootRouteChildren {
   WatchLaterRoute: typeof WatchLaterRoute
   YoutubeSessionRoute: typeof YoutubeSessionRoute
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute
+  EmbedVideoIdRoute: typeof EmbedVideoIdRoute
   PlaylistsIdRoute: typeof PlaylistsIdRoute
   SubscriptionsChannelsRoute: typeof SubscriptionsChannelsRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
@@ -593,6 +606,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportPipepipeRouteImport
       parentRoute: typeof ImportRoute
     }
+    '/embed_/$videoId': {
+      id: '/embed_/$videoId'
+      path: '/embed/$videoId'
+      fullPath: '/embed/$videoId'
+      preLoaderRoute: typeof EmbedVideoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/channel_/$channelId': {
       id: '/channel_/$channelId'
       path: '/channel/$channelId'
@@ -649,6 +669,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchLaterRoute: WatchLaterRoute,
   YoutubeSessionRoute: YoutubeSessionRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
+  EmbedVideoIdRoute: EmbedVideoIdRoute,
   PlaylistsIdRoute: PlaylistsIdRoute,
   SubscriptionsChannelsRoute: SubscriptionsChannelsRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
