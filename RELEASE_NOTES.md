@@ -1,17 +1,18 @@
-# TypeType 1.0.2
+# TypeType 1.0.3
 
-TypeType 1.0.2 is a stability update for SABR playback. It fixes a Chromium MediaSource failure that could happen during rapid seeks or when replacing an active player session.
+TypeType 1.0.3 improves the stable release process for self-hosters. GitHub releases now provide concise, human-written notes together with the exact commit and container image used for each release.
 
 ## What changed
 
-- Prevent `SourceBuffer.abort()` while an asynchronous removal is active.
-- Improve playback stability during rapid forward and backward seeks.
-- Preserve cancellation of obsolete SABR segment requests.
-- Keep existing API contracts and self-hosting configuration unchanged.
+- Publish curated notes for stable TypeType releases.
+- Validate that release notes match the version before publishing an image.
+- Include the immutable commit and multi-architecture container digest in every stable release.
+- Keep automatic beta build notes separate from stable release notes.
+
+TypeType runtime behavior, API contracts and self-hosting configuration are unchanged from 1.0.2.
 
 ## Updating
 
 Follow the [update guide](https://priveetee.github.io/Docs-TypeType/self-hosting/maintenance).
 
 If necessary, follow the [rollback guide](https://priveetee.github.io/Docs-TypeType/self-hosting/rollback).
-
