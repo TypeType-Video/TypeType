@@ -96,3 +96,48 @@ jobs:
             echo "- Revision: \`$REVISION\`"
             echo "- Image: \`$IMAGE@$DIGEST\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-beta:
+    needs: validate
+    if: needs.validate.outputs.channel == 'beta'
+    runs-on: [self-hosted, Linux, X64, arko, typetype]
+    environment: beta
+    steps:
+      - name: Validate deployment configuration
+        env:
+          DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_PORT"
+          test -n "$DEPLOY_USER"
+          test -n "$DEPLOY_KEY"
+
+      - name: Configure SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          DEPLOY_KEY: ${{ secrets.TYPE_TYPE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 600 /dev/null "$RUNNER_TEMP/typetype_deploy_key"
+          printf '%s\n' "$DEPLOY_KEY" > "$RUNNER_TEMP/typetype_deploy_key"
+          ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" > "$RUNNER_TEMP/known_hosts" 2>/dev/null
+
+      - name: Update beta
+        env:
+          DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+        run: |
+          ssh -i "$RUNNER_TEMP/typetype_deploy_key" -p "$DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" /usr/local/sbin/typetype-beta-update
+          curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/health
+          curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/downloader/health
+
+  record-stable:
+    needs: validate
+    if: needs.validate.outputs.channel == 'stable'
+    runs-on: [self-hosted, Linux, X64, arko, typetype]
+    steps:
+      - run: echo "Stable image recorded; no deployment was started."
