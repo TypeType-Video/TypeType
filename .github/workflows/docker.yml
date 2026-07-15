@@ -158,15 +158,16 @@ jobs:
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          rm -rf /tmp/typetype-digests
-          mkdir -p /tmp/typetype-digests
-          touch "/tmp/typetype-digests/${DIGEST#sha256:}"
+          digest_dir="$RUNNER_TEMP/typetype-digests"
+          rm -rf "$digest_dir"
+          mkdir -p "$digest_dir"
+          touch "$digest_dir/${DIGEST#sha256:}"
 
       - name: Upload digest
         uses: actions/upload-artifact@v7
         with:
           name: digests-${{ matrix.arch }}
-          path: /tmp/typetype-digests/*
+          path: ${{ runner.temp }}/typetype-digests/*
           if-no-files-found: error
           retention-days: 1
 
@@ -186,12 +187,12 @@ jobs:
 
     steps:
       - name: Prepare digest directory
-        run: rm -rf /tmp/typetype-digests
+        run: rm -rf "$RUNNER_TEMP/typetype-digests"
 
       - name: Download digests
         uses: actions/download-artifact@v8.0.1
         with:
-          path: /tmp/typetype-digests
+          path: ${{ runner.temp }}/typetype-digests
           pattern: digests-*
           merge-multiple: true
 
@@ -208,10 +209,11 @@ jobs:
       - name: Create manifest list and push
         id: manifest
         env:
+          DIGEST_DIR: ${{ runner.temp }}/typetype-digests
           IMAGE: ${{ needs.prepare-image.outputs.image }}
           METADATA_JSON: ${{ needs.prepare-image.outputs.metadata-json }}
-        working-directory: /tmp/typetype-digests
         run: |
+          cd "$DIGEST_DIR"
           mapfile -t digests < <(find . -maxdepth 1 -type f -printf '%f\n' | sort)
           if [[ "${#digests[@]}" -ne 2 ]]; then
             echo "Expected two platform digests, found ${#digests[@]}"
