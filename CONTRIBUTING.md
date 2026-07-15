@@ -58,6 +58,18 @@ The central repository owns orchestration rather than component source code. Val
 
 Do not copy frontend, server, player, token, downloader, or documentation source into this repository. Update the owning component first, then update its pinned revision in the central stack when the compatible component revision is ready.
 
+## Programming preferences
+
+- Keep each change focused on one responsibility and place it in the repository that owns the behavior.
+- Prefer clear names and structure over explanatory comments, but comments are welcome whenever a contributor finds them useful.
+- Split files and scripts before they become difficult to reason about. Do not compress code to keep a file short.
+- Reuse the existing stack and standard platform tools before adding a dependency.
+- Verify the license and maintenance status of every new dependency before proposing it.
+- Keep component communication behind documented HTTP contracts and preserve repository license boundaries.
+- Use Bash for stack scripts, with `#!/usr/bin/env bash` and `set -euo pipefail`.
+- Keep installer, update, and rollback behavior safe for existing data, generated secrets, and user-edited configuration.
+- Do not add emojis, generated artifacts, local tooling details, or unrelated formatting changes.
+
 ## Pull requests
 
 A useful pull request explains:
