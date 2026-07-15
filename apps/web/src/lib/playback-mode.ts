@@ -20,7 +20,7 @@ export function readPlaybackMode(): PlaybackMode {
 export function resolveStoredPlaybackMode(stored: string | null): PlaybackMode {
   if (stored === "adaptive") return "sabr";
   if (stored === "ios-legacy-compat") return "legacy";
-  return isPlaybackMode(stored) ? stored : "legacy";
+  return isPlaybackMode(stored) ? stored : "sabr";
 }
 
 export function setPlaybackMode(mode: PlaybackMode): void {
