@@ -1,6 +1,6 @@
 {
   "name": "typetype",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "devDependencies": {
     "@biomejs/biome": "^2.5.3",
     "knip": "^6.25.0",
