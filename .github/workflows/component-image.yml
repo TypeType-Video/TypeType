@@ -33,12 +33,14 @@ jobs:
           PAYLOAD: ${{ toJSON(github.event.client_payload) }}
         run: |
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "channel=beta" >> "$GITHUB_OUTPUT"
-            echo "component=all" >> "$GITHUB_OUTPUT"
-            echo "digest=manual" >> "$GITHUB_OUTPUT"
-            echo "image=all beta images" >> "$GITHUB_OUTPUT"
-            echo "revision=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
-            echo "version=manual" >> "$GITHUB_OUTPUT"
+            {
+              echo "channel=beta"
+              echo "component=all"
+              echo "digest=manual"
+              echo "image=all beta images"
+              echo "revision=$GITHUB_SHA"
+              echo "version=manual"
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -67,12 +69,14 @@ jobs:
           [[ "$revision" =~ ^[0-9a-f]{40}$ ]]
           [[ "$version" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]{0,127}$ ]]
 
-          echo "channel=$channel" >> "$GITHUB_OUTPUT"
-          echo "component=$component" >> "$GITHUB_OUTPUT"
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
-          echo "image=$image" >> "$GITHUB_OUTPUT"
-          echo "revision=$revision" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "channel=$channel"
+            echo "component=$component"
+            echo "digest=$digest"
+            echo "image=$image"
+            echo "revision=$revision"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Record component version
         env:
