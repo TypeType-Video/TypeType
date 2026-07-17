@@ -1,15 +1,19 @@
-# TypeType 1.0.3
+# TypeType 1.0.4
 
-TypeType 1.0.3 improves the stable release process for self-hosters. GitHub releases now provide concise, human-written notes together with the exact commit and container image used for each release.
+TypeType 1.0.4 is a hotfix for YouTube SABR playback. It restores playback for
+on-demand videos whose initialization segments were not returned during session
+startup.
 
 ## What changed
 
-- Publish curated notes for stable TypeType releases.
-- Validate that release notes match the version before publishing an image.
-- Include the immutable commit and multi-architecture container digest in every stable release.
-- Keep automatic beta build notes separate from stable release notes.
+- Restore the SABR cold-start request state used to fetch audio and video
+  initialization segments.
+- Prevent affected playback sessions from repeatedly restarting before the
+  browser can initialize its MediaSource buffers.
+- Preserve the existing playback API, stream selection and self-hosting
+  configuration.
 
-TypeType runtime behavior, API contracts and self-hosting configuration are unchanged from 1.0.2.
+No database migration or environment change is required.
 
 ## Updating
 
