@@ -1,19 +1,31 @@
-# TypeType 1.0.4
+# TypeType 1.1.0
 
-TypeType 1.0.4 is a hotfix for YouTube SABR playback. It restores playback for
-on-demand videos whose initialization segments were not returned during session
-startup.
+TypeType 1.1.0 adds native YouTube livestream playback over SABR, an
+embeddable player, and several library and availability improvements.
 
 ## What changed
 
-- Restore the SABR cold-start request state used to fetch audio and video
-  initialization segments.
-- Prevent affected playback sessions from repeatedly restarting before the
-  browser can initialize its MediaSource buffers.
-- Preserve the existing playback API, stream selection and self-hosting
-  configuration.
+- Play YouTube livestreams through stateful SABR with live-edge following,
+  DVR seeking, quality changes, and playback recovery.
+- Add an embed route with start-time parameters, guest access control, and a
+  manual retry action.
+- Add Watch Later directly to video menus.
+- Improve imported playlist loading, ordering, duplicate handling, and deleted
+  video filtering.
+- Show scheduled, members-only, and unavailable states on video cards, and
+  keep active livestreams visible in the subscription feed.
+- Recover automatically when YouTube expires the player context used for SABR
+  admission.
+- Allow the Server and Token services to share the optional
+  `YOUTUBE_OUTBOUND_PROXY_URL` setting.
 
-No database migration or environment change is required.
+No database migration is required. The new proxy setting is optional and
+existing configurations remain valid.
+
+## Thanks
+
+Thanks to @tam1m for contributing the embed player, and to everyone who
+reported and tested the changes in this release.
 
 ## Updating
 
