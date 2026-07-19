@@ -22,6 +22,7 @@ services:
       GITHUB_REPO: ${GITHUB_REPO:-TypeType-Video/TypeType}
       GITHUB_ISSUE_TEMPLATE: ${GITHUB_ISSUE_TEMPLATE:-bug_report_backend.md}
       DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
+      YOUTUBE_OUTBOUND_PROXY_URL: ${YOUTUBE_OUTBOUND_PROXY_URL:-}
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-true}
       YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://typetype-token:8081
       YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://typetype-server:8080
@@ -123,6 +124,7 @@ services:
     ipc: host
     environment:
       NODE_ENV: production
+      YOUTUBE_OUTBOUND_PROXY_URL: ${YOUTUBE_OUTBOUND_PROXY_URL:-}
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-true}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN_FILE: /run/typetype-secrets/youtube_remote_login_internal_token
