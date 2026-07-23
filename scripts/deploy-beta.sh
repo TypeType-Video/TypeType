@@ -25,8 +25,10 @@ managed_files=(
   nginx.conf
   scripts/bootstrap-garage.sh
   scripts/deploy-beta.sh
+  scripts/youtube-egress-relay.mjs
 )
 services=(
+  youtube-egress-relay
   typetype
   typetype-server
   typetype-downloader
@@ -52,7 +54,14 @@ for file in "${managed_files[@]}"; do
 done
 
 printf 'services:\n' > "$backup/rollback.yml"
+declare -A current_services=()
+while read -r service; do
+  current_services["$service"]=1
+done < <(compose config --services)
 for service in "${services[@]}"; do
+  if [[ -z "${current_services[$service]:-}" ]]; then
+    continue
+  fi
   container=$(compose ps -a -q "$service" | head -n 1)
   if [[ -n "$container" ]]; then
     image=$(docker inspect "$container" --format '{{.Image}}')
@@ -96,6 +105,8 @@ install -m 644 "$source_root/garage.toml" "$root/garage.toml"
 install -m 644 "$source_root/nginx.conf" "$root/nginx.conf"
 install -m 755 "$source_root/scripts/bootstrap-garage.sh" "$root/scripts/bootstrap-garage.sh"
 install -m 755 "$source_root/scripts/deploy-beta.sh" "$root/scripts/deploy-beta.sh"
+install -m 644 "$source_root/scripts/youtube-egress-relay.mjs" "$root/scripts/youtube-egress-relay.mjs"
+install -d -m 0750 "$root/.runtime/egress"
 cd "$root"
 
 ./scripts/bootstrap-garage.sh
