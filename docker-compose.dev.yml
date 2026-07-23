@@ -1,4 +1,36 @@
 services:
+  youtube-egress-relay:
+    image: ${YOUTUBE_EGRESS_RELAY_IMAGE:-node:22.23.1-alpine3.23@sha256:8516dce0483394d5708d4b2ee6cacb79fb1d617ea4e2787c2120bcca92ce372e}
+    user: "${YOUTUBE_EGRESS_RELAY_UID:-1000}:${YOUTUBE_EGRESS_RELAY_GID:-1000}"
+    init: true
+    command: ["node", "/app/youtube-egress-relay.mjs"]
+    environment:
+      UPSTREAM_SOCKET: /run/typetype-egress/proxy.sock
+      LISTEN_PORT: "29083"
+      MAX_CONNECTIONS: "256"
+      IDLE_TIMEOUT_MS: "120000"
+    volumes:
+      - ./.runtime/egress:/run/typetype-egress:ro
+      - ./scripts/youtube-egress-relay.mjs:/app/youtube-egress-relay.mjs:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          const s=require('node:net').createConnection('/run/typetype-egress/proxy.sock');
+          const done=c=>{s.destroy();process.exit(c)};
+          s.once('connect',()=>done(0));s.once('error',()=>done(1));
+          setTimeout(()=>done(1),2000)
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
   typetype:
     image: ${TYPETYPE_WEB_BETA_IMAGE:-ghcr.io/typetype-video/typetype-beta:latest}
     ports:
@@ -21,7 +53,7 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
       DRAGONFLY_URL: ${DRAGONFLY_URL:-redis://dragonfly:6379}
       DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
-      YOUTUBE_OUTBOUND_PROXY_URL: ${YOUTUBE_OUTBOUND_PROXY_URL:-}
+      YOUTUBE_OUTBOUND_PROXY_URL: http://youtube-egress-relay:29083
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-false}
       YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://typetype-token:8081
       YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://typetype-server:8080
@@ -33,6 +65,8 @@ services:
       postgres-init:
         condition: service_completed_successfully
       dragonfly:
+        condition: service_healthy
+      youtube-egress-relay:
         condition: service_healthy
       typetype-token:
         condition: service_healthy
@@ -90,13 +124,16 @@ services:
     ipc: host
     environment:
       NODE_ENV: production
-      YOUTUBE_OUTBOUND_PROXY_URL: ${YOUTUBE_OUTBOUND_PROXY_URL:-}
+      YOUTUBE_OUTBOUND_PROXY_URL: http://youtube-egress-relay:29083
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-false}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
       YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN: ${YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN:-http://typetype-server:8080}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
       YOUTUBE_REMOTE_LOGIN_FRAME_FPS: ${YOUTUBE_REMOTE_LOGIN_FRAME_FPS:-10}
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}
+    depends_on:
+      youtube-egress-relay:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8081/health > /dev/null"]
     restart: unless-stopped
