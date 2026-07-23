@@ -8,6 +8,42 @@ TypeType is a self-hosted video platform for YouTube, NicoNico, and BiliBili. It
 
 This is the central TypeType repository. It contains the Docker Compose stack, installer, update and rollback tools, release coordination, and the project issue tracker.
 
+## Desktop
+
+<p align="center">
+  <img src="assets/screenshots/01-hero-watch-desktop.png" alt="TypeType playing a YouTube video" width="100%">
+</p>
+
+### Search across three services
+
+<p align="center">
+  <img src="assets/gifs/01-multi-service-search.gif" alt="Switching a TypeType search between YouTube, NicoNico, and BiliBili" width="960">
+</p>
+
+| YouTube | NicoNico | BiliBili |
+| --- | --- | --- |
+| ![YouTube search results](assets/screenshots/02-youtube-search-desktop.png) | ![NicoNico search results](assets/screenshots/03-niconico-search-desktop.png) | ![BiliBili search results](assets/screenshots/04-bilibili-search-desktop.png) |
+
+### Keep your own library
+
+| Save to a playlist | Resume from history |
+| --- | --- |
+| ![Saving a video to a playlist](assets/gifs/02-save-to-playlist.gif) | ![Resuming a video from history](assets/gifs/03-resume-from-history.gif) |
+
+| Subscriptions | History |
+| --- | --- |
+| ![TypeType subscriptions](assets/screenshots/05-subscriptions-desktop.png) | ![TypeType watch history](assets/screenshots/06-history-desktop.png) |
+
+## Mobile
+
+| Home | Search | History |
+| --- | --- | --- |
+| ![TypeType mobile home](assets/screenshots/07-mobile-home.png) | ![TypeType mobile search](assets/screenshots/08-mobile-search.png) | ![TypeType mobile history](assets/screenshots/09-mobile-history.png) |
+
+| Playlists | Playback | Audio only |
+| --- | --- | --- |
+| ![TypeType mobile playlists](assets/screenshots/10-mobile-playlists.png) | ![TypeType mobile playback](assets/screenshots/11-mobile-watch.png) | ![TypeType mobile audio-only mode](assets/screenshots/12-mobile-audio-only.png) |
+
 ## Start here
 
 ### Install TypeType
