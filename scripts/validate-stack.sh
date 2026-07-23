@@ -19,6 +19,7 @@ trap cleanup EXIT
 for script in scripts/*.sh; do
   bash -n "$script"
 done
+node --test scripts/youtube-egress-relay.test.mjs
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.arm64.yml config -q
