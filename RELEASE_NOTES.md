@@ -1,44 +1,47 @@
-# TypeType 1.2.0
+# TypeType 1.2.1
 
-TypeType 1.2.0 adds the server-side playback contract required by TypeType
-Android, faster SABR seeking, progressive subscription loading, and several
-playback improvements across mobile, VOD, and livestreams.
+TypeType 1.2.1 improves SABR playback stability, especially after seeks and browser lifecycle transitions. This release also includes additional recovery logic for livestreams and several mobile interface improvements.
 
-## What changed
+## Playback
 
-- Add a dedicated Android-only YouTube VOD API with complete standard DASH
-  manifests, stable playback generations, and same-origin media resources.
-- Expose manual and auto-generated subtitles before Android prepares playback,
-  with stable track identities and server-delivered UTF-8 WebVTT.
-- Reuse existing SABR sessions for same-format seeks, reducing extraction work
-  and making normal seeks and SponsorBlock skips faster.
-- Improve YouTube livestream playback around the live edge, missing segment
-  durations, quality changes, codec changes, and replacement sessions.
-- Load subscription feeds progressively so the first videos can appear without
-  waiting for the complete feed.
-- Improve mobile MSE playback, ManagedMediaSource support, Picture-in-Picture,
-  and buffered seek handling.
-- Preserve saved playback progress and prevent temporary media transitions from
-  overwriting the user's volume state.
-- Add playback speeds up to 4x.
-- Improve recovery when YouTube rejects or expires an extraction session.
+- fix Safari and iOS playback failures after SponsorBlock skips
+- prevent delayed lifecycle events from restarting an obsolete MSE playback loop after a seek
+- improve repeated, buffered and SponsorBlock seeks without unnecessarily replacing the active playback session
+- recover expired SABR sessions automatically
+- preserve media and playback state across fullscreen, Picture-in-Picture, orientation and background transitions
+- keep the same player instance while complete video metadata finishes loading
+- preserve the selected playback speed during temporary player transitions
+- update the MSE runtime to [`@typetype/mse@0.1.42`](https://www.npmjs.com/package/@typetype/mse/v/0.1.42)
 
-Android playback currently supports completed YouTube VODs. Active livestream
-playback is not yet advertised through the Android contract.
+## Livestreams
 
-No database migration or environment change is required.
+- recover bounded gaps between live SABR sequences
+- prevent repeated protected responses without media from buffering indefinitely
+- reset the recovery budget when media, playback position or generation progresses
+- improve recovery when the live playback window advances
+- preserve the active playback session during recoverable live interruptions
+
+## Mobile And PWA
+
+- stabilize the watch layout in mobile landscape mode
+- improve recovery after backgrounding, screen-off and orientation changes
+- preserve playback through fullscreen and Picture-in-Picture transitions
+- make history removal easier to use on touch devices
+
+## Validation
+
+Playback was validated on beta with:
+
+- Safari and an installed WebKit PWA
+- a Chromium-based mobile PWA
+- automatic SponsorBlock skips
+- repeated forward and backward seeks
+- fullscreen and orientation changes
+- background, screen-off and foreground recovery
+- Picture-in-Picture transitions
+- VOD and livestream SABR playback
+- multiple fresh videos and playback sessions
 
 ## Thanks
 
-Thanks to @hugoghx for the detailed livestream reports, @BuggyPasta for the
-Safari and iOS report, and @Toastienergy for reporting the playback speed and
-volume persistence issue.
-
-Thanks also to @InfinityLoop1308 and the PipePipe contributors for the extractor
-work and protocol research that TypeType continues to build on.
-
-## Updating
-
-Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
-
-If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+Thx to @Toastienergy, @BuggyPasta, @jerkiz and @coral-hungus for the Safari, iOS and SponsorBlock reports and testing, and to @hugoghx for the detailed livestream traces.
