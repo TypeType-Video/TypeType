@@ -1,16 +1,15 @@
-# TypeType 1.2.2
+# TypeType 1.2.3
 
-TypeType 1.2.2 is a hotpatch for YouTube livestreams that could start correctly but then buffer again every few seconds.
+TypeType 1.2.3 is a hotpatch for accelerated YouTube playback that could exhaust SABR media windows and repeatedly restart playback.
 
-## Livestreams
+## Playback
 
-- keep the server-side SABR pump active while a livestream is playing
-- maintain a bounded media buffer instead of waiting for a missing segment before requesting more data
-- wake the SABR pump immediately when the player needs another segment
-- keep audio and video windows aligned when their timestamps differ slightly
-- resolve missing live segment durations from the next available segment
-- prevent playback from incorrectly jumping over cached live media
-- preserve bounded cache eviction during long playback sessions
+- propagate playback speed continuously through the web SABR contract
+- size media and server read-ahead buffers for playback speeds up to 4x
+- keep rate-aware SABR preparation bounded during long sessions
+- preserve the selected video format during recovery instead of switching codec families
+- prevent repeated recovery sessions after seeks when playback is faster than the prepared window
+- update the MSE runtime to [`@typetype/mse@0.1.43`](https://www.npmjs.com/package/@typetype/mse/v/0.1.43)
 
 ## Updating
 
