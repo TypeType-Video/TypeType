@@ -1,18 +1,16 @@
-# TypeType 1.2.3
+# TypeType 1.2.4
 
-TypeType 1.2.3 is a hotpatch for accelerated YouTube playback that could exhaust SABR media windows and repeatedly restart playback.
+## Summary
 
-## Playback
+- fix intermittent SABR startup failures when resuming videos from a saved position
+- restore reliable audio and video initialization on cold playback sessions
+- prevent stalled preparation from retrying indefinitely
+- improve recovery when a SABR session cannot produce media
 
-- propagate playback speed continuously through the web SABR contract
-- size media and server read-ahead buffers for playback speeds up to 4x
-- keep rate-aware SABR preparation bounded during long sessions
-- preserve the selected video format during recovery instead of switching codec families
-- prevent repeated recovery sessions after seeks when playback is faster than the prepared window
-- update the MSE runtime to [`@typetype/mse@0.1.43`](https://www.npmjs.com/package/@typetype/mse/v/0.1.43)
+Normal seeks and quality changes continue to preserve the current playback position.
 
-## Updating
+No configuration or database migration is required.
 
-Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+Thx to everyone who reported playback and buffering issues.
 
-If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+If u want to support TypeType, please share it with others. If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee).
