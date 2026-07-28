@@ -6,6 +6,7 @@
 - restore reliable audio and video initialization on cold playback sessions
 - prevent stalled preparation from retrying indefinitely
 - improve recovery when a SABR session cannot produce media
+- keep repeated long-distance seeks responsive while SABR recovery is pending
 
 Normal seeks and quality changes continue to preserve the current playback position.
 
