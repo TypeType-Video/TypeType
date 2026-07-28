@@ -35,11 +35,14 @@ services:
     image: ${TYPETYPE_WEB_BETA_IMAGE:-ghcr.io/typetype-video/typetype-beta:latest}
     ports:
       - "${HOST_PORT_WEB_BETA:-18082}:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       typetype-server:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/api/version/web"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
     restart: unless-stopped
 
   typetype-server:
@@ -180,19 +183,63 @@ services:
       test: ["CMD", "redis-cli", "ping"]
     restart: unless-stopped
 
+  garage-config:
+    image: busybox:1.37
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        config=/etc/garage/garage.toml
+        if [ -s "$$config" ]; then
+          exit 0
+        fi
+        umask 077
+        if [ -s /migration/garage.toml ]; then
+          cp /migration/garage.toml "$$config"
+          exit 0
+        fi
+        cat > "$$config" <<'EOF'
+        metadata_dir = "/var/lib/garage/meta"
+        data_dir = "/var/lib/garage/data"
+        db_engine = "sqlite"
+
+        replication_factor = 1
+
+        rpc_bind_addr = "[::]:3901"
+        rpc_public_addr = "127.0.0.1:3901"
+
+        [s3_api]
+        s3_region = "garage"
+        api_bind_addr = "[::]:3900"
+        EOF
+    volumes:
+      - garage_config:/etc/garage
+      - ./.typetype-migration:/migration:ro
+    restart: "no"
+
   garage:
     image: dxflrs/garage:v2.2.0
     ports:
       - "${HOST_BIND_GARAGE_S3_BETA:-127.0.0.1}:${HOST_PORT_GARAGE_S3_BETA:-3900}:3900"
     environment:
+      GARAGE_CONFIG_FILE: /etc/garage/garage.toml
       GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-}
     volumes:
-      - ./garage.toml:/etc/garage.toml:ro
+      - garage_config:/etc/garage
       - garage_meta:/var/lib/garage/meta
       - garage_data:/var/lib/garage/data
+    depends_on:
+      garage-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  garage_config:
   garage_meta:
   garage_data:

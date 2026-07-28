@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${COMPOSE_FILE:-${ROOT_DIR}/docker-compose.yml}"
 COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE:-}"
+COMPOSE_CUSTOM_FILE="${COMPOSE_CUSTOM_FILE:-}"
 ENV_FILE="${ROOT_DIR}/.env"
 
 PLACEHOLDER_ACCESS_KEY="SET_ME_ACCESS_KEY"
@@ -121,13 +122,16 @@ COMPOSE_ARGS=(-f "${COMPOSE_FILE}")
 if [[ -n "${COMPOSE_OVERRIDE_FILE}" ]]; then
   COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
 fi
+if [[ -n "${COMPOSE_CUSTOM_FILE}" ]]; then
+  COMPOSE_ARGS+=(-f "${COMPOSE_CUSTOM_FILE}")
+fi
 
 compose() {
   docker compose "${COMPOSE_ARGS[@]}" "$@"
 }
 
 garage_exec() {
-  compose exec -T garage /garage -c /etc/garage.toml "$@"
+  compose exec -T garage /garage "$@"
 }
 
 echo "[garage-bootstrap] starting garage service if needed..."
