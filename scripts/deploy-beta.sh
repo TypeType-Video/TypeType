@@ -21,8 +21,6 @@ compose() {
 managed_files=(
   .env.example
   docker-compose.dev.yml
-  garage.toml
-  nginx.conf
   scripts/bootstrap-garage.sh
   scripts/deploy-beta.sh
   scripts/youtube-egress-relay.mjs
@@ -36,6 +34,7 @@ services=(
   postgres
   postgres-init
   dragonfly
+  garage-config
   garage
 )
 
@@ -101,17 +100,19 @@ trap finish EXIT
 
 install -m 644 "$source_root/.env.example" "$root/.env.example"
 install -m 644 "$source_root/docker-compose.dev.yml" "$root/docker-compose.dev.yml"
-install -m 644 "$source_root/garage.toml" "$root/garage.toml"
-install -m 644 "$source_root/nginx.conf" "$root/nginx.conf"
 install -m 755 "$source_root/scripts/bootstrap-garage.sh" "$root/scripts/bootstrap-garage.sh"
 install -m 755 "$source_root/scripts/deploy-beta.sh" "$root/scripts/deploy-beta.sh"
 install -m 644 "$source_root/scripts/youtube-egress-relay.mjs" "$root/scripts/youtube-egress-relay.mjs"
+install -d -m 700 "$root/.typetype-migration"
+if [[ -s "$root/garage.toml" ]]; then
+  install -D -m 600 "$root/garage.toml" "$root/.typetype-migration/garage.toml"
+fi
 install -d -m 0750 "$root/.runtime/egress"
 cd "$root"
 
-./scripts/bootstrap-garage.sh
 compose pull
 compose up -d --remove-orphans --wait --wait-timeout 180
+./scripts/bootstrap-garage.sh
 
 probe() {
   local url="$1"

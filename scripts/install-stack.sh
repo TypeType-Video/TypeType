@@ -11,6 +11,8 @@ AUTO_APPROVE=0
 REF_SET=0
 INSTALL_DIR_SET=0
 ENV_FILE_CREATED=0
+BACKUP_DIR=""
+CUSTOM_COMPOSE_FILE=""
 
 DEFAULT_DOWNLOADER_S3_ACCESS_KEY="SET_ME_ACCESS_KEY"
 DEFAULT_DOWNLOADER_S3_SECRET_KEY="SET_ME_SECRET_KEY"
@@ -340,6 +342,9 @@ compose_command_hint() {
   if [[ ${USE_ARM64_OVERRIDE} -eq 1 ]]; then
     args="${args} -f docker-compose.arm64.yml"
   fi
+  if [[ -n "${CUSTOM_COMPOSE_FILE}" ]]; then
+    args="${args} -f docker-compose.override.yml"
+  fi
   printf 'docker compose %s --env-file .env %s' "${args}" "${command}"
 }
 
@@ -379,15 +384,79 @@ choose_stack_port() {
 fetch_file() {
   local relative_path="$1"
   local out_path="$2"
+  local temporary
 
   mkdir -p "$(dirname "${out_path}")"
+  temporary="$(mktemp "${out_path}.tmp.XXXXXX")"
 
   if [[ -n "${SOURCE_DIR}" ]]; then
-    cp "${SOURCE_DIR}/${relative_path}" "${out_path}"
+    cp "${SOURCE_DIR}/${relative_path}" "${temporary}"
   else
     local base_url="https://raw.githubusercontent.com/${REPO}/${REF}"
-    curl -fsSL "${base_url}/${relative_path}" -o "${out_path}"
+    curl -fsSL --retry 3 "${base_url}/${relative_path}" -o "${temporary}"
   fi
+  mv "${temporary}" "${out_path}"
+}
+
+backup_existing_stack() {
+  local env_file="${INSTALL_DIR}/.env"
+  local existing=()
+  local source
+  local timestamp
+
+  shopt -s nullglob
+  existing+=("${INSTALL_DIR}"/docker-compose*.yml)
+  shopt -u nullglob
+  for source in "${env_file}" "${INSTALL_DIR}/nginx.conf" "${INSTALL_DIR}/garage.toml"; do
+    [[ -e "${source}" ]] && existing+=("${source}")
+  done
+  [[ -d "${INSTALL_DIR}/scripts" ]] && existing+=("${INSTALL_DIR}/scripts")
+  [[ ${#existing[@]} -gt 0 ]] || return 0
+
+  timestamp="$(date -u +%Y%m%d-%H%M%S)"
+  BACKUP_DIR="${INSTALL_DIR}/.typetype-backups/update-${timestamp}"
+  mkdir -p "${BACKUP_DIR}"
+  chmod 0700 "${INSTALL_DIR}/.typetype-backups" "${BACKUP_DIR}"
+  for source in "${existing[@]}"; do
+    cp -a "${source}" "${BACKUP_DIR}/"
+  done
+
+  if [[ -f "${COMPOSE_FILE}" ]]; then
+    local old_args=(-f "${COMPOSE_FILE}")
+    if is_arm64_host && [[ -f "${ARM64_COMPOSE_FILE}" ]]; then
+      old_args+=(-f "${ARM64_COMPOSE_FILE}")
+    fi
+    if [[ -f "${INSTALL_DIR}/docker-compose.override.yml" ]]; then
+      old_args+=(-f "${INSTALL_DIR}/docker-compose.override.yml")
+    fi
+    if docker compose "${old_args[@]}" --env-file "${env_file}" config -q 2>/dev/null; then
+      docker compose "${old_args[@]}" --env-file "${env_file}" config --images \
+        > "${BACKUP_DIR}/resolved-images.txt"
+      docker compose "${old_args[@]}" --env-file "${env_file}" images \
+        > "${BACKUP_DIR}/running-images.txt" 2>/dev/null || true
+    fi
+  fi
+  echo "[install] Backed up the existing stack to ${BACKUP_DIR}"
+}
+
+stage_legacy_garage_config() {
+  local legacy_config="${INSTALL_DIR}/garage.toml"
+
+  mkdir -p "${INSTALL_DIR}/.typetype-migration"
+  chmod 0700 "${INSTALL_DIR}/.typetype-migration"
+  [[ -s "${legacy_config}" ]] || return 0
+
+  cp "${legacy_config}" "${INSTALL_DIR}/.typetype-migration/garage.toml"
+  chmod 0600 "${INSTALL_DIR}/.typetype-migration/garage.toml"
+  echo "[install] Staged the existing garage.toml for one-time import into the managed config volume."
+}
+
+verify_component_versions() {
+  local base_url="http://127.0.0.1:${HOST_PORT_WEB_RESOLVED}/api/version"
+  local endpoint
+  for endpoint in "" "/web" "/server" "/token" "/downloader"; do
+    curl -fsS "${base_url}${endpoint}" >/dev/null
+  done
 }
 
 need_cmd curl
@@ -424,20 +493,33 @@ COMPOSE_FILE="${INSTALL_DIR}/${COMPOSE_NAME}"
 ARM64_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.arm64.yml"
 USE_ARM64_OVERRIDE=0
 
+if [[ -s "${INSTALL_DIR}/nginx.conf" ]]; then
+  echo "[install] Existing nginx.conf detected; it will be backed up and is no longer mounted by default."
+  echo "[install] Keep using it only through an explicit Compose override."
+fi
+if [[ -s "${INSTALL_DIR}/garage.toml" ]]; then
+  echo "[install] Existing garage.toml detected; it will be preserved in the managed config volume."
+fi
+
+backup_existing_stack
+
+stage_legacy_garage_config
+
 fetch_file "${COMPOSE_SOURCE}" "${COMPOSE_FILE}"
 fetch_file "docker-compose.arm64.yml" "${ARM64_COMPOSE_FILE}"
-fetch_file "nginx.conf" "${INSTALL_DIR}/nginx.conf"
-fetch_file "garage.toml" "${INSTALL_DIR}/garage.toml"
 fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
 fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
 fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 fetch_file "scripts/bootstrap-garage.sh" "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 fetch_file "scripts/setup-stack.sh" "${INSTALL_DIR}/scripts/setup-stack.sh"
+fetch_file "scripts/validate-stack.sh" "${INSTALL_DIR}/scripts/validate-stack.sh"
+fetch_file "scripts/youtube-egress-relay.mjs" "${INSTALL_DIR}/scripts/youtube-egress-relay.mjs"
 
 chmod +x "${INSTALL_DIR}/scripts/install-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 chmod +x "${INSTALL_DIR}/scripts/setup-stack.sh"
+chmod +x "${INSTALL_DIR}/scripts/validate-stack.sh"
 
 COMPOSE_ARGS=(-f "${COMPOSE_FILE}")
 COMPOSE_OVERRIDE_FILE=""
@@ -446,6 +528,11 @@ if is_arm64_host; then
   COMPOSE_OVERRIDE_FILE="${ARM64_COMPOSE_FILE}"
   COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
   echo "[install] ARM64 host detected, using Redis cache override."
+fi
+if [[ -f "${INSTALL_DIR}/docker-compose.override.yml" ]]; then
+  CUSTOM_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.override.yml"
+  COMPOSE_ARGS+=(-f "${CUSTOM_COMPOSE_FILE}")
+  echo "[install] Custom Compose override detected and preserved."
 fi
 
 if [[ ! -f "${INSTALL_DIR}/.env" ]]; then
@@ -494,8 +581,13 @@ else
   printf '\nALLOWED_ORIGINS=%s\n' "${input_origins}" >> "${INSTALL_DIR}/.env"
 fi
 
+echo "[install] Validating the resolved Compose stack..."
+docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" config -q
+
 if [[ ${START_STACK} -eq 0 ]]; then
   echo "[install] Download-only complete."
+  [[ ! -s "${INSTALL_DIR}/garage.toml" ]] || echo "[install] The existing garage.toml will be imported on the next Compose startup."
+  [[ -z "${BACKUP_DIR}" ]] || echo "[install] Rollback files: ${BACKUP_DIR}"
   echo "[install] Next step: cd ${INSTALL_DIR} && $(compose_command_hint 'up -d')"
   exit 0
 fi
@@ -516,8 +608,14 @@ docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" up -d --wai
 echo "[install] Bootstrapping Garage..."
 (
   cd "${INSTALL_DIR}"
-  COMPOSE_FILE="${COMPOSE_FILE}" COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" ./scripts/bootstrap-garage.sh
+  COMPOSE_FILE="${COMPOSE_FILE}" \
+    COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+    COMPOSE_CUSTOM_FILE="${CUSTOM_COMPOSE_FILE}" \
+    ./scripts/bootstrap-garage.sh
 )
+
+echo "[install] Checking component version endpoints..."
+verify_component_versions
 
 echo "[install] Service status:"
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" ps
@@ -525,3 +623,4 @@ docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" ps
 echo
 echo "Done. Open http://localhost:${HOST_PORT_WEB_RESOLVED}"
 echo "Install directory: ${INSTALL_DIR}"
+[[ -z "${BACKUP_DIR}" ]] || echo "Rollback files: ${BACKUP_DIR}"

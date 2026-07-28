@@ -267,10 +267,21 @@ cd "${ROOT_DIR}"
 
 COMPOSE_ARGS=(-f "${ROOT_DIR}/docker-compose.yml")
 COMPOSE_OVERRIDE_FILE=""
+COMPOSE_CUSTOM_FILE=""
 if is_arm64_host && [[ -f "${ROOT_DIR}/docker-compose.arm64.yml" ]]; then
   COMPOSE_OVERRIDE_FILE="${ROOT_DIR}/docker-compose.arm64.yml"
   COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
   echo "[setup] ARM64 host detected, using Redis cache override."
+fi
+if [[ -f "${ROOT_DIR}/docker-compose.override.yml" ]]; then
+  COMPOSE_CUSTOM_FILE="${ROOT_DIR}/docker-compose.override.yml"
+  COMPOSE_ARGS+=(-f "${COMPOSE_CUSTOM_FILE}")
+  echo "[setup] Custom Compose override detected."
+fi
+install -d -m 700 "${ROOT_DIR}/.typetype-migration"
+if [[ -s "${ROOT_DIR}/garage.toml" ]]; then
+  install -D -m 600 "${ROOT_DIR}/garage.toml" "${ROOT_DIR}/.typetype-migration/garage.toml"
+  echo "[setup] Staged the existing garage.toml for import into the managed config volume."
 fi
 
 ensure_youtube_remote_login_env "${ENV_FILE}"
@@ -291,14 +302,20 @@ if [[ -z "${CURRENT_ALLOWED_ORIGINS}" || "${CURRENT_ALLOWED_ORIGINS}" == "${PACK
 fi
 
 echo
+echo "[setup] Validating the resolved Compose stack..."
+docker compose "${COMPOSE_ARGS[@]}" config -q
+
 echo "[setup] Pulling images..."
 docker compose "${COMPOSE_ARGS[@]}" pull
 
 echo "[setup] Starting services..."
-docker compose "${COMPOSE_ARGS[@]}" up -d
+docker compose "${COMPOSE_ARGS[@]}" up -d --wait --wait-timeout 180
 
 echo "[setup] Bootstrapping Garage for downloader..."
-COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml" COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" "${ROOT_DIR}/scripts/bootstrap-garage.sh"
+COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml" \
+  COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+  COMPOSE_CUSTOM_FILE="${COMPOSE_CUSTOM_FILE}" \
+  "${ROOT_DIR}/scripts/bootstrap-garage.sh"
 
 echo "[setup] Current service status:"
 docker compose "${COMPOSE_ARGS[@]}" ps
