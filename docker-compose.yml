@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
 
   typetype-secrets:
-    image: busybox:1.37
+    image: busybox:1.38
     command:
       - /bin/sh
       - -ec
@@ -179,7 +179,7 @@ services:
     restart: "no"
 
   dragonfly:
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.39.0
     ulimits:
       memlock: -1
     healthcheck:
