@@ -95,7 +95,7 @@ if [[ "$component" == all ]]; then
   proxy_url=$(docker compose --project-directory "$root" --env-file "$root/.env" \
     -f "$source_root/docker-compose.dev.yml" config --environment \
     | sed -n 's/^YOUTUBE_OUTBOUND_PROXY_URL=//p')
-  "$source_root/scripts/check-youtube-egress.sh" "$proxy_url"
+  "$source_root/scripts/check-youtube-egress.sh" "$project" "$proxy_url"
 fi
 rollback_root="$root/.deploy-rollbacks"
 backup="$rollback_root/$(date -u +'%Y%m%dT%H%M%SZ')-$$"

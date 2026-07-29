@@ -33,7 +33,11 @@ case "$1" in
     ;;
   inspect)
     if [[ "$2" == anchor ]]; then
-      echo "$FAKE_STACK_ROOT"
+      if [[ "$*" == *"State.Pid"* ]]; then
+        echo 12345
+      else
+        echo "$FAKE_STACK_ROOT"
+      fi
     else
       echo sha256:old
     fi
@@ -69,7 +73,21 @@ fi
 EOF
 chmod +x "$fake_bin/curl"
 
+cat > "$fake_bin/nsenter" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%q ' "$@" >> "$FAKE_NSENTER_LOG"
+printf '\n' >> "$FAKE_NSENTER_LOG"
+while [[ "$1" != -- ]]; do
+  shift
+done
+shift
+exec "$@"
+EOF
+chmod +x "$fake_bin/nsenter"
+
 export FAKE_DOCKER_LOG="$temporary/docker.log"
+export FAKE_NSENTER_LOG="$temporary/nsenter.log"
 export FAKE_STACK_ROOT="$stack"
 export PATH="$fake_bin:$PATH"
 digest="sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
@@ -123,6 +141,11 @@ fi
 if FAKE_EGRESS_FAIL=1 TYPETYPE_DEPLOY_COMPONENT=all \
     "$repository/scripts/deploy-beta.sh" "$repository"; then
   echo "a full rollout passed with an unavailable egress proxy" >&2
+  exit 1
+fi
+if ! grep -Fq -- '--target 12345 --net --' "$FAKE_NSENTER_LOG"; then
+  echo "the egress preflight did not use a beta container network namespace" >&2
+  cat "$FAKE_NSENTER_LOG" >&2
   exit 1
 fi
 if grep -Eq 'compose .* (pull|up) ' "$FAKE_DOCKER_LOG"; then
