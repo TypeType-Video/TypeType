@@ -44,7 +44,6 @@ if [[ "$component" != all ]]; then
   [[ "$image" == "$expected_image" ]]
   [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
 fi
-
 export COMPOSE_FILE="$root/docker-compose.dev.yml"
 export COMPOSE_PROJECT_NAME="$project"
 
@@ -71,16 +70,14 @@ set_env_value() {
   chown --reference="$root/.env" "$temporary"
   mv "$temporary" "$root/.env"
 }
-
 managed_files=(
   .env.example
   docker-compose.dev.yml
   scripts/bootstrap-garage.sh
+  scripts/check-youtube-egress.sh
   scripts/deploy-beta.sh
-  scripts/youtube-egress-relay.mjs
 )
 services=(
-  youtube-egress-relay
   typetype
   typetype-server
   typetype-downloader
@@ -94,6 +91,12 @@ services=(
 
 docker compose --project-directory "$root" --env-file "$root/.env" \
   -f "$source_root/docker-compose.dev.yml" config -q
+if [[ "$component" == all ]]; then
+  proxy_url=$(docker compose --project-directory "$root" --env-file "$root/.env" \
+    -f "$source_root/docker-compose.dev.yml" config --environment \
+    | sed -n 's/^YOUTUBE_OUTBOUND_PROXY_URL=//p')
+  "$source_root/scripts/check-youtube-egress.sh" "$proxy_url"
+fi
 rollback_root="$root/.deploy-rollbacks"
 backup="$rollback_root/$(date -u +'%Y%m%dT%H%M%SZ')-$$"
 mkdir -p "$backup/scripts"
@@ -106,7 +109,6 @@ for file in "${managed_files[@]}"; do
     printf '%s\n' "$file" >> "$backup/existing-files"
   fi
 done
-
 printf 'services:\n' > "$backup/rollback.yml"
 declare -A current_services=()
 rollback_services=()
@@ -164,13 +166,12 @@ trap finish EXIT
 install -m 644 "$source_root/.env.example" "$root/.env.example"
 install -m 644 "$source_root/docker-compose.dev.yml" "$root/docker-compose.dev.yml"
 install -m 755 "$source_root/scripts/bootstrap-garage.sh" "$root/scripts/bootstrap-garage.sh"
+install -m 755 "$source_root/scripts/check-youtube-egress.sh" "$root/scripts/check-youtube-egress.sh"
 install -m 755 "$source_root/scripts/deploy-beta.sh" "$root/scripts/deploy-beta.sh"
-install -m 644 "$source_root/scripts/youtube-egress-relay.mjs" "$root/scripts/youtube-egress-relay.mjs"
 install -d -m 700 "$root/.typetype-migration"
 if [[ -s "$root/garage.toml" ]]; then
   install -D -m 600 "$root/garage.toml" "$root/.typetype-migration/garage.toml"
 fi
-install -d -m 0750 "$root/.runtime/egress"
 cd "$root"
 
 probe() {

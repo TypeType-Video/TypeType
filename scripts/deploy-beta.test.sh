@@ -13,8 +13,8 @@ for file in \
   .env.example \
   docker-compose.dev.yml \
   scripts/bootstrap-garage.sh \
-  scripts/deploy-beta.sh \
-  scripts/youtube-egress-relay.mjs; do
+  scripts/check-youtube-egress.sh \
+  scripts/deploy-beta.sh; do
   mkdir -p "$stack/$(dirname "$file")"
   cp "$repository/$file" "$stack/$file"
 done
@@ -44,9 +44,12 @@ case "$1" in
     fi
     case "$*" in
       *"config --services"*)
-        printf '%s\n' youtube-egress-relay typetype typetype-server \
-          typetype-downloader typetype-token postgres postgres-init \
+        printf '%s\n' typetype typetype-server typetype-downloader \
+          typetype-token postgres postgres-init \
           dragonfly garage-config garage
+        ;;
+      *"config --environment"*)
+        echo "YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083"
         ;;
       *"ps -a -q"*)
         echo "container-${*: -1}"
@@ -56,6 +59,15 @@ case "$1" in
 esac
 EOF
 chmod +x "$fake_bin/docker"
+
+cat > "$fake_bin/curl" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${FAKE_EGRESS_FAIL:-0}" == 1 ]]; then
+  exit 1
+fi
+EOF
+chmod +x "$fake_bin/curl"
 
 export FAKE_DOCKER_LOG="$temporary/docker.log"
 export FAKE_STACK_ROOT="$stack"
@@ -84,10 +96,6 @@ if ! grep -Fq 'up -d --no-deps --wait --wait-timeout 180 typetype-server' \
   cat "$FAKE_DOCKER_LOG" >&2
   exit 1
 fi
-if grep -Eq 'compose .* up .*youtube-egress-relay' "$FAKE_DOCKER_LOG"; then
-  echo "a server rollout must not recreate the egress relay" >&2
-  exit 1
-fi
 if grep -Eq 'compose .* pull $' "$FAKE_DOCKER_LOG"; then
   echo "a server rollout must not pull the full stack" >&2
   exit 1
@@ -106,7 +114,19 @@ if FAKE_FAIL_UPDATE=1 \
 fi
 grep -Fxq "$previous_pin" "$stack/.env"
 grep -Fq 'up -d --no-deps typetype-server' "$FAKE_DOCKER_LOG"
-if grep -Eq 'compose .* up .*youtube-egress-relay' "$FAKE_DOCKER_LOG"; then
-  echo "a server rollback must not recreate the egress relay" >&2
+if grep -Eq 'compose .* up .*typetype($| )' "$FAKE_DOCKER_LOG"; then
+  echo "a server rollback must not recreate the frontend" >&2
+  exit 1
+fi
+
+: > "$FAKE_DOCKER_LOG"
+if FAKE_EGRESS_FAIL=1 TYPETYPE_DEPLOY_COMPONENT=all \
+    "$repository/scripts/deploy-beta.sh" "$repository"; then
+  echo "a full rollout passed with an unavailable egress proxy" >&2
+  exit 1
+fi
+if grep -Eq 'compose .* (pull|up) ' "$FAKE_DOCKER_LOG"; then
+  echo "a failed egress preflight mutated the stack" >&2
+  cat "$FAKE_DOCKER_LOG" >&2
   exit 1
 fi
