@@ -21,7 +21,7 @@ services:
         - node
         - -e
         - >-
-          const s=require('node:net').createConnection('/run/typetype-egress/proxy.sock');
+          const s=require('node:net').createConnection({host:'127.0.0.1',port:29083});
           const done=c=>{s.destroy();process.exit(c)};
           s.once('connect',()=>done(0));s.once('error',()=>done(1));
           setTimeout(()=>done(1),2000)

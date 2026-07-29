@@ -20,6 +20,7 @@ for script in scripts/*.sh; do
   bash -n "$script"
 done
 node --test scripts/youtube-egress-relay.test.mjs
+./scripts/deploy-beta.test.sh
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.arm64.yml config -q
@@ -37,5 +38,13 @@ if ! grep -q 'source: garage_config' <<<"${stable_config}"; then
 fi
 if ! grep -q 'source: garage_config' <<<"${dev_config}"; then
   echo "beta Compose must use the managed Garage config volume" >&2
+  exit 1
+fi
+if ! grep -q "host:'127.0.0.1',port:29083" <<<"$dev_config"; then
+  echo "beta relay healthcheck must probe the relay listener" >&2
+  exit 1
+fi
+if grep -q "createConnection('/run/typetype-egress/proxy.sock')" <<<"$dev_config"; then
+  echo "beta relay healthcheck must not make the stack depend on the tunnel socket" >&2
   exit 1
 fi
