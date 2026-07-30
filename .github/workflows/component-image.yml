@@ -127,11 +127,17 @@ jobs:
 
       - name: Update beta
         env:
+          COMPONENT: ${{ needs.validate.outputs.component }}
           DEPLOY_HOST: ${{ secrets.TYPE_TYPE_DEPLOY_HOST }}
           DEPLOY_PORT: ${{ secrets.TYPE_TYPE_DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.TYPE_TYPE_DEPLOY_USER }}
+          DIGEST: ${{ needs.validate.outputs.digest }}
+          IMAGE: ${{ needs.validate.outputs.image }}
         run: |
-          ssh -i "$RUNNER_TEMP/typetype_deploy_key" -p "$DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" /usr/local/sbin/typetype-beta-update
+          printf -v update_command \
+            'TYPETYPE_DEPLOY_COMPONENT=%q TYPETYPE_DEPLOY_IMAGE=%q TYPETYPE_DEPLOY_DIGEST=%q /usr/local/sbin/typetype-beta-update' \
+            "$COMPONENT" "$IMAGE" "$DIGEST"
+          ssh -i "$RUNNER_TEMP/typetype_deploy_key" -p "$DEPLOY_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" "$update_command"
           curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/health
           curl --fail --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error https://beta.typetype.video/api/downloader/health
 

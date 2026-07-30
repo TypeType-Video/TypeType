@@ -22,8 +22,6 @@ managed_files=(
   .env.example
   docker-compose.yml
   docker-compose.arm64.yml
-  garage.toml
-  nginx.conf
   scripts/bootstrap-env.sh
   scripts/bootstrap-garage.sh
   scripts/deploy-stable.sh
@@ -37,6 +35,7 @@ services=(
   postgres
   postgres-init
   dragonfly
+  garage-config
   garage
 )
 
@@ -106,6 +105,10 @@ finish() {
 }
 trap finish EXIT
 
+install -d -m 700 "$root/.typetype-migration"
+if [[ -s "$root/garage.toml" ]]; then
+  install -D -m 600 "$root/garage.toml" "$root/.typetype-migration/garage.toml"
+fi
 for file in "${managed_files[@]}"; do
   install -D -m 644 "$source_root/$file" "$root/$file"
 done
@@ -115,9 +118,9 @@ chmod 755 "$root/scripts/deploy-stable.sh"
 cd "$root"
 
 ./scripts/bootstrap-env.sh
-./scripts/bootstrap-garage.sh
 compose pull
 compose up -d --remove-orphans --wait --wait-timeout 180
+./scripts/bootstrap-garage.sh
 
 probe() {
   local service="$1"

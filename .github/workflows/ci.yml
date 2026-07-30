@@ -19,7 +19,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: true
       - run: ./scripts/validate-stack.sh
@@ -28,7 +28,7 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: [self-hosted, Linux, X64, arko, typetype]
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
         with:
           submodules: true
       - run: ./scripts/validate-stack.sh

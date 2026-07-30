@@ -19,7 +19,37 @@ trap cleanup EXIT
 for script in scripts/*.sh; do
   bash -n "$script"
 done
+./scripts/deploy-beta.test.sh
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.arm64.yml config -q
-docker compose --env-file .env.example -f docker-compose.dev.yml config -q
+if docker compose --env-file .env.example -f docker-compose.dev.yml config -q 2>/dev/null; then
+  echo "beta Compose must reject a missing outbound proxy" >&2
+  exit 1
+fi
+YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
+  docker compose --env-file .env.example -f docker-compose.dev.yml config -q
+
+stable_config="$(docker compose --env-file .env.example -f docker-compose.yml config)"
+dev_config="$(YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
+  docker compose --env-file .env.example -f docker-compose.dev.yml config)"
+if grep -q '/etc/nginx/conf.d/default.conf' <<<"${stable_config}${dev_config}"; then
+  echo "default Compose must use the nginx configuration bundled in the web image" >&2
+  exit 1
+fi
+if ! grep -q 'source: garage_config' <<<"${stable_config}"; then
+  echo "stable Compose must use the managed Garage config volume" >&2
+  exit 1
+fi
+if ! grep -q 'source: garage_config' <<<"${dev_config}"; then
+  echo "beta Compose must use the managed Garage config volume" >&2
+  exit 1
+fi
+if grep -q 'youtube-egress-relay' <<<"$dev_config"; then
+  echo "beta Compose must use the externally validated egress proxy" >&2
+  exit 1
+fi
+if [[ $(grep -c 'YOUTUBE_OUTBOUND_PROXY_URL: http://127.0.0.1:29083' <<<"$dev_config") -ne 2 ]]; then
+  echo "beta Server and Token must share the configured outbound proxy" >&2
+  exit 1
+fi
