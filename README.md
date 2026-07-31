@@ -9,6 +9,11 @@ Run one private instance, then use it from the responsive web app or the native
 Android client. Accounts, subscriptions, history, playlists, favorites, watch
 progress, and settings stay on the instance you control.
 
+<p align="center">
+  <a href="https://typetype.video/fdroid/"><img src="https://raw.githubusercontent.com/TypeType-Video/TypeType-Android/main/assets/badges/fdroid.svg" alt="Install TypeType with F-Droid" width="30%"></a>
+  <a href="https://github.com/TypeType-Video/TypeType-Android/releases/latest"><img src="https://raw.githubusercontent.com/TypeType-Video/TypeType-Android/main/assets/badges/signed-apk.svg" alt="Download the latest signed TypeType APK" width="30%"></a>
+</p>
+
 ## Install
 
 Docker Engine and Docker Compose v2 are required for the self-hosted stack.
@@ -16,11 +21,6 @@ Docker Engine and Docker Compose v2 are required for the self-hosted stack.
 ```sh
 curl -fsSL https://raw.githubusercontent.com/TypeType-Video/TypeType/main/scripts/install-stack.sh | bash
 ```
-
-<p align="center">
-  <a href="https://typetype.video/fdroid/"><img src="https://raw.githubusercontent.com/TypeType-Video/TypeType-Android/main/assets/badges/fdroid.svg" alt="Install TypeType with F-Droid" width="30%"></a>
-  <a href="https://github.com/TypeType-Video/TypeType-Android/releases/latest"><img src="https://raw.githubusercontent.com/TypeType-Video/TypeType-Android/main/assets/badges/signed-apk.svg" alt="Download the latest signed TypeType APK" width="30%"></a>
-</p>
 
 ## Web app
 
