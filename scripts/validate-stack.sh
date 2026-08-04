@@ -19,6 +19,7 @@ trap cleanup EXIT
 for script in scripts/*.sh; do
   bash -n "$script"
 done
+./scripts/install-stack.test.sh
 ./scripts/deploy-beta.test.sh
 
 docker compose --env-file .env.example -f docker-compose.yml config -q

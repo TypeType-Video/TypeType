@@ -513,7 +513,6 @@ fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 fetch_file "scripts/bootstrap-garage.sh" "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 fetch_file "scripts/setup-stack.sh" "${INSTALL_DIR}/scripts/setup-stack.sh"
 fetch_file "scripts/validate-stack.sh" "${INSTALL_DIR}/scripts/validate-stack.sh"
-fetch_file "scripts/youtube-egress-relay.mjs" "${INSTALL_DIR}/scripts/youtube-egress-relay.mjs"
 
 chmod +x "${INSTALL_DIR}/scripts/install-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-env.sh"
