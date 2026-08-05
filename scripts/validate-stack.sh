@@ -54,3 +54,13 @@ if [[ $(grep -c 'YOUTUBE_OUTBOUND_PROXY_URL: http://127.0.0.1:29083' <<<"$dev_co
   echo "beta Server and Token must share the configured outbound proxy" >&2
   exit 1
 fi
+for config in "$stable_config" "$dev_config"; do
+  if ! grep -q 'AUTH_SESSION_TTL_DAYS: "30"' <<<"$config"; then
+    echo "Server must receive the default account session lifetime" >&2
+    exit 1
+  fi
+  if ! grep -q 'AUTH_ALLOW_INSECURE_COOKIES: "false"' <<<"$config"; then
+    echo "Server must keep insecure refresh cookies disabled by default" >&2
+    exit 1
+  fi
+done
