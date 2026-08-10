@@ -90,6 +90,16 @@ The installer creates `~/typetype-stack`, generates installation-specific secret
 - SponsorBlock, DeArrow, content blocking, imports, OIDC, and instance administration
 - No TypeType telemetry; the instance operator controls the deployment and its data
 
+## Sponsors
+
+A big thx to [@Toastienergy](https://github.com/Toastienergy) and
+[@filippobaroni](https://github.com/filippobaroni) for supporting TypeType through
+GitHub Sponsors. Their support helps me cover the infrastructure and spend more
+time improving the project.
+
+If u want to support TypeType financially, u can do so through
+[GitHub Sponsors](https://github.com/sponsors/Priveetee).
+
 ## For developers
 
 Each component has its own repository, tests, release cycle, and license. Pull requests belong in the repository that owns the changed code. Bug reports and feature requests stay in the central issue tracker.
