@@ -86,12 +86,8 @@ Token will no longer silently bypass it.
 
 ## Updating
 
-Follow the
-[update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
 
-If necessary, follow the
-[rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
 
-If u want to support TypeType, please share it with others. If u want to
-support it financially, u can do so through
-[GitHub Sponsors](https://github.com/sponsors/Priveetee).
+If u want to support TypeType, please share it with others. If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee).
