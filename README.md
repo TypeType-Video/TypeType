@@ -90,7 +90,12 @@ The installer creates `~/typetype-stack`, generates installation-specific secret
 - SponsorBlock, DeArrow, content blocking, imports, OIDC, and instance administration
 - No TypeType telemetry; the instance operator controls the deployment and its data
 
-## Sponsors
+## Thanks to sponsors
+
+<p>
+  <a href="https://github.com/Toastienergy" title="@Toastienergy"><img src="https://github.com/Toastienergy.png?size=128" alt="@Toastienergy" width="64" height="64"></a>
+  <a href="https://github.com/filippobaroni" title="@filippobaroni"><img src="https://github.com/filippobaroni.png?size=128" alt="@filippobaroni" width="64" height="64"></a>
+</p>
 
 A big thx to [@Toastienergy](https://github.com/Toastienergy) and
 [@filippobaroni](https://github.com/filippobaroni) for supporting TypeType through
