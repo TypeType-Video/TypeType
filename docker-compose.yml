@@ -188,7 +188,7 @@ services:
       test: ["CMD", "redis-cli", "ping"]
     restart: unless-stopped
   garage-config:
-    image: busybox:1.37
+    image: busybox:1.38
     command:
       - /bin/sh
       - -ec
