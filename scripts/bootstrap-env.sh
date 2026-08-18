@@ -16,11 +16,7 @@ generate_secret() {
     return
   fi
 
-  python3 - <<'PY'
-import secrets
-
-print(secrets.token_urlsafe(48))
-PY
+  head -c 48 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=\n'
 }
 
 generate_hex_secret() {
@@ -29,11 +25,7 @@ generate_hex_secret() {
     return
   fi
 
-  python3 - <<'PY'
-import secrets
-
-print(secrets.token_hex(32))
-PY
+  od -An -N 32 -tx1 /dev/urandom | tr -d '[:space:]'
 }
 
 set_env_var() {
