@@ -141,17 +141,7 @@ confirm_tty() {
 
 generate_hex() {
   local bytes="$1"
-  if command -v openssl >/dev/null 2>&1; then
-    openssl rand -hex "${bytes}"
-    return
-  fi
-
-  python3 - "${bytes}" <<'PY'
-import secrets
-import sys
-
-print(secrets.token_hex(int(sys.argv[1])))
-PY
+  od -An -N "${bytes}" -tx1 /dev/urandom | tr -d '[:space:]'
 }
 
 generate_downloader_access_key() {
@@ -232,20 +222,24 @@ ensure_youtube_remote_login_env() {
   fi
 }
 
-require_free_port() {
+port_is_listening() {
   local port="$1"
-  python3 - <<PY
-import socket, sys
-port = int(${port})
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-try:
-    s.bind(("0.0.0.0", port))
-except OSError:
-    sys.exit(1)
-finally:
-    s.close()
-sys.exit(0)
-PY
+  local port_hex
+  local socket_tables=(/proc/net/tcp)
+  if [[ -r /proc/net/tcp ]]; then
+    [[ ! -r /proc/net/tcp6 ]] || socket_tables+=(/proc/net/tcp6)
+    port_hex="$(printf '%04X' "${port}")"
+    awk -v port="${port_hex}" '
+      NR > 1 && toupper(substr($2, length($2) - 3)) == port && $4 == "0A" { found = 1; exit }
+      END { exit found ? 0 : 1 }
+    ' "${socket_tables[@]}"
+    return
+  fi
+  (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null
+}
+
+require_free_port() {
+  ! port_is_listening "$1"
 }
 
 get_env_var() {
@@ -261,24 +255,17 @@ is_valid_port() {
 }
 
 find_random_free_port() {
-  python3 - <<'PY'
-import random
-import socket
-
-for _ in range(500):
-    port = random.randint(20000, 60999)
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.bind(("0.0.0.0", port))
-    except OSError:
-        continue
-    finally:
-        s.close()
-    print(port)
-    break
-else:
-    raise SystemExit("no free port found")
-PY
+  local attempt
+  local port
+  for ((attempt = 0; attempt < 500; attempt++)); do
+    port=$((20000 + (((RANDOM << 15) | RANDOM) % 41000)))
+    if require_free_port "${port}"; then
+      echo "${port}"
+      return
+    fi
+  done
+  echo "[install] No free port found between 20000 and 60999." >&2
+  return 1
 }
 
 existing_stack_port() {

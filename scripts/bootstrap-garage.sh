@@ -14,17 +14,7 @@ STATIC_RPC_SECRET="f4db2c1d5aef1dce278d4315b80425e98831714a48c059e22c2a39001b15c
 
 generate_hex() {
   local bytes="$1"
-  if command -v openssl >/dev/null 2>&1; then
-    openssl rand -hex "${bytes}"
-    return
-  fi
-
-  python3 - "${bytes}" <<'PY'
-import secrets
-import sys
-
-print(secrets.token_hex(int(sys.argv[1])))
-PY
+  od -An -N "${bytes}" -tx1 /dev/urandom | tr -d '[:space:]'
 }
 
 generate_downloader_access_key() {
