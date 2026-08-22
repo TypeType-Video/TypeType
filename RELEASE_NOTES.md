@@ -1,84 +1,69 @@
-# TypeType 1.5.0
+# TypeType 1.6.0
 
-TypeType 1.5.0 adds private RSS feeds, new-upload notifications and better
-control over live content. It also closes a security issue in the public media
-proxy and improves SABR playback during resumes and long-distance seeks.
-
-## RSS And Notifications
-
-- Add private RSS feeds for all subscriptions or a selected set of channels.
-- Filter feeds by service and content type, with direct shortcuts from channel
-  pages.
-- Regenerate, disable or delete feed links without affecting subscriptions.
-- Show compact in-app notifications when subscribed channels publish new
-  videos. [#211](https://github.com/TypeType-Video/TypeType/issues/211)
-- Give instance administrators control over RSS availability, public base URL,
-  account limits, polling intervals and request rate limits.
-
-RSS access is private to each account. Feed tokens can be revoked at any time
-and do not expose the account session itself.
-
-## Subscriptions
-
-- Add account settings to hide live streams, upcoming streams or both from the
-  subscription feed. [#213](https://github.com/TypeType-Video/TypeType/issues/213)
-- Remove stale live entries after they stop being available from the provider.
-- Normalize channel tab URLs before fetching and caching subscription pages.
+TypeType 1.6.0 improves web playback, connected YouTube accounts, subscription feeds, downloads, authentication and notifications.
 
 ## Playback
 
-- Restore saved playback positions reliably in Safari after SABR preparation.
-- Preserve the requested position while a SABR session is being prepared or
-  recovered.
-- Seek directly to distant positions before decoder preroll instead of replaying
-  unnecessary media.
-- Preserve play and pause intent through seeks and quality changes.
-- Update the web player to `@typetype/mse` 0.1.44.
+- Resume playback after returning to a suspended browser tab instead of stopping or restarting from the beginning. [#219](https://github.com/TypeType-Video/TypeType/issues/219)
+- Stop replaying the current video when autoplay is disabled. [#224](https://github.com/TypeType-Video/TypeType/issues/224)
+- Show the correct resolution and codec labels in the quality selector. [#227](https://github.com/TypeType-Video/TypeType/issues/227)
+- Preserve the exact playback position when changing video quality instead of jumping backward. [#229](https://github.com/TypeType-Video/TypeType/issues/229)
+- Preserve saved progress through MSE source transitions and expire stale cached positions before resume.
+- Keep Safari playback transitions bounded when autoplay permission or user activation has expired.
 
-## Security
+## YouTube Accounts
 
-- Restrict the public media proxy to supported provider hosts and approved
-  media paths.
-- Block private, loopback and local-network destinations, including redirect
-  and DNS resolution checks.
-- Keep cross-provider redirects outside the proxy allowlist.
-- Report YouTube remote-login readiness accurately instead of exposing an
-  unusable login flow.
-- Update application and build dependencies across the released services.
+- Preserve the selected connected YouTube account through SABR preparation, token refresh and playback recovery.
+- Bind the YouTube player and media tokens to the same selected account.
+- Guide content requiring authentication to the YouTube account connection flow.
+- Add an option to hide members-only videos. [#225](https://github.com/TypeType-Video/TypeType/issues/225)
 
-## Self-Hosting
+## Subscription Feeds
 
-No manual database migration is required.
+- Correctly classify scheduled, active and finished live streams when applying the live visibility setting. [#213](https://github.com/TypeType-Video/TypeType/issues/213)
+- Preserve the original ordering of scheduled live streams instead of continually promoting them.
+- Remove finished or stale live entries from subscription feeds.
 
-RSS is disabled by default. Instance administrators can enable it and configure
-the public feed base URL from the documented environment settings.
+## Subscription Groups API
 
-The account session lifetime and insecure-cookie development settings are now
-documented in English, French and Spanish.
+- Add the complete Server contract for named subscription groups. [#172](https://github.com/TypeType-Video/TypeType/issues/172)
+- Create, rename and delete groups.
+- Assign a subscribed channel to multiple groups.
+- Filter subscriptions and feeds by group or show ungrouped channels.
+- Preserve stable pagination while group membership changes.
+- Include groups and memberships in TypeType backups.
 
-## Known Limitations
+**Subscription groups are API-only in this release. There is no web interface for creating or managing groups yet.** The frontend integration remains tracked in [#172](https://github.com/TypeType-Video/TypeType/issues/172).
 
-- YouTube may still throttle subtitle retrieval with HTTP 429 on some egress
-  addresses. [#210](https://github.com/TypeType-Video/TypeType/issues/210)
-- Native SABR playback on ARM64 remains under investigation.
-  [#204](https://github.com/TypeType-Video/TypeType/issues/204)
+## Accounts And Notifications
+
+- Fix initial OIDC installations requiring users to sign in twice. [#221](https://github.com/TypeType-Video/TypeType/issues/221)
+- Add a setting to mute notification popups while keeping notifications available in the notification center. [#231](https://github.com/TypeType-Video/TypeType/issues/231)
+
+## Downloads
+
+- Allow downloads to work when Garage is only available through the internal TypeType network. A separate public Garage endpoint is no longer required. [#222](https://github.com/TypeType-Video/TypeType/issues/222)
+- Keep artifact delivery behind the authenticated Server gateway.
+
+No configuration change or manual database migration is required. Server creates the subscription-group tables through its normal schema initialization.
 
 ## Thx
 
-- A big thx to @LuckeeSoft for the RSS and notification ideas and for the
-  detailed feedback while the feature was taking shape.
-- Thx to @CCGcastiel for proposing granular live-content controls for the
-  subscription feed.
-- Thx to @Buage for privately and responsibly reporting the public proxy issue
-  before disclosure. [#212](https://github.com/TypeType-Video/TypeType/issues/212)
-- Thx to @VitoItalianGamer for the detailed browser playback reports and the
-  time spent reproducing intermittent buffering behavior.
-- A big thx to [@Toastienergy](https://github.com/Toastienergy) and
-  [@filippobaroni](https://github.com/filippobaroni) for supporting TypeType
-  through GitHub Sponsors. Their support helps me cover the infrastructure and
-  spend more time improving the project.
-- Thx as well to everyone testing beta, sharing logs and helping other
-  self-hosters.
+A huge thx to @kapdon for implementing the complete subscription-groups Server contract and for the careful work on pagination, backups and tests.
+
+Thx to @CCGcastiel for proposing the live-stream visibility controls and helping improve subscription feeds.
+
+Thx to @arcoast for reporting the OIDC first-login problem and the Garage download configuration issue.
+
+Thx to @mfuchsberger for reporting the autoplay loop and proposing the option to hide members-only content.
+
+Thx to @therealresonix for the detailed quality selector and playback-position reports.
+
+Thx to @Toni-Vide for proposing the notification mute setting.
+
+A special thx to my sponsors @Toastienergy and @filippobaroni for supporting TypeType.
+
+Thx as well to everyone testing the beta, reporting playback problems, sharing logs, improving the documentation and helping other self-hosters.
 
 ## Updating
 
