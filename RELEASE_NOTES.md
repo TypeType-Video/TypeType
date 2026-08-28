@@ -1,69 +1,57 @@
-# TypeType 1.6.0
+# TypeType 1.7.0
 
-TypeType 1.6.0 improves web playback, connected YouTube accounts, subscription feeds, downloads, authentication and notifications.
+TypeType 1.7.0 adds account portability, community localization, subscription-group groundwork and a more resilient SABR playback path.
 
 ## Playback
 
-- Resume playback after returning to a suspended browser tab instead of stopping or restarting from the beginning. [#219](https://github.com/TypeType-Video/TypeType/issues/219)
-- Stop replaying the current video when autoplay is disabled. [#224](https://github.com/TypeType-Video/TypeType/issues/224)
-- Show the correct resolution and codec labels in the quality selector. [#227](https://github.com/TypeType-Video/TypeType/issues/227)
-- Preserve the exact playback position when changing video quality instead of jumping backward. [#229](https://github.com/TypeType-Video/TypeType/issues/229)
-- Preserve saved progress through MSE source transitions and expire stale cached positions before resume.
-- Keep Safari playback transitions bounded when autoplay permission or user activation has expired.
+- Restore saved playback positions before SABR startup instead of beginning at `00:00`.
+- Update TypeType-Player to MSE `0.1.56` with more stable buffered seeks and source transitions.
+- Stream VOD SABR media progressively and reuse bootstrap preparation to reduce startup and seek work.
+- Align VOD audio windows to the current playhead and keep playback generations isolated during seeks.
+- Prefer the original audio language when the source exposes it. [#249](https://github.com/TypeType-Video/TypeType/issues/249)
+- Reduce redundant progress requests and avoid blocking playback on cached progress updates.
+- Improve loading/session transitions and startup buffering while the remaining runtime reports continue to be monitored. [#238](https://github.com/TypeType-Video/TypeType/issues/238) [#248](https://github.com/TypeType-Video/TypeType/issues/248)
 
-## YouTube Accounts
+## Account Portability
 
-- Preserve the selected connected YouTube account through SABR preparation, token refresh and playback recovery.
-- Bind the YouTube player and media tokens to the same selected account.
-- Guide content requiring authentication to the YouTube account connection flow.
-- Add an option to hide members-only videos. [#225](https://github.com/TypeType-Video/TypeType/issues/225)
+- Add asynchronous account import and export with owned jobs, progress and diagnostics.
+- Support TypeType, PipePipe, NewPipe, Invidious, Piped, LibreTube, ViewTube, Materialious, Flow, SkyTube, Grayjay, YouTube Takeout and OPML data.
+- Add the import workspace and preview flow in the web application.
+- Keep portability format detection and category writes bounded and deterministic.
 
-## Subscription Feeds
+## Localization
 
-- Correctly classify scheduled, active and finished live streams when applying the live visibility setting. [#213](https://github.com/TypeType-Video/TypeType/issues/213)
-- Preserve the original ordering of scheduled live streams instead of continually promoting them.
-- Remove finished or stale live entries from subscription feeds.
+- Add the frontend translation catalog and English/French runtime messages. [#246](https://github.com/TypeType-Video/TypeType/issues/246)
+- Add a Weblate workflow so contributors can translate without changing application code.
+- Cover navigation, settings, player, watch, administration, authentication and portability surfaces.
+- Unify and slightly speed up the language transition animation across the application.
+- Use the Lucide `Pin` icon for pinned comments.
+- Add checks that prevent new untranslated frontend literals from being introduced.
 
-## Subscription Groups API
+## Subscription Groups
 
-- Add the complete Server contract for named subscription groups. [#172](https://github.com/TypeType-Video/TypeType/issues/172)
-- Create, rename and delete groups.
-- Assign a subscribed channel to multiple groups.
-- Filter subscriptions and feeds by group or show ungrouped channels.
-- Preserve stable pagination while group membership changes.
-- Include groups and memberships in TypeType backups.
+- Add named subscription-group membership endpoints, including bounded atomic batch updates. [#172](https://github.com/TypeType-Video/TypeType/issues/172) [PR #80](https://github.com/TypeType-Video/TypeType-Server/pull/80)
+- Preserve idempotent single-item compatibility while supporting multi-group channel membership.
+- Add a TypeType management preview for filters, ungrouped channels, search, multi-select and inline group creation.
+- Keep channels optional: nobody is required to assign every subscription to a group.
 
-**Subscription groups are API-only in this release. There is no web interface for creating or managing groups yet.** The frontend integration remains tracked in [#172](https://github.com/TypeType-Video/TypeType/issues/172).
+## Downloads And Reliability
 
-## Accounts And Notifications
+- Preserve downloader artifact response metadata, including `Content-Length`. [#240](https://github.com/TypeType-Video/TypeType/issues/240)
+- Keep the authenticated Server gateway in front of downloader artifacts.
+- Serialize remote YouTube login input events so pointer press/release order is preserved. [#250](https://github.com/TypeType-Video/TypeType/issues/250)
 
-- Fix initial OIDC installations requiring users to sign in twice. [#221](https://github.com/TypeType-Video/TypeType/issues/221)
-- Add a setting to mute notification popups while keeping notifications available in the notification center. [#231](https://github.com/TypeType-Video/TypeType/issues/231)
-
-## Downloads
-
-- Allow downloads to work when Garage is only available through the internal TypeType network. A separate public Garage endpoint is no longer required. [#222](https://github.com/TypeType-Video/TypeType/issues/222)
-- Keep artifact delivery behind the authenticated Server gateway.
-
-No configuration change or manual database migration is required. Server creates the subscription-group tables through its normal schema initialization.
+No configuration change or manual database migration is required for this release.
 
 ## Thx
 
-A huge thx to @kapdon for implementing the complete subscription-groups Server contract and for the careful work on pagination, backups and tests.
+A huge thx to @kapdon for implementing the subscription-group Server contract and for the careful work on batching, locking and tests. [PR #80](https://github.com/TypeType-Video/TypeType-Server/pull/80)
 
-Thx to @CCGcastiel for proposing the live-stream visibility controls and helping improve subscription feeds.
+Thx to [@typetype-translations](https://github.com/typetype-translations) and everyone contributing translations through Weblate. [#246](https://github.com/TypeType-Video/TypeType/issues/246)
 
-Thx to @arcoast for reporting the OIDC first-login problem and the Garage download configuration issue.
+A special thx to sponsors [@Toastienergy](https://github.com/Toastienergy) and [@filippobaroni](https://github.com/filippobaroni) for supporting TypeType.
 
-Thx to @mfuchsberger for reporting the autoplay loop and proposing the option to hide members-only content.
-
-Thx to @therealresonix for the detailed quality selector and playback-position reports.
-
-Thx to @Toni-Vide for proposing the notification mute setting.
-
-A special thx to my sponsors @Toastienergy and @filippobaroni for supporting TypeType.
-
-Thx as well to everyone testing the beta, reporting playback problems, sharing logs, improving the documentation and helping other self-hosters.
+Thx as well to everyone testing the beta, reporting playback and buffering problems, sharing logs, improving the documentation and helping other self-hosters.
 
 ## Updating
 

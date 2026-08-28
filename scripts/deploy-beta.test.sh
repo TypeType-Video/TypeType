@@ -118,6 +118,26 @@ if grep -Eq 'compose .* pull $' "$FAKE_DOCKER_LOG"; then
   echo "a server rollout must not pull the full stack" >&2
   exit 1
 fi
+for source in \
+  TypeType-Frontend \
+  TypeType-Server \
+  TypeType-Downloader \
+  TypeType-Token; do
+  if ! grep -Fq \
+    "image prune --all --force --filter label=org.opencontainers.image.source=https://github.com/TypeType-Video/$source" \
+    "$FAKE_DOCKER_LOG"; then
+    echo "the beta rollout did not prune unused $source images" >&2
+    cat "$FAKE_DOCKER_LOG" >&2
+    exit 1
+  fi
+done
+prune_line=$(grep -n -m1 'image prune --all --force' "$FAKE_DOCKER_LOG" | cut -d: -f1)
+pull_line=$(grep -n -m1 'compose .* pull typetype-server' "$FAKE_DOCKER_LOG" | cut -d: -f1)
+if ((prune_line >= pull_line)); then
+  echo "unused images must be pruned before pulling a replacement" >&2
+  cat "$FAKE_DOCKER_LOG" >&2
+  exit 1
+fi
 
 previous_pin=$(grep '^TYPETYPE_SERVER_BETA_IMAGE=' "$stack/.env")
 : > "$FAKE_DOCKER_LOG"

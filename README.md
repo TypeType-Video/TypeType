@@ -81,6 +81,16 @@ The installer creates `~/typetype-stack`, generates installation-specific secret
 - [Release notes](https://typetype.video/releases)
 - [Report a bug or request a feature](https://github.com/TypeType-Video/TypeType/issues)
 
+## Translations
+
+<a href="https://translate.typetype.video/engage/typetype/">
+    <img src="https://translate.typetype.video/widgets/typetype/-/multi-auto.svg" alt="Translation status" />
+</a>
+
+The [Weblate](https://translate.typetype.video/projects/typetype/web/) platform is the preferred method of contributing translations to the TypeType web interface.
+
+Read the [localization guide](https://github.com/TypeType-Video/TypeType-Frontend/blob/dev/LOCALIZATION.md) for the catalog and contribution workflow.
+
 ## What TypeType includes
 
 - Responsive web and native Android clients for YouTube, NicoNico, and BiliBili
