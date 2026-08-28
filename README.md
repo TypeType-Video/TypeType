@@ -14,8 +14,6 @@ progress, and settings stay on the instance you control.
   <a href="https://github.com/TypeType-Video/TypeType-Android/releases/latest"><img src="https://raw.githubusercontent.com/TypeType-Video/TypeType-Android/main/assets/badges/signed-apk.svg" alt="Download the latest signed TypeType APK" width="30%"></a>
 </p>
 
-[![Translation status](https://translate.typetype.video/widgets/typetype/-/svg-badge.svg)](https://translate.typetype.video/engage/typetype/)
-
 ## Install
 
 Docker Engine and Docker Compose v2 are required for the self-hosted stack.
@@ -85,10 +83,13 @@ The installer creates `~/typetype-stack`, generates installation-specific secret
 
 ## Translations
 
-The TypeType web interface can be translated without coding through
-[Weblate](https://translate.typetype.video/engage/typetype/). Translate the
-available strings there; Weblate sends the updates back to the
-[TypeType Frontend](https://github.com/TypeType-Video/TypeType-Frontend) as pull requests.
+<a href="https://translate.typetype.video/engage/typetype/">
+    <img src="https://translate.typetype.video/widgets/typetype/-/multi-auto.svg" alt="Translation status" />
+</a>
+
+The [Weblate](https://translate.typetype.video/projects/typetype/web/) platform is the preferred method of contributing translations to the TypeType web interface.
+
+Read the [localization guide](https://github.com/TypeType-Video/TypeType-Frontend/blob/dev/LOCALIZATION.md) for the catalog and contribution workflow.
 
 ## What TypeType includes
 
