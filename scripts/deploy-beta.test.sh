@@ -103,6 +103,8 @@ if ! grep -Fq "TYPETYPE_SERVER_BETA_IMAGE=ghcr.io/typetype-video/typetype-server
   sed -n '/^TYPETYPE_.*_IMAGE=/p' "$stack/.env" >&2
   exit 1
 fi
+grep -Fxq 'YOUTUBE_OUTBOUND_PROXY_URL=http://172.20.0.1:29080' "$stack/.env"
+grep -Fxq 'YOUTUBE_REMOTE_LOGIN_ENABLED=true' "$stack/.env"
 if ! grep -Fq 'pull typetype-server' "$FAKE_DOCKER_LOG"; then
   echo "the server rollout did not pull only the server image" >&2
   cat "$FAKE_DOCKER_LOG" >&2
