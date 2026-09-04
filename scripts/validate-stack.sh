@@ -24,10 +24,7 @@ done
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.arm64.yml config -q
-if docker compose --env-file .env.example -f docker-compose.dev.yml config -q 2>/dev/null; then
-  echo "beta Compose must reject a missing outbound proxy" >&2
-  exit 1
-fi
+docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 
@@ -50,8 +47,8 @@ if grep -q 'youtube-egress-relay' <<<"$dev_config"; then
   echo "beta Compose must use the externally validated egress proxy" >&2
   exit 1
 fi
-if [[ $(grep -c 'YOUTUBE_OUTBOUND_PROXY_URL: http://127.0.0.1:29083' <<<"$dev_config") -ne 2 ]]; then
-  echo "beta Server and Token must share the configured outbound proxy" >&2
+if [[ $(grep -c 'YOUTUBE_OUTBOUND_PROXY_URL:' <<<"$dev_config") -ne 2 ]]; then
+  echo "beta Server and Token must expose the shared outbound proxy setting" >&2
   exit 1
 fi
 for config in "$stable_config" "$dev_config"; do

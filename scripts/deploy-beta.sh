@@ -104,9 +104,6 @@ services=(
 )
 
 proxy_url=$(awk -F= '$1 == "YOUTUBE_OUTBOUND_PROXY_URL" { value = substr($0, index($0, "=") + 1) } END { print value }' "$root/.env")
-if [[ -z "$proxy_url" ]]; then
-  proxy_url=http://172.20.0.1:29080
-fi
 YOUTUBE_OUTBOUND_PROXY_URL="$proxy_url" docker compose \
   --project-directory "$root" --env-file "$root/.env" \
   -f "$source_root/docker-compose.dev.yml" config -q
