@@ -1,74 +1,100 @@
-# TypeType 1.6.0
+# TypeType 1.8.0
 
-TypeType 1.6.0 improves web playback, connected YouTube accounts, subscription feeds, downloads, authentication and notifications.
+TypeType 1.8.0 improves playback reliability, the watch experience,
+account portability, sharing and localization.
 
 ## Playback
 
-- Resume playback after returning to a suspended browser tab instead of stopping or restarting from the beginning. [#219](https://github.com/TypeType-Video/TypeType/issues/219)
-- Stop replaying the current video when autoplay is disabled. [#224](https://github.com/TypeType-Video/TypeType/issues/224)
-- Show the correct resolution and codec labels in the quality selector. [#227](https://github.com/TypeType-Video/TypeType/issues/227)
-- Preserve the exact playback position when changing video quality instead of jumping backward. [#229](https://github.com/TypeType-Video/TypeType/issues/229)
-- Preserve saved progress through MSE source transitions and expire stale cached positions before resume.
-- Keep Safari playback transitions bounded when autoplay permission or user activation has expired.
+- Recover stalled SABR segment requests instead of leaving playback stuck.
+- Preserve the exact playback position across WebKit provider changes.
+- Isolate WebKit seeks to prevent stale media state.
+- Improve paused Firefox seeks by filling the playback buffer first.
+- Synchronize compact player controls after seeking.
+- Reduce playback regressions when switching or recovering media sources.
+- Update TypeType-Player to MSE `0.1.59`.
+- Keep BiliBili stream extraction compatible with the fixes introduced in 1.7.3.
 
-## YouTube Accounts
+## Floating Watch Player
 
-- Preserve the selected connected YouTube account through SABR preparation, token refresh and playback recovery.
-- Bind the YouTube player and media tokens to the same selected account.
-- Guide content requiring authentication to the YouTube account connection flow.
-- Add an option to hide members-only videos. [#225](https://github.com/TypeType-Video/TypeType/issues/225)
+- Keep the current video visible while scrolling through the page.
+- Add a draggable floating player.
+- Persist the floating player position and state across navigation.
+- Keep the compact player usable on mobile.
+- Disable the floating player in landscape layouts where it would obstruct content.
+- Keep the player stable when related videos are displayed.
 
-## Subscription Feeds
+## Sharing
 
-- Correctly classify scheduled, active and finished live streams when applying the live visibility setting. [#213](https://github.com/TypeType-Video/TypeType/issues/213)
-- Preserve the original ordering of scheduled live streams instead of continually promoting them.
-- Remove finished or stale live entries from subscription feeds.
+- Add a compact share menu anchored to the share button.
+- Show the destination name next to each share icon.
+- Add direct links to the original provider.
+- Normalize YouTube Shorts share links.
+- Improve the share menu layout on desktop and mobile.
 
-## Subscription Groups API
+## Playback Progress
 
-- Add the complete Server contract for named subscription groups. [#172](https://github.com/TypeType-Video/TypeType/issues/172)
-- Create, rename and delete groups.
-- Assign a subscribed channel to multiple groups.
-- Filter subscriptions and feeds by group or show ungrouped channels.
-- Preserve stable pagination while group membership changes.
-- Include groups and memberships in TypeType backups.
+- Show playback progress directly on video cards.
+- Add batch progress lookup for faster history and recommendation loading.
+- Keep progress updates non-blocking during playback.
 
-**Subscription groups are API-only in this release. There is no web interface for creating or managing groups yet.** The frontend integration remains tracked in [#172](https://github.com/TypeType-Video/TypeType/issues/172).
+## Volume Controls
 
-## Accounts And Notifications
+- Support mouse-wheel volume changes on every player layout.
+- Prevent the page from scrolling when the wheel is used over the volume slider.
+- Keep volume controls usable in the compact and floating players.
 
-- Fix initial OIDC installations requiring users to sign in twice. [#221](https://github.com/TypeType-Video/TypeType/issues/221)
-- Add a setting to mute notification popups while keeping notifications available in the notification center. [#231](https://github.com/TypeType-Video/TypeType/issues/231)
+## Localization
 
-## Downloads
+- Add the German interface locale.
+- Add the German translation catalog.
+- Improve layout behavior for longer translated labels.
+- Make video settings responsive to the active locale.
+- Continue rejecting untranslated frontend messages during validation.
 
-- Allow downloads to work when Garage is only available through the internal TypeType network. A separate public Garage endpoint is no longer required. [#222](https://github.com/TypeType-Video/TypeType/issues/222)
-- Keep artifact delivery behind the authenticated Server gateway.
+## Account Portability
 
-No configuration change or manual database migration is required. Server creates the subscription-group tables through its normal schema initialization.
+- Support large YouTube Takeout archives.
+- Add ZIP64 archive reading for large imports.
+- Return a typed error when an upload is too large.
+- Preserve bounded import processing and progress reporting.
+
+## YouTube Login
+
+- Fix remote YouTube login completion after passkey or 2FA.
+- Stabilize remote YouTube input handling.
+- Improve diagnostics for failed remote-login sessions.
+
+## Server Reliability
+
+- Isolate the Server SABR contract behind explicit adapter boundaries.
+- Expand SABR contract and playback recovery tests.
+- Preserve bounded retries, playback generations and session isolation.
+
+No configuration change or manual database migration is required for this release.
 
 ## Thx
 
-A huge thx to @kapdon for implementing the complete subscription-groups Server contract and for the careful work on pagination, backups and tests.
+Thx to @whiskeredtux and @tigershark482 for the detailed buffering,
+seek and playback reports that helped improve SABR recovery. [#248](https://github.com/TypeType-Video/TypeType/issues/248)
 
-Thx to @CCGcastiel for proposing the live-stream visibility controls and helping improve subscription feeds.
+Thx to @kinouzero for reporting remote YouTube login failures around
+passkey and 2FA, and for testing the login fixes. [#250](https://github.com/TypeType-Video/TypeType/issues/250)
 
-Thx to @arcoast for reporting the OIDC first-login problem and the Garage download configuration issue.
+Thx to @Toastienergy for contributing the German translation and helping
+test the localized interface, compact player and playback experience.
 
-Thx to @mfuchsberger for reporting the autoplay loop and proposing the option to hide members-only content.
+Thx to @surasuku235 for reporting the BiliBili extraction regression
+addressed in the previous release. [#262](https://github.com/TypeType-Video/TypeType/issues/262)
 
-Thx to @therealresonix for the detailed quality selector and playback-position reports.
+A special thx to sponsors [@Toastienergy](https://github.com/Toastienergy)
+and [@filippobaroni](https://github.com/filippobaroni) for supporting
+TypeType.
 
-Thx to @Toni-Vide for proposing the notification mute setting.
-
-A special thx to my sponsors @Toastienergy and @filippobaroni for supporting TypeType.
-
-Thx as well to everyone testing the beta, reporting playback problems, sharing logs, improving the documentation and helping other self-hosters.
+Thx as well to everyone testing the beta, sharing playback logs, testing
+mobile layouts, reviewing translations and helping other self-hosters.
 
 ## Updating
 
 Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
 
 If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
-
-If u want to support TypeType, please share it with others. If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee).
