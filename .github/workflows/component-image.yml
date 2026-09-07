@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: [self-hosted, Linux, X64, arko, typetype]
+    runs-on: [self-hosted, Linux, X64, r730, typetype]
     outputs:
       channel: ${{ steps.payload.outputs.channel }}
       component: ${{ steps.payload.outputs.component }}
@@ -100,7 +100,7 @@ jobs:
   deploy-beta:
     needs: validate
     if: needs.validate.outputs.channel == 'beta'
-    runs-on: [self-hosted, Linux, X64, arko, typetype]
+    runs-on: [self-hosted, Linux, X64, r730, typetype]
     environment: beta
     steps:
       - name: Validate deployment configuration
@@ -144,6 +144,6 @@ jobs:
   record-stable:
     needs: validate
     if: needs.validate.outputs.channel == 'stable'
-    runs-on: [self-hosted, Linux, X64, arko, typetype]
+    runs-on: [self-hosted, Linux, X64, r730, typetype]
     steps:
       - run: echo "Stable image recorded; no deployment was started."

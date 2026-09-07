@@ -103,12 +103,11 @@ services=(
   garage
 )
 
-docker compose --project-directory "$root" --env-file "$root/.env" \
+proxy_url=$(awk -F= '$1 == "YOUTUBE_OUTBOUND_PROXY_URL" { value = substr($0, index($0, "=") + 1) } END { print value }' "$root/.env")
+YOUTUBE_OUTBOUND_PROXY_URL="$proxy_url" docker compose \
+  --project-directory "$root" --env-file "$root/.env" \
   -f "$source_root/docker-compose.dev.yml" config -q
 if [[ "$component" == all ]]; then
-  proxy_url=$(docker compose --project-directory "$root" --env-file "$root/.env" \
-    -f "$source_root/docker-compose.dev.yml" config --environment \
-    | sed -n 's/^YOUTUBE_OUTBOUND_PROXY_URL=//p')
   "$source_root/scripts/check-youtube-egress.sh" "$project" "$proxy_url"
 fi
 rollback_root="$root/.deploy-rollbacks"
@@ -176,6 +175,11 @@ finish() {
   exit "$status"
 }
 trap finish EXIT
+
+set_env_value "YOUTUBE_OUTBOUND_PROXY_URL" "$proxy_url"
+if [[ "$component" == token || "$component" == server || "$component" == all ]]; then
+  set_env_value "YOUTUBE_REMOTE_LOGIN_ENABLED" "true"
+fi
 
 prune_unused_typetype_images
 

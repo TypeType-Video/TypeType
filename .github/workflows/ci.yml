@@ -26,7 +26,7 @@ jobs:
 
   validate-trusted:
     if: github.event_name != 'pull_request'
-    runs-on: [self-hosted, Linux, X64, arko, typetype]
+    runs-on: [self-hosted, Linux, X64, r730, typetype]
     steps:
       - uses: actions/checkout@v7.0.1
         with:
