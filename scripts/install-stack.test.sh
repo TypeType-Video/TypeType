@@ -59,3 +59,22 @@ remote_login_token="$(grep '^YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN=' "${install_di
 [[ "$downloader_access_key" =~ ^GK[0-9a-f]{24}$ ]]
 [[ "$downloader_secret_key" =~ ^[0-9a-f]{64}$ ]]
 [[ "$remote_login_token" =~ ^[A-Za-z0-9_-]{64}$ ]]
+
+beta_install_dir="${temporary}/beta-stack"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$beta_install_dir" \
+    --beta \
+    --download-only \
+    --yes > "${temporary}/beta-install.log"
+
+grep -Fxq 'YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN=http://typetype-beta-server:8080' \
+  "$beta_install_dir/.env"
+grep -Fxq 'YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL=http://typetype-beta-server:8080' \
+  "$beta_install_dir/.env"
+grep -Fxq 'TYPETYPE_API_BASE=http://typetype-beta-server:8080' \
+  "$beta_install_dir/.env"
+grep -Fxq 'TYPETYPE_SERVER_HOST=typetype-beta-server' "$beta_install_dir/.env"
