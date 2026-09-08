@@ -2,7 +2,7 @@ services:
   typetype:
     image: ${TYPETYPE_WEB_BETA_IMAGE:-ghcr.io/typetype-video/typetype-beta:latest}
     environment:
-      TYPETYPE_SERVER_HOST: ${TYPETYPE_SERVER_HOST:-typetype-server}
+      TYPETYPE_SERVER_HOST: ${TYPETYPE_SERVER_HOST:-typetype-beta-server}
       TYPETYPE_SERVER_PORT: "${TYPETYPE_SERVER_PORT:-8080}"
       TYPETYPE_TOKEN_HOST: ${TYPETYPE_TOKEN_HOST:-typetype-token}
       TYPETYPE_TOKEN_PORT: "${TYPETYPE_TOKEN_PORT:-8081}"
@@ -42,6 +42,10 @@ services:
       YOUTUBE_REMOTE_LOGIN_TTL_MS: ${YOUTUBE_REMOTE_LOGIN_TTL_MS:-480000}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}
+    networks:
+      default:
+        aliases:
+          - typetype-beta-server
     depends_on:
       postgres-init:
         condition: service_completed_successfully
