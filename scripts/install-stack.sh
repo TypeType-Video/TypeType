@@ -22,6 +22,8 @@ DEFAULT_YOUTUBE_REMOTE_LOGIN_TTL_MS="480000"
 DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS="2"
 DEFAULT_YOUTUBE_REMOTE_LOGIN_FRAME_FPS="10"
 DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES="524288"
+DEFAULT_BETA_SERVER_HOST="typetype-beta-server"
+DEFAULT_BETA_SERVER_URL="http://typetype-beta-server:8080"
 PLACEHOLDER_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN="SET_ME_SHARED_SECRET"
 
 usage() {
@@ -201,6 +203,32 @@ ensure_env_default() {
   current="$(get_env_var "${env_file}" "${key}")"
   if [[ -z "${current}" ]]; then
     set_env_var "${env_file}" "${key}" "${value}"
+  fi
+}
+
+ensure_beta_internal_server_env() {
+  local env_file="$1"
+  local current
+
+  if [[ ${BETA_STACK} -ne 1 ]]; then
+    return 0
+  fi
+
+  current="$(get_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN")"
+  if [[ -z "${current}" || "${current}" == "http://typetype-server:8080" || "${current}" == "http://typetype-beta-stack-typetype-server-1:8080" ]]; then
+    set_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN" "${DEFAULT_BETA_SERVER_URL}"
+  fi
+  current="$(get_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL")"
+  if [[ -z "${current}" || "${current}" == "http://typetype-server:8080" || "${current}" == "http://typetype-beta-stack-typetype-server-1:8080" ]]; then
+    set_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL" "${DEFAULT_BETA_SERVER_URL}"
+  fi
+  current="$(get_env_var "${env_file}" "TYPETYPE_API_BASE")"
+  if [[ -z "${current}" || "${current}" == "http://typetype-server:8080" || "${current}" == "http://typetype-beta-stack-typetype-server-1:8080" ]]; then
+    set_env_var "${env_file}" "TYPETYPE_API_BASE" "${DEFAULT_BETA_SERVER_URL}"
+  fi
+  current="$(get_env_var "${env_file}" "TYPETYPE_SERVER_HOST")"
+  if [[ -z "${current}" || "${current}" == "typetype-server" || "${current}" == "typetype-beta-stack-typetype-server-1" ]]; then
+    set_env_var "${env_file}" "TYPETYPE_SERVER_HOST" "${DEFAULT_BETA_SERVER_HOST}"
   fi
 }
 
@@ -548,6 +576,7 @@ fi
 ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
 ensure_service_url_env "${INSTALL_DIR}/.env"
+ensure_beta_internal_server_env "${INSTALL_DIR}/.env"
 "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
 if [[ ${BETA_STACK} -eq 1 ]]; then
