@@ -1,6 +1,13 @@
 services:
   typetype:
     image: ${TYPETYPE_WEB_BETA_IMAGE:-ghcr.io/typetype-video/typetype-beta:latest}
+    environment:
+      TYPETYPE_SERVER_HOST: ${TYPETYPE_SERVER_HOST:-typetype-server}
+      TYPETYPE_SERVER_PORT: "${TYPETYPE_SERVER_PORT:-8080}"
+      TYPETYPE_TOKEN_HOST: ${TYPETYPE_TOKEN_HOST:-typetype-token}
+      TYPETYPE_TOKEN_PORT: "${TYPETYPE_TOKEN_PORT:-8081}"
+      TYPETYPE_DOWNLOADER_HOST: ${TYPETYPE_DOWNLOADER_HOST:-typetype-downloader}
+      TYPETYPE_DOWNLOADER_PORT: "${TYPETYPE_DOWNLOADER_PORT:-18093}"
     ports:
       - "${HOST_PORT_WEB_BETA:-18082}:80"
     depends_on:
@@ -25,11 +32,12 @@ services:
       DATABASE_USER: ${DATABASE_USER:-${POSTGRES_USER:-typetype}}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
       DRAGONFLY_URL: ${DRAGONFLY_URL:-redis://dragonfly:6379}
-      DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
+      DOWNLOADER_SERVICE_URL: ${DOWNLOADER_SERVICE_URL:-http://typetype-downloader:18093}
+      SUBTITLE_SERVICE_URL: ${SUBTITLE_SERVICE_URL:-http://typetype-token:8081}
       YOUTUBE_OUTBOUND_PROXY_URL: ${YOUTUBE_OUTBOUND_PROXY_URL:-}
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-false}
-      YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://typetype-token:8081
-      YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://typetype-server:8080
+      YOUTUBE_REMOTE_LOGIN_SERVICE_URL: ${YOUTUBE_REMOTE_LOGIN_SERVICE_URL:-http://typetype-token:8081}
+      YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: ${YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL:-http://typetype-server:8080}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
       YOUTUBE_REMOTE_LOGIN_TTL_MS: ${YOUTUBE_REMOTE_LOGIN_TTL_MS:-480000}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
@@ -54,7 +62,7 @@ services:
     environment:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
-      TYPETYPE_API_BASE: http://typetype-server:8080
+      TYPETYPE_API_BASE: ${TYPETYPE_API_BASE:-http://typetype-server:8080}
       DB_URL: ${DB_URL:-postgres://${POSTGRES_USER:-typetype}:${POSTGRES_PASSWORD:-typetype}@postgres:5432/typetype_downloader?sslmode=disable}
       DB_USER: ${DB_USER:-${POSTGRES_USER:-typetype}}
       DB_PASSWORD: ${DB_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
@@ -69,8 +77,8 @@ services:
       DOWNLOAD_RANGE_MODE: query
       MUXER: avformat
       STORAGE_BACKEND: s3
-      S3_ENDPOINT: http://garage:3900
-      S3_PUBLIC_ENDPOINT: http://garage:3900
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://garage:3900}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://garage:3900}
       S3_REGION: garage
       S3_BUCKET: typetype-downloads
       S3_ACCESS_KEY: ${DOWNLOADER_S3_ACCESS_KEY}

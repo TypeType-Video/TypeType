@@ -222,6 +222,24 @@ ensure_youtube_remote_login_env() {
   fi
 }
 
+ensure_service_url_env() {
+  local env_file="$1"
+
+  ensure_env_default "${env_file}" "DOWNLOADER_SERVICE_URL" "http://typetype-downloader:18093"
+  ensure_env_default "${env_file}" "SUBTITLE_SERVICE_URL" "http://typetype-token:8081"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_SERVICE_URL" "http://typetype-token:8081"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL" "http://typetype-server:8080"
+  ensure_env_default "${env_file}" "TYPETYPE_API_BASE" "http://typetype-server:8080"
+  ensure_env_default "${env_file}" "S3_ENDPOINT" "http://garage:3900"
+  ensure_env_default "${env_file}" "S3_PUBLIC_ENDPOINT" "http://garage:3900"
+  ensure_env_default "${env_file}" "TYPETYPE_SERVER_HOST" "typetype-server"
+  ensure_env_default "${env_file}" "TYPETYPE_SERVER_PORT" "8080"
+  ensure_env_default "${env_file}" "TYPETYPE_TOKEN_HOST" "typetype-token"
+  ensure_env_default "${env_file}" "TYPETYPE_TOKEN_PORT" "8081"
+  ensure_env_default "${env_file}" "TYPETYPE_DOWNLOADER_HOST" "typetype-downloader"
+  ensure_env_default "${env_file}" "TYPETYPE_DOWNLOADER_PORT" "18093"
+}
+
 port_is_listening() {
   local port="$1"
   local port_hex
@@ -529,6 +547,7 @@ fi
 
 ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
+ensure_service_url_env "${INSTALL_DIR}/.env"
 "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
 if [[ ${BETA_STACK} -eq 1 ]]; then

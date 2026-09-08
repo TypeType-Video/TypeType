@@ -28,6 +28,34 @@ docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 
+custom_config="$(TYPETYPE_SERVER_HOST=custom-server \
+  TYPETYPE_TOKEN_HOST=custom-token \
+  TYPETYPE_DOWNLOADER_HOST=custom-downloader \
+  DOWNLOADER_SERVICE_URL=http://custom-downloader:28093 \
+  SUBTITLE_SERVICE_URL=http://custom-token:28081 \
+  YOUTUBE_REMOTE_LOGIN_SERVICE_URL=http://custom-token:28081 \
+  YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL=http://custom-server:28080 \
+  TYPETYPE_API_BASE=http://custom-server:28080 \
+  S3_ENDPOINT=http://custom-garage:23900 \
+  S3_PUBLIC_ENDPOINT=http://public-garage:23900 \
+  docker compose --env-file .env.example -f docker-compose.yml config)"
+for expected in \
+  'TYPETYPE_SERVER_HOST: custom-server' \
+  'TYPETYPE_TOKEN_HOST: custom-token' \
+  'TYPETYPE_DOWNLOADER_HOST: custom-downloader' \
+  'DOWNLOADER_SERVICE_URL: http://custom-downloader:28093' \
+  'SUBTITLE_SERVICE_URL: http://custom-token:28081' \
+  'YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://custom-token:28081' \
+  'YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://custom-server:28080' \
+  'TYPETYPE_API_BASE: http://custom-server:28080' \
+  'S3_ENDPOINT: http://custom-garage:23900' \
+  'S3_PUBLIC_ENDPOINT: http://public-garage:23900'; do
+  if ! grep -q "${expected}" <<<"${custom_config}"; then
+    echo "custom service URL was not propagated: ${expected}" >&2
+    exit 1
+  fi
+done
+
 stable_config="$(docker compose --env-file .env.example -f docker-compose.yml config)"
 dev_config="$(YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config)"
