@@ -195,7 +195,7 @@ services:
     restart: "no"
 
   garage:
-    image: dxflrs/garage:v2.2.0
+    image: dxflrs/garage:v2.4.1
     ports:
       - "${HOST_BIND_GARAGE_S3_BETA:-127.0.0.1}:${HOST_PORT_GARAGE_S3_BETA:-3900}:3900"
     environment:
