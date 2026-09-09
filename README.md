@@ -29,35 +29,35 @@ multi-service discovery, personal libraries, downloads, administration, and
 SABR playback without installing a client.
 
 <p align="center">
-  <img src="assets/screenshots/01-hero-watch-desktop.png" alt="TypeType playing a YouTube video" width="100%">
+  <img src="assets/screenshots/01-hero-watch-desktop.png?v=7f46bbb" alt="TypeType playing a YouTube video" width="100%">
 </p>
 
 ### Search across three services
 
 <p align="center">
-  <img src="assets/gifs/01-multi-service-search.gif" alt="Switching a TypeType search between YouTube, NicoNico, and BiliBili" width="960">
+  <img src="assets/gifs/01-multi-service-search.gif?v=7f46bbb" alt="Switching a TypeType search between YouTube, NicoNico, and BiliBili" width="960">
 </p>
 
 ### Personal library
 
 <p align="center">
-  <img src="assets/gifs/02-library-flow.gif" alt="Browsing playlists and personal video libraries in TypeType" width="960">
+  <img src="assets/gifs/02-library-flow.gif?v=7f46bbb" alt="Browsing playlists and personal video libraries in TypeType" width="960">
 </p>
 
 ### Web playback
 
 <p align="center">
-  <img src="assets/gifs/03-watch-flow.gif" alt="Opening and watching a video in the TypeType web player" width="960">
+  <img src="assets/gifs/03-watch-flow.gif?v=7f46bbb" alt="Opening and watching a video in the TypeType web player" width="960">
 </p>
 
 ### Mobile web
 
 | Home | Search | Playback |
 | --- | --- | --- |
-| ![TypeType mobile home](assets/screenshots/07-mobile-home.png) | ![TypeType mobile search](assets/screenshots/08-mobile-search.png) | ![TypeType mobile playback](assets/screenshots/11-mobile-watch.png) |
+| ![TypeType mobile home](assets/screenshots/07-mobile-home.png?v=7f46bbb) | ![TypeType mobile search](assets/screenshots/08-mobile-search.png?v=7f46bbb) | ![TypeType mobile playback](assets/screenshots/11-mobile-watch.png?v=7f46bbb) |
 
 <p align="center">
-  <img src="assets/gifs/04-mobile-flow.gif" alt="Using TypeType on a mobile screen" width="430">
+  <img src="assets/gifs/04-mobile-flow.gif?v=7f46bbb" alt="Using TypeType on a mobile screen" width="430">
 </p>
 
 ## Native Android app
