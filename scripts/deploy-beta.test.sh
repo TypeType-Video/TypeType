@@ -14,6 +14,7 @@ for file in \
   docker-compose.dev.yml \
   scripts/bootstrap-garage.sh \
   scripts/check-youtube-egress.sh \
+  scripts/initialize-stack.sh \
   scripts/deploy-beta.sh; do
   mkdir -p "$stack/$(dirname "$file")"
   cp "$repository/$file" "$stack/$file"
@@ -49,8 +50,8 @@ case "$1" in
     case "$*" in
       *"config --services"*)
         printf '%s\n' typetype typetype-server typetype-downloader \
-          typetype-token postgres postgres-init \
-          dragonfly garage-config garage
+          typetype-token postgres typetype-init \
+          dragonfly garage
         ;;
       *"config --environment"*)
         echo "YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083"

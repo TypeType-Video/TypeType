@@ -315,7 +315,7 @@ echo "[setup] Pulling images..."
 docker compose "${COMPOSE_ARGS[@]}" pull
 
 echo "[setup] Starting services..."
-docker compose "${COMPOSE_ARGS[@]}" up -d --wait --wait-timeout 180
+docker compose "${COMPOSE_ARGS[@]}" up -d --remove-orphans --wait --wait-timeout 180
 
 echo "[setup] Bootstrapping Garage for downloader..."
 COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml" \

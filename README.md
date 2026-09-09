@@ -69,6 +69,23 @@ and Android clients both connect to the same TypeType instance.
 
 The installer creates `~/typetype-stack`, generates installation-specific secrets, and asks before starting the stack.
 
+The first startup runs one short-lived `typetype-init` service. It creates the
+Downloader database, prepares the Garage configuration, and stores the private
+YouTube session secrets in named volumes before the application services start.
+It is expected to show as `exited (0)` after a successful setup; it is not a
+service that needs to stay running.
+
+For an existing installation, update the Compose files and run:
+
+```sh
+docker compose up -d --remove-orphans --wait
+```
+
+The migration keeps the existing `postgres_data`, `typetype_secrets`, and
+Garage volumes. Do not use `docker compose down -v` during an update: that
+would delete the account database, generated secrets, and stored download
+artifacts.
+
 - [Quick start](https://typetype-video.github.io/Docs-TypeType/self-hosting/quick-start)
 - [Manual Docker Compose setup](https://typetype-video.github.io/Docs-TypeType/self-hosting/docker-compose#manual-setup)
 - [Configuration](https://typetype-video.github.io/Docs-TypeType/self-hosting/configuration)

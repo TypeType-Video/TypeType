@@ -544,12 +544,14 @@ fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
 fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
 fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 fetch_file "scripts/bootstrap-garage.sh" "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
+fetch_file "scripts/initialize-stack.sh" "${INSTALL_DIR}/scripts/initialize-stack.sh"
 fetch_file "scripts/setup-stack.sh" "${INSTALL_DIR}/scripts/setup-stack.sh"
 fetch_file "scripts/validate-stack.sh" "${INSTALL_DIR}/scripts/validate-stack.sh"
 
 chmod +x "${INSTALL_DIR}/scripts/install-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
+chmod +x "${INSTALL_DIR}/scripts/initialize-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/setup-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/validate-stack.sh"
 
@@ -637,7 +639,8 @@ echo "[install] Pulling Docker images..."
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" pull
 
 echo "[install] Starting stack..."
-docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" up -d --wait --wait-timeout 180
+docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" \
+  up -d --remove-orphans --wait --wait-timeout 180
 
 echo "[install] Bootstrapping Garage..."
 (

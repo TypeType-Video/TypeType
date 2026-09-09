@@ -24,11 +24,13 @@ managed_files=(
   docker-compose.arm64.yml
   scripts/bootstrap-env.sh
   scripts/bootstrap-garage.sh
+  scripts/initialize-stack.sh
   scripts/deploy-stable.sh
 )
 services=(
   typetype
   typetype-server
+  typetype-init
   typetype-secrets
   typetype-downloader
   typetype-token
@@ -55,7 +57,14 @@ for file in "${managed_files[@]}"; do
 done
 
 printf 'services:\n' > "$backup/rollback.yml"
+declare -A current_services=()
+while read -r current_service; do
+  current_services["$current_service"]=1
+done < <(compose config --services)
 for service in "${services[@]}"; do
+  if [[ -z "${current_services[$service]:-}" ]]; then
+    continue
+  fi
   container=$(compose ps -a -q "$service" 2>/dev/null | head -n 1 || true)
   if [[ -n "$container" ]]; then
     image=$(docker inspect "$container" --format '{{.Image}}')
@@ -114,6 +123,7 @@ for file in "${managed_files[@]}"; do
 done
 chmod 755 "$root/scripts/bootstrap-env.sh"
 chmod 755 "$root/scripts/bootstrap-garage.sh"
+chmod 755 "$root/scripts/initialize-stack.sh"
 chmod 755 "$root/scripts/deploy-stable.sh"
 cd "$root"
 

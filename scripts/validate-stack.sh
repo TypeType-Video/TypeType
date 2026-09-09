@@ -59,6 +59,21 @@ done
 stable_config="$(docker compose --env-file .env.example -f docker-compose.yml config)"
 dev_config="$(YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config)"
+stable_services="$(docker compose --env-file .env.example -f docker-compose.yml config --services)"
+dev_services="$(YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
+  docker compose --env-file .env.example -f docker-compose.dev.yml config --services)"
+for services in "$stable_services" "$dev_services"; do
+  if ! grep -Fxq typetype-init <<<"$services"; then
+    echo "both Compose stacks must expose the consolidated init service" >&2
+    exit 1
+  fi
+  for removed_service in typetype-secrets postgres-init garage-config; do
+    if grep -Fxq "$removed_service" <<<"$services"; then
+      echo "obsolete init service is still exposed: ${removed_service}" >&2
+      exit 1
+    fi
+  done
+done
 if grep -q '/etc/nginx/conf.d/default.conf' <<<"${stable_config}${dev_config}"; then
   echo "default Compose must use the nginx configuration bundled in the web image" >&2
   exit 1
@@ -80,6 +95,10 @@ if [[ $(grep -c 'YOUTUBE_OUTBOUND_PROXY_URL:' <<<"$dev_config") -ne 2 ]]; then
   exit 1
 fi
 for config in "$stable_config" "$dev_config"; do
+  if ! grep -q 'initialize-stack.sh' <<<"$config"; then
+    echo "Compose must mount the shared initialization script" >&2
+    exit 1
+  fi
   if ! grep -q 'AUTH_SESSION_TTL_DAYS: "30"' <<<"$config"; then
     echo "Server must receive the default account session lifetime" >&2
     exit 1
