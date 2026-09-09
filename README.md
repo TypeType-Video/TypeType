@@ -38,11 +38,27 @@ SABR playback without installing a client.
   <img src="assets/gifs/01-multi-service-search.gif" alt="Switching a TypeType search between YouTube, NicoNico, and BiliBili" width="960">
 </p>
 
+### Personal library
+
+<p align="center">
+  <img src="assets/gifs/02-library-flow.gif" alt="Browsing playlists and personal video libraries in TypeType" width="960">
+</p>
+
+### Web playback
+
+<p align="center">
+  <img src="assets/gifs/03-watch-flow.gif" alt="Opening and watching a video in the TypeType web player" width="960">
+</p>
+
 ### Mobile web
 
 | Home | Search | Playback |
 | --- | --- | --- |
 | ![TypeType mobile home](assets/screenshots/07-mobile-home.png) | ![TypeType mobile search](assets/screenshots/08-mobile-search.png) | ![TypeType mobile playback](assets/screenshots/11-mobile-watch.png) |
+
+<p align="center">
+  <img src="assets/gifs/04-mobile-flow.gif" alt="Using TypeType on a mobile screen" width="430">
+</p>
 
 ## Native Android app
 
