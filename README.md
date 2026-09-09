@@ -35,19 +35,19 @@ SABR playback without installing a client.
 ### Search across three services
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/gifs/01-multi-service-search.gif" alt="Switching a TypeType search between YouTube, NicoNico, and BiliBili" width="960">
+  <img src="assets/gifs/01-multi-service-search-fluid.gif" alt="Browsing search results from YouTube, NicoNico, and BiliBili" width="960">
 </p>
 
 ### Personal library
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/gifs/02-library-flow.gif" alt="Browsing playlists and personal video libraries in TypeType" width="960">
+  <img src="assets/gifs/02-library-flow-fluid.gif" alt="Browsing playlists and personal video libraries in TypeType" width="960">
 </p>
 
 ### Web playback
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/gifs/03-watch-flow.gif" alt="Opening and watching a video in the TypeType web player" width="960">
+  <img src="assets/gifs/03-watch-flow-fluid.gif" alt="Browsing a video page and its player in TypeType" width="960">
 </p>
 
 ### Mobile web
@@ -57,7 +57,7 @@ SABR playback without installing a client.
 | ![TypeType mobile home](https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/07-mobile-home.png) | ![TypeType mobile search](https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/08-mobile-search.png) | ![TypeType mobile playback](https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/11-mobile-watch.png) |
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/gifs/04-mobile-flow.gif" alt="Using TypeType on a mobile screen" width="430">
+  <img src="assets/gifs/04-mobile-flow-fluid.gif" alt="Browsing TypeType search results on a mobile screen" width="430">
 </p>
 
 ## Native Android app
