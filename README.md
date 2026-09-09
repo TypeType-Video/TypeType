@@ -40,9 +40,9 @@ SABR playback without installing a client.
 
 ### Mobile web
 
-| Home | Playback | Audio only |
+| Home | Search | Playback |
 | --- | --- | --- |
-| ![TypeType mobile home](assets/screenshots/07-mobile-home.png) | ![TypeType mobile playback](assets/screenshots/11-mobile-watch.png) | ![TypeType mobile audio-only mode](assets/screenshots/12-mobile-audio-only.png) |
+| ![TypeType mobile home](assets/screenshots/07-mobile-home.png) | ![TypeType mobile search](assets/screenshots/08-mobile-search.png) | ![TypeType mobile playback](assets/screenshots/11-mobile-watch.png) |
 
 ## Native Android app
 
@@ -119,17 +119,26 @@ Read the [localization guide](https://github.com/TypeType-Video/TypeType-Fronten
 
 ## Thanks to sponsors
 
+### Recurring sponsor
+
 <p>
   <a href="https://github.com/Toastienergy" title="@Toastienergy"><img src="https://github.com/Toastienergy.png?size=128" alt="@Toastienergy" width="64" height="64"></a>
+</p>
+
+Thank you to [@Toastienergy](https://github.com/Toastienergy) for supporting
+TypeType through a recurring GitHub Sponsors contribution. It helps me cover the
+infrastructure and spend more time improving the project.
+
+### One-time donor
+
+<p>
   <a href="https://github.com/filippobaroni" title="@filippobaroni"><img src="https://github.com/filippobaroni.png?size=128" alt="@filippobaroni" width="64" height="64"></a>
 </p>
 
-A big thx to [@Toastienergy](https://github.com/Toastienergy) and
-[@filippobaroni](https://github.com/filippobaroni) for supporting TypeType through
-GitHub Sponsors. Their support helps me cover the infrastructure and spend more
-time improving the project.
+I also thank [@filippobaroni](https://github.com/filippobaroni) for the one-time
+GitHub Sponsors donation that helped support TypeType.
 
-If u want to support TypeType financially, u can do so through
+If you want to support TypeType financially, you can do so through
 [GitHub Sponsors](https://github.com/sponsors/Priveetee).
 
 ## For developers
