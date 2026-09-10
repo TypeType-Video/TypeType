@@ -5,7 +5,7 @@ source_root="${1:?deployment source is required}"
 component="${TYPETYPE_DEPLOY_COMPONENT:-${2:-all}}"
 image="${TYPETYPE_DEPLOY_IMAGE:-${3:-}}"
 digest="${TYPETYPE_DEPLOY_DIGEST:-${4:-}}"
-project=typetype-beta-stack
+project=typetype-beta
 anchor=$(docker ps -a -q \
   --filter "label=com.docker.compose.project=${project}" | head -n 1)
 test -n "$anchor"

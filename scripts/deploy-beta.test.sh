@@ -97,6 +97,8 @@ TYPETYPE_DEPLOY_IMAGE=ghcr.io/typetype-video/typetype-server-beta \
 TYPETYPE_DEPLOY_DIGEST="$digest" \
   "$repository/scripts/deploy-beta.sh" "$repository"
 
+grep -Fq 'label=com.docker.compose.project=typetype-beta' "$FAKE_DOCKER_LOG"
+
 if ! grep -Fq "TYPETYPE_SERVER_BETA_IMAGE=ghcr.io/typetype-video/typetype-server-beta@$digest" \
   "$stack/.env"; then
   echo "the server image digest was not persisted" >&2
