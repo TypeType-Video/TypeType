@@ -5,9 +5,18 @@ source_root="${1:?deployment source is required}"
 component="${TYPETYPE_DEPLOY_COMPONENT:-${2:-all}}"
 image="${TYPETYPE_DEPLOY_IMAGE:-${3:-}}"
 digest="${TYPETYPE_DEPLOY_DIGEST:-${4:-}}"
-project=typetype-beta
-anchor=$(docker ps -a -q \
-  --filter "label=com.docker.compose.project=${project}" | head -n 1)
+stage=locate-stack
+trap 'printf "beta deployment failed during %s\n" "$stage" >&2' ERR
+project=
+anchor=
+for candidate in typetype-beta typetype-beta-stack; do
+  anchor=$(docker ps -a -q \
+    --filter "label=com.docker.compose.project=${candidate}" | head -n 1)
+  if [[ -n "$anchor" ]]; then
+    project="$candidate"
+    break
+  fi
+done
 test -n "$anchor"
 root=$(docker inspect "$anchor" --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')
 test -d "$root"
@@ -41,6 +50,7 @@ case "$component" in
   *) exit 64 ;;
 esac
 if [[ "$component" != all ]]; then
+  stage=validate-component
   [[ "$image" == "$expected_image" ]]
   [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
 fi
@@ -105,6 +115,7 @@ services=(
 )
 
 proxy_url=$(awk -F= '$1 == "YOUTUBE_OUTBOUND_PROXY_URL" { value = substr($0, index($0, "=") + 1) } END { print value }' "$root/.env")
+stage=validate-compose
 YOUTUBE_OUTBOUND_PROXY_URL="$proxy_url" docker compose \
   --project-directory "$root" --env-file "$root/.env" \
   -f "$source_root/docker-compose.dev.yml" config -q
@@ -112,6 +123,7 @@ if [[ "$component" == all ]]; then
   "$source_root/scripts/check-youtube-egress.sh" "$project" "$proxy_url"
 fi
 rollback_root="$root/.deploy-rollbacks"
+stage=prepare-rollback
 backup="$rollback_root/$(date -u +'%Y%m%dT%H%M%SZ')-$$"
 mkdir -p "$backup/scripts"
 cp -a "$root/.env" "$backup/.env"
@@ -182,8 +194,10 @@ if [[ "$component" == token || "$component" == server || "$component" == all ]];
   set_env_value "YOUTUBE_REMOTE_LOGIN_ENABLED" "true"
 fi
 
+stage=prune-images
 prune_unused_typetype_images
 
+stage=install-stack-files
 install -m 644 "$source_root/.env.example" "$root/.env.example"
 install -m 644 "$source_root/docker-compose.dev.yml" "$root/docker-compose.dev.yml"
 install -m 755 "$source_root/scripts/bootstrap-garage.sh" "$root/scripts/bootstrap-garage.sh"
@@ -209,6 +223,7 @@ probe() {
 }
 
 if [[ "$component" == all ]]; then
+  stage=update-full-stack
   compose pull
   COMPOSE_FILE="$root/docker-compose.dev.yml" ./scripts/run-stack-init.sh
   compose up -d --remove-orphans --wait --wait-timeout 180
@@ -219,6 +234,7 @@ if [[ "$component" == all ]]; then
   probe http://typetype-downloader:18093/health/deep
   compose exec -T typetype wget -q -T 20 -t 1 -O /dev/null http://127.0.0.1/api/health
 else
+  stage="update-$component"
   set_env_value "$image_variable" "$image@$digest"
   compose pull "$target_service"
   compose up -d --no-deps --wait --wait-timeout 180 "$target_service"
@@ -242,3 +258,4 @@ else
 fi
 compose ps
 succeeded=true
+trap - ERR
