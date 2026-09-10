@@ -29,20 +29,36 @@ multi-service discovery, personal libraries, downloads, administration, and
 SABR playback without installing a client.
 
 <p align="center">
-  <img src="assets/screenshots/01-hero-watch-desktop.png" alt="TypeType playing a YouTube video" width="100%">
+  <img src="https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/01-hero-watch-desktop.png" alt="TypeType playing a YouTube video" width="100%">
 </p>
 
 ### Search across three services
 
 <p align="center">
-  <img src="assets/gifs/01-multi-service-search.gif" alt="Switching a TypeType search between YouTube, NicoNico, and BiliBili" width="960">
+  <img src="assets/gifs/01-multi-service-search-fluid.gif" alt="Browsing search results from YouTube, NicoNico, and BiliBili" width="960">
+</p>
+
+### Personal library
+
+<p align="center">
+  <img src="assets/gifs/02-library-flow-fluid.gif" alt="Browsing playlists and personal video libraries in TypeType" width="960">
+</p>
+
+### Web playback
+
+<p align="center">
+  <img src="assets/gifs/03-watch-flow-fluid.gif" alt="Browsing a video page and its player in TypeType" width="960">
 </p>
 
 ### Mobile web
 
-| Home | Playback | Audio only |
+| Home | Search | Playback |
 | --- | --- | --- |
-| ![TypeType mobile home](assets/screenshots/07-mobile-home.png) | ![TypeType mobile playback](assets/screenshots/11-mobile-watch.png) | ![TypeType mobile audio-only mode](assets/screenshots/12-mobile-audio-only.png) |
+| ![TypeType mobile home](https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/07-mobile-home.png) | ![TypeType mobile search](https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/08-mobile-search.png) | ![TypeType mobile playback](https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/11-mobile-watch.png) |
+
+<p align="center">
+  <img src="assets/gifs/04-mobile-flow-fluid.gif" alt="Browsing TypeType search results on a mobile screen" width="430">
+</p>
 
 ## Native Android app
 
@@ -68,6 +84,23 @@ and rollback tools, release coordination, and project issue tracker. The web
 and Android clients both connect to the same TypeType instance.
 
 The installer creates `~/typetype-stack`, generates installation-specific secrets, and asks before starting the stack.
+
+The first startup runs one short-lived `typetype-init` task. It creates the
+Downloader database, prepares the Garage configuration, and stores the private
+YouTube session secrets in named volumes before the application services start.
+Compose removes its container automatically after a successful setup.
+
+For an existing installation, update the Compose files and run:
+
+```sh
+./scripts/run-stack-init.sh
+docker compose up -d --remove-orphans --wait
+```
+
+The migration keeps the existing `postgres_data`, `typetype_secrets`, and
+Garage volumes. Do not use `docker compose down -v` during an update: that
+would delete the account database, generated secrets, and stored download
+artifacts.
 
 - [Quick start](https://typetype-video.github.io/Docs-TypeType/self-hosting/quick-start)
 - [Manual Docker Compose setup](https://typetype-video.github.io/Docs-TypeType/self-hosting/docker-compose#manual-setup)
@@ -102,17 +135,26 @@ Read the [localization guide](https://github.com/TypeType-Video/TypeType-Fronten
 
 ## Thanks to sponsors
 
+### Recurring sponsor
+
 <p>
   <a href="https://github.com/Toastienergy" title="@Toastienergy"><img src="https://github.com/Toastienergy.png?size=128" alt="@Toastienergy" width="64" height="64"></a>
+</p>
+
+Thank you to [@Toastienergy](https://github.com/Toastienergy) for supporting
+TypeType through a recurring GitHub Sponsors contribution. It helps me cover the
+infrastructure and spend more time improving the project.
+
+### One-time donor
+
+<p>
   <a href="https://github.com/filippobaroni" title="@filippobaroni"><img src="https://github.com/filippobaroni.png?size=128" alt="@filippobaroni" width="64" height="64"></a>
 </p>
 
-A big thx to [@Toastienergy](https://github.com/Toastienergy) and
-[@filippobaroni](https://github.com/filippobaroni) for supporting TypeType through
-GitHub Sponsors. Their support helps me cover the infrastructure and spend more
-time improving the project.
+I also thank [@filippobaroni](https://github.com/filippobaroni) for the one-time
+GitHub Sponsors donation that helped support TypeType.
 
-If u want to support TypeType financially, u can do so through
+If you want to support TypeType financially, you can do so through
 [GitHub Sponsors](https://github.com/sponsors/Priveetee).
 
 ## For developers

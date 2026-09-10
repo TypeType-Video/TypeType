@@ -22,6 +22,8 @@ DEFAULT_YOUTUBE_REMOTE_LOGIN_TTL_MS="480000"
 DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS="2"
 DEFAULT_YOUTUBE_REMOTE_LOGIN_FRAME_FPS="10"
 DEFAULT_YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES="524288"
+DEFAULT_BETA_SERVER_HOST="typetype-beta-server"
+DEFAULT_BETA_SERVER_URL="http://typetype-beta-server:8080"
 PLACEHOLDER_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN="SET_ME_SHARED_SECRET"
 
 usage() {
@@ -204,6 +206,32 @@ ensure_env_default() {
   fi
 }
 
+ensure_beta_internal_server_env() {
+  local env_file="$1"
+  local current
+
+  if [[ ${BETA_STACK} -ne 1 ]]; then
+    return 0
+  fi
+
+  current="$(get_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN")"
+  if [[ -z "${current}" || "${current}" == "http://typetype-server:8080" || "${current}" == "http://typetype-beta-stack-typetype-server-1:8080" ]]; then
+    set_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN" "${DEFAULT_BETA_SERVER_URL}"
+  fi
+  current="$(get_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL")"
+  if [[ -z "${current}" || "${current}" == "http://typetype-server:8080" || "${current}" == "http://typetype-beta-stack-typetype-server-1:8080" ]]; then
+    set_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL" "${DEFAULT_BETA_SERVER_URL}"
+  fi
+  current="$(get_env_var "${env_file}" "TYPETYPE_API_BASE")"
+  if [[ -z "${current}" || "${current}" == "http://typetype-server:8080" || "${current}" == "http://typetype-beta-stack-typetype-server-1:8080" ]]; then
+    set_env_var "${env_file}" "TYPETYPE_API_BASE" "${DEFAULT_BETA_SERVER_URL}"
+  fi
+  current="$(get_env_var "${env_file}" "TYPETYPE_SERVER_HOST")"
+  if [[ -z "${current}" || "${current}" == "typetype-server" || "${current}" == "typetype-beta-stack-typetype-server-1" ]]; then
+    set_env_var "${env_file}" "TYPETYPE_SERVER_HOST" "${DEFAULT_BETA_SERVER_HOST}"
+  fi
+}
+
 ensure_youtube_remote_login_env() {
   local env_file="$1"
   local current_token
@@ -220,6 +248,24 @@ ensure_youtube_remote_login_env() {
     set_env_var "${env_file}" "YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN" "$(generate_youtube_remote_login_token)"
     echo "[install] Generated internal YouTube remote login token in ${env_file}"
   fi
+}
+
+ensure_service_url_env() {
+  local env_file="$1"
+
+  ensure_env_default "${env_file}" "DOWNLOADER_SERVICE_URL" "http://typetype-downloader:18093"
+  ensure_env_default "${env_file}" "SUBTITLE_SERVICE_URL" "http://typetype-token:8081"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_SERVICE_URL" "http://typetype-token:8081"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL" "http://typetype-server:8080"
+  ensure_env_default "${env_file}" "TYPETYPE_API_BASE" "http://typetype-server:8080"
+  ensure_env_default "${env_file}" "S3_ENDPOINT" "http://garage:3900"
+  ensure_env_default "${env_file}" "S3_PUBLIC_ENDPOINT" "http://garage:3900"
+  ensure_env_default "${env_file}" "TYPETYPE_SERVER_HOST" "typetype-server"
+  ensure_env_default "${env_file}" "TYPETYPE_SERVER_PORT" "8080"
+  ensure_env_default "${env_file}" "TYPETYPE_TOKEN_HOST" "typetype-token"
+  ensure_env_default "${env_file}" "TYPETYPE_TOKEN_PORT" "8081"
+  ensure_env_default "${env_file}" "TYPETYPE_DOWNLOADER_HOST" "typetype-downloader"
+  ensure_env_default "${env_file}" "TYPETYPE_DOWNLOADER_PORT" "18093"
 }
 
 port_is_listening() {
@@ -498,12 +544,16 @@ fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
 fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
 fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 fetch_file "scripts/bootstrap-garage.sh" "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
+fetch_file "scripts/initialize-stack.sh" "${INSTALL_DIR}/scripts/initialize-stack.sh"
+fetch_file "scripts/run-stack-init.sh" "${INSTALL_DIR}/scripts/run-stack-init.sh"
 fetch_file "scripts/setup-stack.sh" "${INSTALL_DIR}/scripts/setup-stack.sh"
 fetch_file "scripts/validate-stack.sh" "${INSTALL_DIR}/scripts/validate-stack.sh"
 
 chmod +x "${INSTALL_DIR}/scripts/install-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
+chmod +x "${INSTALL_DIR}/scripts/initialize-stack.sh"
+chmod +x "${INSTALL_DIR}/scripts/run-stack-init.sh"
 chmod +x "${INSTALL_DIR}/scripts/setup-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/validate-stack.sh"
 
@@ -529,6 +579,8 @@ fi
 
 ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
+ensure_service_url_env "${INSTALL_DIR}/.env"
+ensure_beta_internal_server_env "${INSTALL_DIR}/.env"
 "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
 if [[ ${BETA_STACK} -eq 1 ]]; then
@@ -574,14 +626,14 @@ if [[ ${START_STACK} -eq 0 ]]; then
   echo "[install] Download-only complete."
   [[ ! -s "${INSTALL_DIR}/garage.toml" ]] || echo "[install] The existing garage.toml will be imported on the next Compose startup."
   [[ -z "${BACKUP_DIR}" ]] || echo "[install] Rollback files: ${BACKUP_DIR}"
-  echo "[install] Next step: cd ${INSTALL_DIR} && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/run-stack-init.sh && $(compose_command_hint 'up -d')"
   exit 0
 fi
 
 if [[ ${AUTO_APPROVE} -eq 0 ]] && ! confirm_tty "Proceed with Docker pull + startup in ${INSTALL_DIR}?"; then
   echo "[install] Stack files are ready in ${INSTALL_DIR}."
   echo "[install] Docker startup skipped."
-  echo "[install] Next step: cd ${INSTALL_DIR} && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/run-stack-init.sh && $(compose_command_hint 'up -d')"
   exit 0
 fi
 
@@ -589,7 +641,12 @@ echo "[install] Pulling Docker images..."
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" pull
 
 echo "[install] Starting stack..."
-docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" up -d --wait --wait-timeout 180
+COMPOSE_FILE="${COMPOSE_FILE}" \
+  COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+  COMPOSE_CUSTOM_FILE="${CUSTOM_COMPOSE_FILE}" \
+  "${INSTALL_DIR}/scripts/run-stack-init.sh"
+docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" \
+  up -d --remove-orphans --wait --wait-timeout 180
 
 echo "[install] Bootstrapping Garage..."
 (

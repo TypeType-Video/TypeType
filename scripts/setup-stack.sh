@@ -112,6 +112,24 @@ ensure_youtube_remote_login_env() {
   fi
 }
 
+ensure_service_url_env() {
+  local env_file="$1"
+
+  ensure_env_default "${env_file}" "DOWNLOADER_SERVICE_URL" "http://typetype-downloader:18093"
+  ensure_env_default "${env_file}" "SUBTITLE_SERVICE_URL" "http://typetype-token:8081"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_SERVICE_URL" "http://typetype-token:8081"
+  ensure_env_default "${env_file}" "YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL" "http://typetype-server:8080"
+  ensure_env_default "${env_file}" "TYPETYPE_API_BASE" "http://typetype-server:8080"
+  ensure_env_default "${env_file}" "S3_ENDPOINT" "http://garage:3900"
+  ensure_env_default "${env_file}" "S3_PUBLIC_ENDPOINT" "http://garage:3900"
+  ensure_env_default "${env_file}" "TYPETYPE_SERVER_HOST" "typetype-server"
+  ensure_env_default "${env_file}" "TYPETYPE_SERVER_PORT" "8080"
+  ensure_env_default "${env_file}" "TYPETYPE_TOKEN_HOST" "typetype-token"
+  ensure_env_default "${env_file}" "TYPETYPE_TOKEN_PORT" "8081"
+  ensure_env_default "${env_file}" "TYPETYPE_DOWNLOADER_HOST" "typetype-downloader"
+  ensure_env_default "${env_file}" "TYPETYPE_DOWNLOADER_PORT" "18093"
+}
+
 get_env_var() {
   local env_file="$1"
   local key="$2"
@@ -272,6 +290,7 @@ if [[ -s "${ROOT_DIR}/garage.toml" ]]; then
 fi
 
 ensure_youtube_remote_login_env "${ENV_FILE}"
+ensure_service_url_env "${ENV_FILE}"
 "${ROOT_DIR}/scripts/bootstrap-env.sh"
 
 HOST_PORT_SERVER_RESOLVED="$(choose_stack_port "${ENV_FILE}" "HOST_PORT_SERVER" "${DEFAULT_HOST_PORT_SERVER}" "API")"
@@ -296,7 +315,11 @@ echo "[setup] Pulling images..."
 docker compose "${COMPOSE_ARGS[@]}" pull
 
 echo "[setup] Starting services..."
-docker compose "${COMPOSE_ARGS[@]}" up -d --wait --wait-timeout 180
+COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml" \
+  COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+  COMPOSE_CUSTOM_FILE="${COMPOSE_CUSTOM_FILE}" \
+  "${ROOT_DIR}/scripts/run-stack-init.sh"
+docker compose "${COMPOSE_ARGS[@]}" up -d --remove-orphans --wait --wait-timeout 180
 
 echo "[setup] Bootstrapping Garage for downloader..."
 COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml" \

@@ -21,6 +21,7 @@ for script in scripts/*.sh; do
 done
 ./scripts/install-stack.test.sh
 ./scripts/deploy-beta.test.sh
+./scripts/run-stack-init.test.sh
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.arm64.yml config -q
@@ -28,9 +29,66 @@ docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 
+custom_config="$(TYPETYPE_SERVER_HOST=custom-server \
+  TYPETYPE_TOKEN_HOST=custom-token \
+  TYPETYPE_DOWNLOADER_HOST=custom-downloader \
+  DOWNLOADER_SERVICE_URL=http://custom-downloader:28093 \
+  SUBTITLE_SERVICE_URL=http://custom-token:28081 \
+  YOUTUBE_REMOTE_LOGIN_SERVICE_URL=http://custom-token:28081 \
+  YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL=http://custom-server:28080 \
+  TYPETYPE_API_BASE=http://custom-server:28080 \
+  S3_ENDPOINT=http://custom-garage:23900 \
+  S3_PUBLIC_ENDPOINT=http://public-garage:23900 \
+  docker compose --env-file .env.example -f docker-compose.yml config)"
+for expected in \
+  'TYPETYPE_SERVER_HOST: custom-server' \
+  'TYPETYPE_TOKEN_HOST: custom-token' \
+  'TYPETYPE_DOWNLOADER_HOST: custom-downloader' \
+  'DOWNLOADER_SERVICE_URL: http://custom-downloader:28093' \
+  'SUBTITLE_SERVICE_URL: http://custom-token:28081' \
+  'YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://custom-token:28081' \
+  'YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://custom-server:28080' \
+  'TYPETYPE_API_BASE: http://custom-server:28080' \
+  'S3_ENDPOINT: http://custom-garage:23900' \
+  'S3_PUBLIC_ENDPOINT: http://public-garage:23900'; do
+  if ! grep -q "${expected}" <<<"${custom_config}"; then
+    echo "custom service URL was not propagated: ${expected}" >&2
+    exit 1
+  fi
+done
+
 stable_config="$(docker compose --env-file .env.example -f docker-compose.yml config)"
 dev_config="$(YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config)"
+stable_services="$(docker compose --env-file .env.example -f docker-compose.yml config --services)"
+dev_services="$(YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
+  docker compose --env-file .env.example -f docker-compose.dev.yml config --services)"
+for services in "$stable_services" "$dev_services"; do
+  if grep -Fxq typetype-init <<<"$services"; then
+    echo "default Compose startup must exclude the one-shot init service" >&2
+    exit 1
+  fi
+  for removed_service in typetype-secrets postgres-init garage-config; do
+    if grep -Fxq "$removed_service" <<<"$services"; then
+      echo "obsolete init service is still exposed: ${removed_service}" >&2
+      exit 1
+    fi
+  done
+done
+for compose_file in docker-compose.yml docker-compose.dev.yml; do
+  init_config="$(docker compose --profile init --env-file .env.example \
+    -f "$compose_file" config)"
+  init_services="$(docker compose --profile init --env-file .env.example \
+    -f "$compose_file" config --services)"
+  if ! grep -Fxq typetype-init <<<"$init_services"; then
+    echo "the init profile must expose the consolidated init service" >&2
+    exit 1
+  fi
+  if ! grep -q 'initialize-stack.sh' <<<"$init_config"; then
+    echo "the init profile must mount the shared initialization script" >&2
+    exit 1
+  fi
+done
 if grep -q '/etc/nginx/conf.d/default.conf' <<<"${stable_config}${dev_config}"; then
   echo "default Compose must use the nginx configuration bundled in the web image" >&2
   exit 1
@@ -61,3 +119,7 @@ for config in "$stable_config" "$dev_config"; do
     exit 1
   fi
 done
+if grep -q 'condition: service_completed_successfully' <<<"${stable_config}${dev_config}"; then
+  echo "runtime services must not depend on the one-shot init container" >&2
+  exit 1
+fi

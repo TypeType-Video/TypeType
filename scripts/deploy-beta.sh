@@ -99,17 +99,18 @@ managed_files=(
   docker-compose.dev.yml
   scripts/bootstrap-garage.sh
   scripts/check-youtube-egress.sh
+  scripts/initialize-stack.sh
+  scripts/run-stack-init.sh
   scripts/deploy-beta.sh
 )
 services=(
   typetype
   typetype-server
+  typetype-init
   typetype-downloader
   typetype-token
   postgres
-  postgres-init
   dragonfly
-  garage-config
   garage
 )
 
@@ -201,6 +202,8 @@ install -m 644 "$source_root/.env.example" "$root/.env.example"
 install -m 644 "$source_root/docker-compose.dev.yml" "$root/docker-compose.dev.yml"
 install -m 755 "$source_root/scripts/bootstrap-garage.sh" "$root/scripts/bootstrap-garage.sh"
 install -m 755 "$source_root/scripts/check-youtube-egress.sh" "$root/scripts/check-youtube-egress.sh"
+install -m 755 "$source_root/scripts/initialize-stack.sh" "$root/scripts/initialize-stack.sh"
+install -m 755 "$source_root/scripts/run-stack-init.sh" "$root/scripts/run-stack-init.sh"
 install -m 755 "$source_root/scripts/deploy-beta.sh" "$root/scripts/deploy-beta.sh"
 install -d -m 700 "$root/.typetype-migration"
 if [[ -s "$root/garage.toml" ]]; then
@@ -222,6 +225,7 @@ probe() {
 if [[ "$component" == all ]]; then
   stage=update-full-stack
   compose pull
+  COMPOSE_FILE="$root/docker-compose.dev.yml" ./scripts/run-stack-init.sh
   compose up -d --remove-orphans --wait --wait-timeout 180
   ./scripts/bootstrap-garage.sh
   probe http://127.0.0.1:8080/health

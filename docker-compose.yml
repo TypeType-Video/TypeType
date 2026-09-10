@@ -1,6 +1,13 @@
 services:
   typetype:
     image: ${TYPETYPE_WEB_IMAGE:-ghcr.io/typetype-video/typetype:latest}
+    environment:
+      TYPETYPE_SERVER_HOST: ${TYPETYPE_SERVER_HOST:-typetype-server}
+      TYPETYPE_SERVER_PORT: "${TYPETYPE_SERVER_PORT:-8080}"
+      TYPETYPE_TOKEN_HOST: ${TYPETYPE_TOKEN_HOST:-typetype-token}
+      TYPETYPE_TOKEN_PORT: "${TYPETYPE_TOKEN_PORT:-8081}"
+      TYPETYPE_DOWNLOADER_HOST: ${TYPETYPE_DOWNLOADER_HOST:-typetype-downloader}
+      TYPETYPE_DOWNLOADER_PORT: "${TYPETYPE_DOWNLOADER_PORT:-18093}"
     ports:
       - "${HOST_PORT_WEB:-8082}:80"
     depends_on:
@@ -26,12 +33,12 @@ services:
       DRAGONFLY_URL: ${DRAGONFLY_URL:-redis://dragonfly:6379}
       GITHUB_REPO: ${GITHUB_REPO:-TypeType-Video/TypeType}
       GITHUB_ISSUE_TEMPLATE: ${GITHUB_ISSUE_TEMPLATE:-bug_report_backend.md}
-      DOWNLOADER_SERVICE_URL: http://typetype-downloader:18093
+      DOWNLOADER_SERVICE_URL: ${DOWNLOADER_SERVICE_URL:-http://typetype-downloader:18093}
+      SUBTITLE_SERVICE_URL: ${SUBTITLE_SERVICE_URL:-http://typetype-token:8081}
       YOUTUBE_OUTBOUND_PROXY_URL: ${YOUTUBE_OUTBOUND_PROXY_URL:-}
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-true}
-      YOUTUBE_REMOTE_LOGIN_SERVICE_URL: http://typetype-token:8081
-      YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: http://typetype-server:8080
-      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
+      YOUTUBE_REMOTE_LOGIN_SERVICE_URL: ${YOUTUBE_REMOTE_LOGIN_SERVICE_URL:-http://typetype-token:8081}
+      YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: ${YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL:-http://typetype-server:8080}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN_FILE: /run/typetype-secrets/youtube_remote_login_internal_token
       YOUTUBE_SESSION_ENCRYPTION_KEY_FILE: /run/typetype-secrets/youtube_session_encryption_key
       YOUTUBE_REMOTE_LOGIN_TTL_MS: ${YOUTUBE_REMOTE_LOGIN_TTL_MS:-480000}
@@ -40,10 +47,6 @@ services:
     volumes:
       - typetype_secrets:/run/typetype-secrets:ro
     depends_on:
-      typetype-secrets:
-        condition: service_completed_successfully
-      postgres-init:
-        condition: service_completed_successfully
       dragonfly:
         condition: service_healthy
       typetype-token:
@@ -54,43 +57,12 @@ services:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health"]
     restart: unless-stopped
 
-  typetype-secrets:
-    image: busybox:1.38
-    command:
-      - /bin/sh
-      - -ec
-      - |
-        generate_secret() {
-          dd if=/dev/urandom bs=48 count=1 2>/dev/null | base64 | tr '+/' '-_' | tr -d '=\n'
-        }
-        ensure_secret() {
-          file="$$1"
-          value="$$2"
-          placeholder="$$3"
-          legacy_placeholder="$$4"
-          if [ -n "$$value" ] && [ "$$value" != "$$placeholder" ] && [ "$$value" != "$$legacy_placeholder" ]; then
-            printf '%s' "$$value" > "$$file"
-          elif [ ! -s "$$file" ]; then
-            generate_secret > "$$file"
-          fi
-          chmod 0444 "$$file"
-        }
-        mkdir -p /run/typetype-secrets
-        ensure_secret /run/typetype-secrets/youtube_remote_login_internal_token "$$YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN" SET_ME_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN SET_ME_SHARED_SECRET
-        ensure_secret /run/typetype-secrets/youtube_session_encryption_key "$$YOUTUBE_SESSION_ENCRYPTION_KEY" SET_ME_YOUTUBE_SESSION_ENCRYPTION_KEY SET_ME_SHARED_SECRET
-    environment:
-      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
-      YOUTUBE_SESSION_ENCRYPTION_KEY: ${YOUTUBE_SESSION_ENCRYPTION_KEY:-}
-    volumes:
-      - typetype_secrets:/run/typetype-secrets
-    restart: "no"
-
   typetype-downloader:
     image: ${TYPETYPE_DOWNLOADER_IMAGE:-ghcr.io/typetype-video/typetype-downloader:latest}
     environment:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
-      TYPETYPE_API_BASE: http://typetype-server:8080
+      TYPETYPE_API_BASE: ${TYPETYPE_API_BASE:-http://typetype-server:8080}
       DB_URL: ${DB_URL:-postgres://${POSTGRES_USER:-typetype}:${POSTGRES_PASSWORD:-typetype}@postgres:5432/typetype_downloader?sslmode=disable}
       REDIS_HOST: dragonfly
       REDIS_PORT: "6379"
@@ -103,16 +75,14 @@ services:
       DOWNLOAD_RANGE_MODE: query
       MUXER: avformat
       STORAGE_BACKEND: s3
-      S3_ENDPOINT: http://garage:3900
-      S3_PUBLIC_ENDPOINT: http://garage:3900
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://garage:3900}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://garage:3900}
       S3_REGION: garage
       S3_BUCKET: typetype-downloads
       S3_ACCESS_KEY: ${DOWNLOADER_S3_ACCESS_KEY:-}
       S3_SECRET_KEY: ${DOWNLOADER_S3_SECRET_KEY:-}
       S3_ARTIFACT_TTL_SECONDS: "7200"
     depends_on:
-      postgres-init:
-        condition: service_completed_successfully
       dragonfly:
         condition: service_healthy
       garage:
@@ -131,7 +101,6 @@ services:
       NODE_ENV: production
       YOUTUBE_OUTBOUND_PROXY_URL: ${YOUTUBE_OUTBOUND_PROXY_URL:-}
       YOUTUBE_REMOTE_LOGIN_ENABLED: ${YOUTUBE_REMOTE_LOGIN_ENABLED:-true}
-      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN_FILE: /run/typetype-secrets/youtube_remote_login_internal_token
       YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN: ${YOUTUBE_REMOTE_LOGIN_CALLBACK_ORIGIN:-http://typetype-server:8080}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
@@ -139,9 +108,6 @@ services:
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}
     volumes:
       - typetype_secrets:/run/typetype-secrets:ro
-    depends_on:
-      typetype-secrets:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8081/health > /dev/null"]
     restart: unless-stopped
@@ -160,24 +126,25 @@ services:
       retries: 30
     restart: unless-stopped
 
-  postgres-init:
+  typetype-init:
+    profiles: ["init"]
     image: postgres:17
     depends_on:
       postgres:
         condition: service_healthy
     environment:
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-typetype}
       POSTGRES_USER: ${POSTGRES_USER:-typetype}
       PGPASSWORD: ${POSTGRES_PASSWORD:-typetype}
-    command:
-      - /bin/sh
-      - -ec
-      - |
-        until pg_isready -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"; do sleep 1; done
-        EXISTS=$$(psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT 1 FROM pg_database WHERE datname='typetype_downloader'")
-        if [ "$$EXISTS" != "1" ]; then
-          psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -c "CREATE DATABASE typetype_downloader"
-        fi
+      YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
+      YOUTUBE_SESSION_ENCRYPTION_KEY: ${YOUTUBE_SESSION_ENCRYPTION_KEY:-}
+    command: ["/bin/sh", "/usr/local/bin/initialize-stack.sh"]
+    volumes:
+      - typetype_secrets:/run/typetype-secrets
+      - garage_config:/etc/garage
+      - ./.typetype-migration:/migration:ro
+      - ./scripts/initialize-stack.sh:/usr/local/bin/initialize-stack.sh:ro
     restart: "no"
 
   dragonfly:
@@ -187,42 +154,8 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
     restart: unless-stopped
-  garage-config:
-    image: busybox:1.38
-    command:
-      - /bin/sh
-      - -ec
-      - |
-        config=/etc/garage/garage.toml
-        if [ -s "$$config" ]; then
-          exit 0
-        fi
-        umask 077
-        if [ -s /migration/garage.toml ]; then
-          cp /migration/garage.toml "$$config"
-          exit 0
-        fi
-        cat > "$$config" <<'EOF'
-        metadata_dir = "/var/lib/garage/meta"
-        data_dir = "/var/lib/garage/data"
-        db_engine = "sqlite"
-
-        replication_factor = 1
-
-        rpc_bind_addr = "[::]:3901"
-        rpc_public_addr = "127.0.0.1:3901"
-
-        [s3_api]
-        s3_region = "garage"
-        api_bind_addr = "[::]:3900"
-        EOF
-    volumes:
-      - garage_config:/etc/garage
-      - ./.typetype-migration:/migration:ro
-    restart: "no"
-
   garage:
-    image: dxflrs/garage:v2.2.0
+    image: dxflrs/garage:v2.4.1
     ports:
       - "${HOST_BIND_GARAGE_S3:-127.0.0.1}:${HOST_PORT_GARAGE_S3:-3900}:3900"
     environment:
@@ -232,9 +165,6 @@ services:
       - garage_config:/etc/garage
       - garage_meta:/var/lib/garage/meta
       - garage_data:/var/lib/garage/data
-    depends_on:
-      garage-config:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "/garage", "status"]
       interval: 5s
