@@ -2,10 +2,17 @@
 set -euo pipefail
 
 source_root="${1:?deployment source is required}"
-project=typetype-stack
-server=$(docker ps -q \
-  --filter "label=com.docker.compose.project=${project}" \
-  --filter label=com.docker.compose.service=typetype-server)
+project=
+server=
+for candidate in typetype-stack typetype; do
+  server=$(docker ps -q \
+    --filter "label=com.docker.compose.project=${candidate}" \
+    --filter label=com.docker.compose.service=typetype-server | head -n 1)
+  if [[ -n "$server" ]]; then
+    project="$candidate"
+    break
+  fi
+done
 test -n "$server"
 root=$(docker inspect "$server" --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')
 test -d "$root"
