@@ -25,6 +25,7 @@ managed_files=(
   scripts/bootstrap-env.sh
   scripts/bootstrap-garage.sh
   scripts/initialize-stack.sh
+  scripts/run-stack-init.sh
   scripts/deploy-stable.sh
 )
 services=(
@@ -124,11 +125,13 @@ done
 chmod 755 "$root/scripts/bootstrap-env.sh"
 chmod 755 "$root/scripts/bootstrap-garage.sh"
 chmod 755 "$root/scripts/initialize-stack.sh"
+chmod 755 "$root/scripts/run-stack-init.sh"
 chmod 755 "$root/scripts/deploy-stable.sh"
 cd "$root"
 
 ./scripts/bootstrap-env.sh
 compose pull
+./scripts/run-stack-init.sh
 compose up -d --remove-orphans --wait --wait-timeout 180
 ./scripts/bootstrap-garage.sh
 

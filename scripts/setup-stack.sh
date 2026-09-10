@@ -315,6 +315,10 @@ echo "[setup] Pulling images..."
 docker compose "${COMPOSE_ARGS[@]}" pull
 
 echo "[setup] Starting services..."
+COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml" \
+  COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+  COMPOSE_CUSTOM_FILE="${COMPOSE_CUSTOM_FILE}" \
+  "${ROOT_DIR}/scripts/run-stack-init.sh"
 docker compose "${COMPOSE_ARGS[@]}" up -d --remove-orphans --wait --wait-timeout 180
 
 echo "[setup] Bootstrapping Garage for downloader..."

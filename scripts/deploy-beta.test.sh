@@ -15,6 +15,7 @@ for file in \
   scripts/bootstrap-garage.sh \
   scripts/check-youtube-egress.sh \
   scripts/initialize-stack.sh \
+  scripts/run-stack-init.sh \
   scripts/deploy-beta.sh; do
   mkdir -p "$stack/$(dirname "$file")"
   cp "$repository/$file" "$stack/$file"

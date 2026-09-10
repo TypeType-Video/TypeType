@@ -85,15 +85,15 @@ and Android clients both connect to the same TypeType instance.
 
 The installer creates `~/typetype-stack`, generates installation-specific secrets, and asks before starting the stack.
 
-The first startup runs one short-lived `typetype-init` service. It creates the
+The first startup runs one short-lived `typetype-init` task. It creates the
 Downloader database, prepares the Garage configuration, and stores the private
 YouTube session secrets in named volumes before the application services start.
-It is expected to show as `exited (0)` after a successful setup; it is not a
-service that needs to stay running.
+Compose removes its container automatically after a successful setup.
 
 For an existing installation, update the Compose files and run:
 
 ```sh
+./scripts/run-stack-init.sh
 docker compose up -d --remove-orphans --wait
 ```
 

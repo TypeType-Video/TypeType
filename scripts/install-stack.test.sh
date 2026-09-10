@@ -44,6 +44,7 @@ for file in \
   scripts/bootstrap-env.sh \
   scripts/bootstrap-garage.sh \
   scripts/initialize-stack.sh \
+  scripts/run-stack-init.sh \
   scripts/setup-stack.sh \
   scripts/validate-stack.sh; do
   test -s "${install_dir}/${file}"

@@ -47,8 +47,6 @@ services:
     volumes:
       - typetype_secrets:/run/typetype-secrets:ro
     depends_on:
-      typetype-init:
-        condition: service_completed_successfully
       dragonfly:
         condition: service_healthy
       typetype-token:
@@ -85,8 +83,6 @@ services:
       S3_SECRET_KEY: ${DOWNLOADER_S3_SECRET_KEY:-}
       S3_ARTIFACT_TTL_SECONDS: "7200"
     depends_on:
-      typetype-init:
-        condition: service_completed_successfully
       dragonfly:
         condition: service_healthy
       garage:
@@ -112,9 +108,6 @@ services:
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}
     volumes:
       - typetype_secrets:/run/typetype-secrets:ro
-    depends_on:
-      typetype-init:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8081/health > /dev/null"]
     restart: unless-stopped
@@ -134,6 +127,7 @@ services:
     restart: unless-stopped
 
   typetype-init:
+    profiles: ["init"]
     image: postgres:17
     depends_on:
       postgres:
@@ -171,9 +165,6 @@ services:
       - garage_config:/etc/garage
       - garage_meta:/var/lib/garage/meta
       - garage_data:/var/lib/garage/data
-    depends_on:
-      typetype-init:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "/garage", "status"]
       interval: 5s

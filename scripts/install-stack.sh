@@ -545,6 +545,7 @@ fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
 fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 fetch_file "scripts/bootstrap-garage.sh" "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 fetch_file "scripts/initialize-stack.sh" "${INSTALL_DIR}/scripts/initialize-stack.sh"
+fetch_file "scripts/run-stack-init.sh" "${INSTALL_DIR}/scripts/run-stack-init.sh"
 fetch_file "scripts/setup-stack.sh" "${INSTALL_DIR}/scripts/setup-stack.sh"
 fetch_file "scripts/validate-stack.sh" "${INSTALL_DIR}/scripts/validate-stack.sh"
 
@@ -552,6 +553,7 @@ chmod +x "${INSTALL_DIR}/scripts/install-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 chmod +x "${INSTALL_DIR}/scripts/bootstrap-garage.sh"
 chmod +x "${INSTALL_DIR}/scripts/initialize-stack.sh"
+chmod +x "${INSTALL_DIR}/scripts/run-stack-init.sh"
 chmod +x "${INSTALL_DIR}/scripts/setup-stack.sh"
 chmod +x "${INSTALL_DIR}/scripts/validate-stack.sh"
 
@@ -624,14 +626,14 @@ if [[ ${START_STACK} -eq 0 ]]; then
   echo "[install] Download-only complete."
   [[ ! -s "${INSTALL_DIR}/garage.toml" ]] || echo "[install] The existing garage.toml will be imported on the next Compose startup."
   [[ -z "${BACKUP_DIR}" ]] || echo "[install] Rollback files: ${BACKUP_DIR}"
-  echo "[install] Next step: cd ${INSTALL_DIR} && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/run-stack-init.sh && $(compose_command_hint 'up -d')"
   exit 0
 fi
 
 if [[ ${AUTO_APPROVE} -eq 0 ]] && ! confirm_tty "Proceed with Docker pull + startup in ${INSTALL_DIR}?"; then
   echo "[install] Stack files are ready in ${INSTALL_DIR}."
   echo "[install] Docker startup skipped."
-  echo "[install] Next step: cd ${INSTALL_DIR} && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/run-stack-init.sh && $(compose_command_hint 'up -d')"
   exit 0
 fi
 
@@ -639,6 +641,10 @@ echo "[install] Pulling Docker images..."
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" pull
 
 echo "[install] Starting stack..."
+COMPOSE_FILE="${COMPOSE_FILE}" \
+  COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+  COMPOSE_CUSTOM_FILE="${CUSTOM_COMPOSE_FILE}" \
+  "${INSTALL_DIR}/scripts/run-stack-init.sh"
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" \
   up -d --remove-orphans --wait --wait-timeout 180
 

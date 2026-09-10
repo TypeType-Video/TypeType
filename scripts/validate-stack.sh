@@ -21,6 +21,7 @@ for script in scripts/*.sh; do
 done
 ./scripts/install-stack.test.sh
 ./scripts/deploy-beta.test.sh
+./scripts/run-stack-init.test.sh
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.arm64.yml config -q
@@ -63,8 +64,8 @@ stable_services="$(docker compose --env-file .env.example -f docker-compose.yml 
 dev_services="$(YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config --services)"
 for services in "$stable_services" "$dev_services"; do
-  if ! grep -Fxq typetype-init <<<"$services"; then
-    echo "both Compose stacks must expose the consolidated init service" >&2
+  if grep -Fxq typetype-init <<<"$services"; then
+    echo "default Compose startup must exclude the one-shot init service" >&2
     exit 1
   fi
   for removed_service in typetype-secrets postgres-init garage-config; do
@@ -73,6 +74,20 @@ for services in "$stable_services" "$dev_services"; do
       exit 1
     fi
   done
+done
+for compose_file in docker-compose.yml docker-compose.dev.yml; do
+  init_config="$(docker compose --profile init --env-file .env.example \
+    -f "$compose_file" config)"
+  init_services="$(docker compose --profile init --env-file .env.example \
+    -f "$compose_file" config --services)"
+  if ! grep -Fxq typetype-init <<<"$init_services"; then
+    echo "the init profile must expose the consolidated init service" >&2
+    exit 1
+  fi
+  if ! grep -q 'initialize-stack.sh' <<<"$init_config"; then
+    echo "the init profile must mount the shared initialization script" >&2
+    exit 1
+  fi
 done
 if grep -q '/etc/nginx/conf.d/default.conf' <<<"${stable_config}${dev_config}"; then
   echo "default Compose must use the nginx configuration bundled in the web image" >&2
@@ -95,10 +110,6 @@ if [[ $(grep -c 'YOUTUBE_OUTBOUND_PROXY_URL:' <<<"$dev_config") -ne 2 ]]; then
   exit 1
 fi
 for config in "$stable_config" "$dev_config"; do
-  if ! grep -q 'initialize-stack.sh' <<<"$config"; then
-    echo "Compose must mount the shared initialization script" >&2
-    exit 1
-  fi
   if ! grep -q 'AUTH_SESSION_TTL_DAYS: "30"' <<<"$config"; then
     echo "Server must receive the default account session lifetime" >&2
     exit 1
@@ -108,3 +119,7 @@ for config in "$stable_config" "$dev_config"; do
     exit 1
   fi
 done
+if grep -q 'condition: service_completed_successfully' <<<"${stable_config}${dev_config}"; then
+  echo "runtime services must not depend on the one-shot init container" >&2
+  exit 1
+fi
