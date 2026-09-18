@@ -1,3 +1,5 @@
+U want to know the current position of TypeType about AI ? Go check [this](https://github.com/TypeType-Video/TypeType/blob/dev/AI_TRANSPARENCY.md).
+
 <p align="center">
   <img src="assets/banner.svg" alt="TypeType" width="100%">
 </p>
