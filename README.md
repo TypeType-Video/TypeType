@@ -4,6 +4,8 @@
 
 You want to know the current position of TypeType about AI ? Go check [this](https://github.com/TypeType-Video/TypeType/blob/dev/AI_TRANSPARENCY.md).
 
+[Roadmap](https://roadmap.typetype.video) · [Git mirror](https://git.typetype.video)
+
 # TypeType
 
 TypeType is a self-hosted video platform for YouTube, NicoNico, and BiliBili.
