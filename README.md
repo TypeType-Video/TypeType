@@ -4,7 +4,7 @@
 
 You want to know the current position of TypeType about AI ? Go check [this](https://github.com/TypeType-Video/TypeType/blob/dev/AI_TRANSPARENCY.md).
 
-[Roadmap](https://roadmap.typetype.video) · [Git mirror](https://git.typetype.video)
+[Roadmap](https://roadmap.typetype.video) · [Git mirror](https://git.typetype.video/TypeType-Video)
 
 # TypeType
 
