@@ -24,6 +24,15 @@ services:
     image: ${TYPETYPE_SERVER_BETA_IMAGE:-ghcr.io/typetype-video/typetype-server-beta:latest}
     ports:
       - "${HOST_BIND_SERVER_BETA:-127.0.0.1}:${HOST_PORT_SERVER_BETA:-18080}:8080"
+    mem_limit: 6g
+    mem_reservation: 4g
+    entrypoint:
+      - java
+      - -XX:+UseContainerSupport
+      - -XX:MaxRAMPercentage=50.0
+      - -XX:+ExitOnOutOfMemoryError
+      - -jar
+      - app.jar
     env_file: .env
     environment:
       AUTH_SESSION_TTL_DAYS: ${AUTH_SESSION_TTL_DAYS:-30}
