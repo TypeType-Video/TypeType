@@ -9,7 +9,7 @@ stage=locate-stack
 trap 'printf "beta deployment failed during %s\n" "$stage" >&2' ERR
 project=
 anchor=
-for candidate in typetype-beta typetype-beta-stack; do
+for candidate in typetype-beta-stack typetype-beta; do
   anchor=$(docker ps -a -q \
     --filter "label=com.docker.compose.project=${candidate}" | head -n 1)
   if [[ -n "$anchor" ]]; then
