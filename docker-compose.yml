@@ -41,6 +41,7 @@ services:
       YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL: ${YOUTUBE_REMOTE_LOGIN_CALLBACK_BASE_URL:-http://typetype-server:8080}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN_FILE: /run/typetype-secrets/youtube_remote_login_internal_token
       YOUTUBE_SESSION_ENCRYPTION_KEY_FILE: /run/typetype-secrets/youtube_session_encryption_key
+      BILIBILI_SESSION_ENCRYPTION_KEY: ${BILIBILI_SESSION_ENCRYPTION_KEY:-}
       YOUTUBE_REMOTE_LOGIN_TTL_MS: ${YOUTUBE_REMOTE_LOGIN_TTL_MS:-480000}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}
@@ -54,7 +55,7 @@ services:
       typetype-downloader:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/8080/health"]
     restart: unless-stopped
 
   typetype-downloader:
@@ -139,6 +140,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-typetype}
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN: ${YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN:-}
       YOUTUBE_SESSION_ENCRYPTION_KEY: ${YOUTUBE_SESSION_ENCRYPTION_KEY:-}
+      BILIBILI_SESSION_ENCRYPTION_KEY: ${BILIBILI_SESSION_ENCRYPTION_KEY:-}
     command: ["/bin/sh", "/usr/local/bin/initialize-stack.sh"]
     volumes:
       - typetype_secrets:/run/typetype-secrets
