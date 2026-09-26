@@ -58,9 +58,11 @@ test ! -e "$python_log"
 downloader_access_key="$(grep '^DOWNLOADER_S3_ACCESS_KEY=' "${install_dir}/.env" | cut -d= -f2-)"
 downloader_secret_key="$(grep '^DOWNLOADER_S3_SECRET_KEY=' "${install_dir}/.env" | cut -d= -f2-)"
 remote_login_token="$(grep '^YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN=' "${install_dir}/.env" | cut -d= -f2-)"
+bilibili_session_key="$(grep '^BILIBILI_SESSION_ENCRYPTION_KEY=' "${install_dir}/.env" | cut -d= -f2-)"
 [[ "$downloader_access_key" =~ ^GK[0-9a-f]{24}$ ]]
 [[ "$downloader_secret_key" =~ ^[0-9a-f]{64}$ ]]
 [[ "$remote_login_token" =~ ^[A-Za-z0-9_-]{64}$ ]]
+[[ "$bilibili_session_key" =~ ^[A-Za-z0-9_-]{64}$ ]]
 
 beta_install_dir="${temporary}/beta-stack"
 PATH="${fake_bin}:${PATH}" \
