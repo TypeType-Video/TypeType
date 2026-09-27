@@ -24,6 +24,15 @@ services:
     image: ${TYPETYPE_SERVER_BETA_IMAGE:-ghcr.io/typetype-video/typetype-server-beta:latest}
     ports:
       - "${HOST_BIND_SERVER_BETA:-127.0.0.1}:${HOST_PORT_SERVER_BETA:-18080}:8080"
+    mem_limit: 6g
+    mem_reservation: 4g
+    entrypoint:
+      - java
+      - -XX:+UseContainerSupport
+      - -XX:MaxRAMPercentage=50.0
+      - -XX:+ExitOnOutOfMemoryError
+      - -jar
+      - app.jar
     env_file: .env
     environment:
       AUTH_SESSION_TTL_DAYS: ${AUTH_SESSION_TTL_DAYS:-30}
@@ -42,6 +51,7 @@ services:
       YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN_FILE: /run/typetype-secrets/youtube_remote_login_internal_token
       YOUTUBE_SESSION_ENCRYPTION_KEY: ""
       YOUTUBE_SESSION_ENCRYPTION_KEY_FILE: /run/typetype-secrets/youtube_session_encryption_key
+      BILIBILI_SESSION_ENCRYPTION_KEY: ${BILIBILI_SESSION_ENCRYPTION_KEY:-}
       YOUTUBE_REMOTE_LOGIN_TTL_MS: ${YOUTUBE_REMOTE_LOGIN_TTL_MS:-480000}
       YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS: ${YOUTUBE_REMOTE_LOGIN_MAX_SESSIONS:-2}
       YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES: ${YOUTUBE_REMOTE_LOGIN_MAX_FRAME_BYTES:-524288}

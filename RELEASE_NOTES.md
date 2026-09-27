@@ -1,3 +1,62 @@
+# TypeType 1.9.0
+
+This is a big one. More than two weeks of work went into making playback more reliable, bringing subscription groups to desktop, improving Takeout and self-hosting, and making TypeType’s approach to AI easier to find. Many of these improvements started with community reports and PRs. We’re grateful to everyone who helped make this release happen.
+
+## AI Transparency
+
+We've added a public [AI Transparency document](https://github.com/TypeType-Video/TypeType/blob/main/AI_TRANSPARENCY.md) explaining our approach to AI in TypeType development.
+
+## Playback and Providers
+
+- Make YouTube web playback SABR-only, while keeping BiliBili and NicoNico playback unchanged. [#168](https://github.com/TypeType-Video/TypeType/issues/168)
+- Requeue recoverable live requests in the active playback session instead of leaving playback stuck.
+- Improve quality selection and stop showing the unavailable-audio warning on single-language streams. [Frontend #34](https://github.com/TypeType-Video/TypeType-Frontend/pull/34), [Frontend #33](https://github.com/TypeType-Video/TypeType-Frontend/pull/33)
+- Decode extractor responses using their declared charset. [Server #87](https://github.com/TypeType-Video/TypeType-Server/pull/87)
+- Fix YouTube comments displaying raw HTML. [#266](https://github.com/TypeType-Video/TypeType/issues/266)
+
+Live playback passed three 30-minute beta runs with no session loss; 16 recoverable requests were requeued in place.
+
+## Subscriptions and Watch Experience
+
+- Add desktop management for subscription groups and paginate group members. [Frontend #32](https://github.com/TypeType-Video/TypeType-Frontend/pull/32), [Server #86](https://github.com/TypeType-Video/TypeType-Server/pull/86)
+- Show a skeleton while channel avatars load and retry failed image requests without requiring a page refresh.
+- Remove the duplicate NicoNico entry from the service picker.
+- Fix Shorts not appearing on the initial home screen. [#275](https://github.com/TypeType-Video/TypeType/issues/275)
+
+## Takeout and Self-Hosting
+
+- Improve Takeout imports for localized fields, including Spanish, and larger archives.
+- Add `BILIBILI_SESSION_ENCRYPTION_KEY` to the Compose and environment templates. [#291](https://github.com/TypeType-Video/TypeType/pull/291)
+- Improve self-hosting documentation, including Dockge and Traefik guidance.
+- Split the Server into focused Gradle modules and keep tests close to the code they cover.
+
+## Issues Fixed in This Dev Line
+
+- [#267](https://github.com/TypeType-Video/TypeType/issues/267): Account registration and login could fail.
+- [#271](https://github.com/TypeType-Video/TypeType/issues/271), [#273](https://github.com/TypeType-Video/TypeType/issues/273), [#274](https://github.com/TypeType-Video/TypeType/issues/274): Fix YouTube Remote Login persistence and configuration issues, plus a readiness check.
+- [#272](https://github.com/TypeType-Video/TypeType/issues/272): Document reverse-proxy WebSocket headers.
+- [#275](https://github.com/TypeType-Video/TypeType/issues/275): Shorts could be missing from the initial home screen.
+- [#266](https://github.com/TypeType-Video/TypeType/issues/266): YouTube comments could display raw HTML.
+
+## Thx
+
+More than two weeks of work went into this release, and many improvements began with someone taking the time to report a problem, send a PR, test a fix, or help with translations. We truly appreciate the time and care you put into TypeType.
+
+- @Aquarius-Situla for the playback fixes in [Frontend #33](https://github.com/TypeType-Video/TypeType-Frontend/pull/33) and [#34](https://github.com/TypeType-Video/TypeType-Frontend/pull/34), and the BiliBili session configuration in [#291](https://github.com/TypeType-Video/TypeType/pull/291).
+- @kapdon for desktop subscription-group management in [Frontend #32](https://github.com/TypeType-Video/TypeType-Frontend/pull/32) and pagination in [Server #86](https://github.com/TypeType-Video/TypeType-Server/pull/86).
+- @tam1m for the charset fix in [Server #87](https://github.com/TypeType-Video/TypeType-Server/pull/87).
+- @drJeckyll for reporting the YouTube comments issue in [#266](https://github.com/TypeType-Video/TypeType/issues/266).
+- @hsjlyj for the detailed reports in [#271](https://github.com/TypeType-Video/TypeType/issues/271), [#272](https://github.com/TypeType-Video/TypeType/issues/272), [#273](https://github.com/TypeType-Video/TypeType/issues/273), and [#274](https://github.com/TypeType-Video/TypeType/issues/274).
+- @therealresonix for reporting the login issue in [#267](https://github.com/TypeType-Video/TypeType/issues/267).
+- @uniextra for the Shorts report and Takeout import feedback in [#275](https://github.com/TypeType-Video/TypeType/issues/275) and [#276](https://github.com/TypeType-Video/TypeType/issues/276).
+- @Toastienergy for the German translation and beta testing.
+
+## Updating
+
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.8.1
 
 TypeType 1.8.1 focuses on making playback more dependable across YouTube, BiliBili and NicoNico, improving mobile controls, strengthening profiles and notifications, making recommendations service-aware, and simplifying self-hosting.

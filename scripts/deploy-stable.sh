@@ -98,8 +98,6 @@ finish() {
   if [[ "$succeeded" == true ]]; then
     printf 'succeeded\n' > "$backup/status"
     ln -sfn "$(basename "$backup")" "$rollback_root/last-successful"
-    find "$rollback_root" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
-      | sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
     exit "$status"
   fi
 
