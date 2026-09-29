@@ -1,0 +1,46 @@
+clone:
+  git:
+    image: woodpeckerci/plugin-git:2.10.0
+    settings:
+      partial: false
+      depth: 0
+      recursive: false
+      fetch-target-branch: true
+
+when:
+  - event: push
+    branch: [dev, main]
+  - event: pull_request
+  - event: manual
+
+services:
+  docker:
+    image: docker:29.1.3-dind@sha256:64d6ee47ea821c986467199baa162f5ac8cde3f57b719f18e23f3ed7a7444131
+    privileged: true
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    commands:
+      - dockerd-entrypoint.sh --host=tcp://0.0.0.0:2375 --tls=false
+
+steps:
+  - name: validate
+    image: docker:29.1.3-cli@sha256:e0b6ff45302985d99b9685b2a2fec50c3379bd47067493968f51da901dc53ad5
+    environment:
+      DOCKER_HOST: tcp://docker:2375
+    commands:
+      - |
+        set -eu
+        apk add --no-cache bash coreutils curl findutils
+        for attempt in $$(seq 1 60); do
+          if docker info >/dev/null 2>&1; then
+            break
+          fi
+          sleep 1
+        done
+        docker info >/dev/null
+        install -d /usr/local/lib/docker/cli-plugins
+        curl -fsSL \
+          https://github.com/docker/compose/releases/download/v2.40.3/docker-compose-linux-x86_64 \
+          -o /usr/local/lib/docker/cli-plugins/docker-compose
+        chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
+        ./scripts/validate-stack.sh
