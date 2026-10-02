@@ -1,0 +1,8 @@
+[Unit]
+Description=Pull TypeType images and deploy Beta and stable stacks
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/typetype-registry-sync

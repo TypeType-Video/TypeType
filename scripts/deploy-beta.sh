@@ -30,22 +30,22 @@ case "$component" in
   frontend)
     target_service=typetype
     image_variable=TYPETYPE_WEB_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-beta
+    expected_image=registery.typetype.video/typetype/web-beta
     ;;
   server)
     target_service=typetype-server
     image_variable=TYPETYPE_SERVER_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-server-beta
+    expected_image=registery.typetype.video/typetype/server-beta
     ;;
   downloader)
     target_service=typetype-downloader
     image_variable=TYPETYPE_DOWNLOADER_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-downloader-beta
+    expected_image=registery.typetype.video/typetype/downloader-beta
     ;;
   token)
     target_service=typetype-token
     image_variable=TYPETYPE_TOKEN_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-token-beta
+    expected_image=registery.typetype.video/typetype/token-beta
     ;;
   *) exit 64 ;;
 esac

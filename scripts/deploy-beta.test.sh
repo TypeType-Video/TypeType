@@ -95,13 +95,13 @@ export PATH="$fake_bin:$PATH"
 digest="sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
 TYPETYPE_DEPLOY_COMPONENT=server \
-TYPETYPE_DEPLOY_IMAGE=ghcr.io/typetype-video/typetype-server-beta \
+TYPETYPE_DEPLOY_IMAGE=registery.typetype.video/typetype/server-beta \
 TYPETYPE_DEPLOY_DIGEST="$digest" \
   "$repository/scripts/deploy-beta.sh" "$repository"
 
 grep -Fq 'label=com.docker.compose.project=typetype-beta' "$FAKE_DOCKER_LOG"
 
-if ! grep -Fq "TYPETYPE_SERVER_BETA_IMAGE=ghcr.io/typetype-video/typetype-server-beta@$digest" \
+if ! grep -Fq "TYPETYPE_SERVER_BETA_IMAGE=registery.typetype.video/typetype/server-beta@$digest" \
   "$stack/.env"; then
   echo "the server image digest was not persisted" >&2
   sed -n '/^TYPETYPE_.*_IMAGE=/p' "$stack/.env" >&2
@@ -150,7 +150,7 @@ previous_pin=$(grep '^TYPETYPE_SERVER_BETA_IMAGE=' "$stack/.env")
 failed_digest="sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
 if FAKE_FAIL_UPDATE=1 \
   TYPETYPE_DEPLOY_COMPONENT=server \
-  TYPETYPE_DEPLOY_IMAGE=ghcr.io/typetype-video/typetype-server-beta \
+  TYPETYPE_DEPLOY_IMAGE=registery.typetype.video/typetype/server-beta \
   TYPETYPE_DEPLOY_DIGEST="$failed_digest" \
     "$repository/scripts/deploy-beta.sh" "$repository"; then
   echo "the simulated failed rollout unexpectedly succeeded" >&2

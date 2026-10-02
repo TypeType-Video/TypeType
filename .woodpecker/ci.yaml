@@ -1,6 +1,6 @@
 clone:
   git:
-    image: woodpeckerci/plugin-git:2.10.0
+    image: woodpeckerci/plugin-git:2.10.0@sha256:0f06b03ec33137b556c77538563f66c400339052d0c5199d4c3ad1a2a37e1964
     settings:
       partial: false
       depth: 0
@@ -41,6 +41,7 @@ steps:
         install -d /usr/local/lib/docker/cli-plugins
         curl -fsSL \
           https://github.com/docker/compose/releases/download/v2.40.3/docker-compose-linux-x86_64 \
-          -o /usr/local/lib/docker/cli-plugins/docker-compose
-        chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
+          -o /tmp/docker-compose
+        printf '%s  %s\n' 'dba9d98e1ba5bfe11d88c99b9bd32fc4a0624a30fafe68eea34d61a3e42fd372' /tmp/docker-compose | sha256sum -c -
+        install -m 0755 /tmp/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
         ./scripts/validate-stack.sh
