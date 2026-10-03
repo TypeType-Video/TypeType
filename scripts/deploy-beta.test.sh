@@ -146,6 +146,7 @@ if ((prune_line >= pull_line)); then
 fi
 
 previous_pin=$(grep '^TYPETYPE_SERVER_BETA_IMAGE=' "$stack/.env")
+printf 'services: {}\n' > "$stack/docker-compose.site.yml"
 : > "$FAKE_DOCKER_LOG"
 failed_digest="sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
 if FAKE_FAIL_UPDATE=1 \
@@ -158,6 +159,9 @@ if FAKE_FAIL_UPDATE=1 \
 fi
 grep -Fxq "$previous_pin" "$stack/.env"
 grep -Fq 'up -d --no-deps typetype-server' "$FAKE_DOCKER_LOG"
+grep -Fq -- "-f $stack/docker-compose.site.yml" "$FAKE_DOCKER_LOG"
+grep -Fq -- "-f $stack/docker-compose.site.yml -f $stack/.deploy-rollbacks/" "$FAKE_DOCKER_LOG"
+grep -Fxq 'services: {}' "$stack/docker-compose.site.yml"
 if grep -Eq 'compose .* up .*typetype($| )' "$FAKE_DOCKER_LOG"; then
   echo "a server rollback must not recreate the frontend" >&2
   exit 1

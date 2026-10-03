@@ -27,8 +27,17 @@ configure_beta_component
 export COMPOSE_FILE="$root/docker-compose.dev.yml"
 export COMPOSE_PROJECT_NAME="$project"
 
+compose_files=(-f "$root/docker-compose.dev.yml")
+source_compose_files=(-f "$source_root/docker-compose.dev.yml")
+site_compose="$root/docker-compose.site.yml"
+if [[ -f "$site_compose" ]]; then
+  compose_files+=(-f "$site_compose")
+  source_compose_files+=(-f "$site_compose")
+  export COMPOSE_CUSTOM_FILE="$site_compose"
+fi
+
 compose() {
-  docker compose --env-file "$root/.env" "$@"
+  docker compose --env-file "$root/.env" "${compose_files[@]}" "$@"
 }
 
 managed_files=(
@@ -56,7 +65,7 @@ proxy_url=$(awk -F= '$1 == "YOUTUBE_OUTBOUND_PROXY_URL" { value = substr($0, ind
 stage=validate-compose
 YOUTUBE_OUTBOUND_PROXY_URL="$proxy_url" docker compose \
   --project-directory "$root" --env-file "$root/.env" \
-  -f "$source_root/docker-compose.dev.yml" config -q
+  "${source_compose_files[@]}" config -q
 if [[ "$component" == all ]]; then
   "$source_root/scripts/check-youtube-egress.sh" "$project" "$proxy_url"
 fi
@@ -116,13 +125,11 @@ finish() {
   done
   cd "$root"
   if [[ "$component" == all ]]; then
-    docker compose --env-file .env -f docker-compose.dev.yml -f "$backup/rollback.yml" \
-      up -d --no-deps "${rollback_services[@]}"
+    compose -f "$backup/rollback.yml" up -d --no-deps "${rollback_services[@]}"
   else
-    docker compose --env-file .env -f docker-compose.dev.yml -f "$backup/rollback.yml" \
-      up -d --no-deps "$target_service"
+    compose -f "$backup/rollback.yml" up -d --no-deps "$target_service"
   fi
-  docker compose --env-file .env -f docker-compose.dev.yml -f "$backup/rollback.yml" ps
+  compose -f "$backup/rollback.yml" ps
   exit "$status"
 }
 trap finish EXIT
