@@ -139,9 +139,6 @@ if [[ "$component" == token || "$component" == server || "$component" == all ]];
   set_env_value "YOUTUBE_REMOTE_LOGIN_ENABLED" "true"
 fi
 
-stage=prune-images
-prune_unused_typetype_images
-
 stage=install-stack-files
 install -m 644 "$source_root/.env.example" "$root/.env.example"
 install -m 644 "$source_root/docker-compose.dev.yml" "$root/docker-compose.dev.yml"

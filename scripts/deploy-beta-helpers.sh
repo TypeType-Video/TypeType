@@ -35,19 +35,6 @@ configure_beta_component() {
   fi
 }
 
-prune_unused_typetype_images() {
-  local source
-  local sources=(
-    https://github.com/TypeType-Video/TypeType-Frontend
-    https://github.com/TypeType-Video/TypeType-Server
-    https://github.com/TypeType-Video/TypeType-Downloader
-    https://github.com/TypeType-Video/TypeType-Token
-  )
-  for source in "${sources[@]}"; do
-    docker image prune --all --force \
-      --filter "label=org.opencontainers.image.source=$source"
-  done
-}
 
 set_env_value() {
   local key="$1"
