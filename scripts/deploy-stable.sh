@@ -21,8 +21,17 @@ test -f "$root/.env"
 export COMPOSE_FILE="$root/docker-compose.yml"
 export COMPOSE_PROJECT_NAME="$project"
 
+compose_files=(-f "$root/docker-compose.yml")
+source_compose_files=(-f "$source_root/docker-compose.yml")
+site_compose="$root/docker-compose.site.yml"
+if [[ -f "$site_compose" ]]; then
+  compose_files+=(-f "$site_compose")
+  source_compose_files+=(-f "$site_compose")
+  export COMPOSE_CUSTOM_FILE="$site_compose"
+fi
+
 compose() {
-  docker compose --project-directory "$root" --env-file "$root/.env" "$@"
+  docker compose --project-directory "$root" --env-file "$root/.env" "${compose_files[@]}" "$@"
 }
 
 managed_files=(
@@ -50,7 +59,7 @@ services=(
 )
 
 docker compose --project-directory "$root" --env-file "$root/.env" \
-  -f "$source_root/docker-compose.yml" config -q
+  "${source_compose_files[@]}" config -q
 rollback_root="$root/.deploy-rollbacks"
 backup="$rollback_root/$(date -u +'%Y%m%dT%H%M%SZ')-$$"
 mkdir -p "$backup/scripts"
@@ -115,9 +124,8 @@ finish() {
     fi
   done
   cd "$root"
-  docker compose --env-file .env -f docker-compose.yml -f "$backup/rollback.yml" \
-    up -d --remove-orphans
-  docker compose --env-file .env -f docker-compose.yml -f "$backup/rollback.yml" ps
+  compose -f "$backup/rollback.yml" up -d --remove-orphans
+  compose -f "$backup/rollback.yml" ps
   exit "$status"
 }
 trap finish EXIT
