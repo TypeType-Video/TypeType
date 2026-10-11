@@ -102,6 +102,21 @@ FAKE_PYTHON_LOG="$python_log" \
 grep -q 'compose .*docker-compose.recommender.yml .*config -q ' "$docker_log"
 
 beta_install_dir="${temporary}/beta-stack"
+sed -i 's/^RECOMMENDER_ENABLED=true$/RECOMMENDER_ENABLED=false/' "${recommender_install_dir}/.env"
+: > "$docker_log"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$recommender_install_dir" \
+    --download-only \
+    --yes > "${temporary}/recommender-removed-update.log"
+if grep -q 'docker-compose.recommender.yml' "$docker_log"; then
+  echo "a disabled recommender must stay disabled during updates" >&2
+  exit 1
+fi
+grep -Fxq 'RECOMMENDER_ENABLED=false' "${recommender_install_dir}/.env"
 PATH="${fake_bin}:${PATH}" \
 FAKE_DOCKER_LOG="$docker_log" \
 FAKE_PYTHON_LOG="$python_log" \
@@ -134,3 +149,36 @@ FAKE_PYTHON_LOG="$python_log" \
 
 grep -Fxq 'TYPETYPE_RECOMMENDER_IMAGE=ghcr.io/typetype-video/typetype-signals-beta:beta' \
   "$beta_recommender_dir/.env"
+arm_fake_bin="${temporary}/arm-bin"
+mkdir -p "$arm_fake_bin"
+cat > "${arm_fake_bin}/uname" <<'EOF'
+#!/usr/bin/env bash
+printf 'aarch64\n'
+EOF
+chmod +x "${arm_fake_bin}/uname"
+arm_beta_recommender_dir="${temporary}/arm-beta-recommender-stack"
+PATH="${arm_fake_bin}:${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$arm_beta_recommender_dir" \
+    --beta \
+    --recommender \
+    --download-only \
+    --yes > "${temporary}/arm-beta-recommender-install.log"
+grep -Fxq 'TYPETYPE_RECOMMENDER_IMAGE=ghcr.io/typetype-video/typetype-signals-beta:beta-arm64' \
+  "$arm_beta_recommender_dir/.env"
+sed -i 's#^TYPETYPE_RECOMMENDER_IMAGE=.*$#TYPETYPE_RECOMMENDER_IMAGE=ghcr.io/typetype-video/typetype-signals-beta:beta#' \
+  "$arm_beta_recommender_dir/.env"
+PATH="${arm_fake_bin}:${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$arm_beta_recommender_dir" \
+    --beta \
+    --download-only \
+    --yes > "${temporary}/arm-beta-recommender-update.log"
+grep -Fxq 'TYPETYPE_RECOMMENDER_IMAGE=ghcr.io/typetype-video/typetype-signals-beta:beta-arm64' \
+  "$arm_beta_recommender_dir/.env"

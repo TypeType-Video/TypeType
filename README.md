@@ -141,6 +141,10 @@ the admin console. Each user still chooses to turn it on for themselves.
 
 Remove it:
 
+Set `RECOMMENDER_ENABLED=false` in `.env` before removing the overlay, or the
+installer will enable it again on a future update. For a beta stack, use
+`docker-compose.dev.yml` instead of `docker-compose.yml`.
+
 ```sh
 docker compose -f docker-compose.yml up -d --remove-orphans --wait
 ```

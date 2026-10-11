@@ -415,8 +415,18 @@ ensure_recommender_env() {
     return 0
   fi
   set_env_var "${env_file}" "RECOMMENDER_ENABLED" "true"
-  if [[ ${BETA_STACK} -eq 1 && -z "$(get_env_var "${env_file}" "TYPETYPE_RECOMMENDER_IMAGE")" ]]; then
-    set_env_var "${env_file}" "TYPETYPE_RECOMMENDER_IMAGE" "ghcr.io/typetype-video/typetype-signals-beta:beta"
+  if [[ ${BETA_STACK} -eq 1 ]]; then
+    local existing_image
+    existing_image="$(get_env_var "${env_file}" "TYPETYPE_RECOMMENDER_IMAGE")"
+    if [[ -z "${existing_image}" \
+      || "${existing_image}" == "ghcr.io/typetype-video/typetype-signals-beta:beta" \
+      || "${existing_image}" == "ghcr.io/typetype-video/typetype-signals-beta:beta-arm64" ]]; then
+      local beta_image="ghcr.io/typetype-video/typetype-signals-beta:beta"
+      if is_arm64_host; then
+        beta_image="ghcr.io/typetype-video/typetype-signals-beta:beta-arm64"
+      fi
+      set_env_var "${env_file}" "TYPETYPE_RECOMMENDER_IMAGE" "${beta_image}"
+    fi
   fi
 }
 
