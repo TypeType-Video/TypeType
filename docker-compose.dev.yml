@@ -169,6 +169,12 @@ services:
 
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.39.0
+    command:
+      - dragonfly
+      - --logtostderr
+      - --cache_mode=true
+      - --maxmemory=${DRAGONFLY_MAX_MEMORY:-2gb}
+      - --proactor_threads=${DRAGONFLY_THREADS:-4}
     ulimits:
       memlock: -1
     healthcheck:
