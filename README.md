@@ -110,6 +110,52 @@ artifacts.
 - [Manual Docker Compose setup](https://typetype-video.github.io/Docs-TypeType/self-hosting/docker-compose#manual-setup)
 - [Configuration](https://typetype-video.github.io/Docs-TypeType/self-hosting/configuration)
 
+### Optional: recommender (experimental)
+
+The recommender is a separate service that can build the home page with one of
+several algorithms each user picks and tunes. It is optional: a stack without it
+behaves exactly as before and shows no option anywhere.
+
+What it needs:
+
+- about 1.2 GB of memory at rest (the container is capped by `RECOMMENDER_MEMORY_LIMIT`, 2 GB by default);
+- about 1 GB of disk for its image and its language model, downloaded once on first start into the `recommender_models` volume (the first start needs internet access and takes a few minutes);
+- PostgreSQL with the `pgvector` extension: the overlay switches the `postgres` service to an image that ships it, on the same data volume;
+- its own database (`typetype_recommender`) and a shared secret, both created by `typetype-init`.
+
+Add it with the installer, which asks, or takes `--recommender`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/TypeType-Video/TypeType/main/scripts/install-stack.sh | bash -s -- --recommender
+```
+
+Or by hand on an existing stack:
+
+```sh
+COMPOSE_RECOMMENDER_FILE=docker-compose.recommender.yml ./scripts/run-stack-init.sh
+docker compose -f docker-compose.yml -f docker-compose.recommender.yml up -d --wait
+```
+
+The installer switches it on (`RECOMMENDER_ENABLED=true`); by hand, switch it on in
+the admin console. Each user still chooses to turn it on for themselves.
+
+Remove it:
+
+Set `RECOMMENDER_ENABLED=false` in `.env` before removing the overlay, or the
+installer will enable it again on a future update. For a beta stack, use
+`docker-compose.dev.yml` instead of `docker-compose.yml`.
+
+```sh
+docker compose -f docker-compose.yml up -d --remove-orphans --wait
+```
+
+The home page goes back to the standard one and the option disappears. User
+choices and opinions stay in the database, and the `recommender_models` volume
+and the `typetype_recommender` database can be deleted by hand.
+
+All its settings (`RECOMMENDER_*`, `TYPETYPE_RECOMMENDER_IMAGE`,
+`TYPETYPE_POSTGRES_VECTOR_IMAGE`) are listed in `.env.example`.
+
 ### Maintain your instance
 
 - [User guide](https://typetype-video.github.io/Docs-TypeType/guide/)
