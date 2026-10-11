@@ -38,6 +38,7 @@ managed_files=(
   .env.example
   docker-compose.yml
   docker-compose.arm64.yml
+  docker-compose.recommender.yml
   scripts/bootstrap-env.sh
   scripts/bootstrap-garage.sh
   scripts/initialize-stack.sh

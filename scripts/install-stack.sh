@@ -8,11 +8,13 @@ START_STACK=1
 SOURCE_DIR=""
 BETA_STACK=0
 AUTO_APPROVE=0
+RECOMMENDER_STACK=0
 REF_SET=0
 INSTALL_DIR_SET=0
 ENV_FILE_CREATED=0
 BACKUP_DIR=""
 CUSTOM_COMPOSE_FILE=""
+RECOMMENDER_COMPOSE_FILE=""
 
 DEFAULT_DOWNLOADER_S3_ACCESS_KEY="SET_ME_ACCESS_KEY"
 DEFAULT_DOWNLOADER_S3_SECRET_KEY="SET_ME_SECRET_KEY"
@@ -38,6 +40,7 @@ Options:
   --dir <path>          Install directory (default: ~/typetype-stack)
   --beta                Install the beta Compose stack only (default ref: dev)
   --yes                 Start Docker automatically without prompts
+  --recommender         Add the optional recommender (experimental)
   --download-only       Download/update files only, do not start Docker
   --source-dir <path>   Copy files from a local repo path (advanced)
   -h, --help            Show this help
@@ -65,6 +68,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --yes)
       AUTO_APPROVE=1
+      shift
+      ;;
+    --recommender)
+      RECOMMENDER_STACK=1
       shift
       ;;
     --download-only)
@@ -375,10 +382,50 @@ compose_command_hint() {
   if [[ ${USE_ARM64_OVERRIDE} -eq 1 ]]; then
     args="${args} -f docker-compose.arm64.yml"
   fi
+  if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
+    args="${args} -f docker-compose.recommender.yml"
+  fi
   if [[ -n "${CUSTOM_COMPOSE_FILE}" ]]; then
     args="${args} -f docker-compose.override.yml"
   fi
   printf 'docker compose %s --env-file .env %s' "${args}" "${command}"
+}
+
+choose_recommender() {
+  if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
+    return 0
+  fi
+  if [[ -f "${INSTALL_DIR}/.env" && "$(get_env_var "${INSTALL_DIR}/.env" "RECOMMENDER_ENABLED")" == "true" ]]; then
+    RECOMMENDER_STACK=1
+    return 0
+  fi
+  if [[ ${AUTO_APPROVE} -eq 1 ]]; then
+    return 0
+  fi
+  echo "[install] Optional: the recommender (experimental) lets each user pick the algorithm of their home page."
+  echo "[install] It needs about 2 GB of memory and 1 GB of disk, and downloads a language model on first start."
+  if confirm_tty "Add the experimental recommender?"; then
+    RECOMMENDER_STACK=1
+  fi
+}
+
+ensure_recommender_env() {
+  local env_file="$1"
+  if [[ ${RECOMMENDER_STACK} -eq 0 ]]; then
+    return 0
+  fi
+  set_env_var "${env_file}" "RECOMMENDER_ENABLED" "true"
+  if [[ ${BETA_STACK} -eq 1 && -z "$(get_env_var "${env_file}" "TYPETYPE_RECOMMENDER_IMAGE")" ]]; then
+    set_env_var "${env_file}" "TYPETYPE_RECOMMENDER_IMAGE" "ghcr.io/typetype-video/typetype-signals-beta:beta"
+  fi
+}
+
+init_command_hint() {
+  if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
+    printf 'COMPOSE_RECOMMENDER_FILE=docker-compose.recommender.yml ./scripts/run-stack-init.sh'
+  else
+    printf './scripts/run-stack-init.sh'
+  fi
 }
 
 choose_stack_port() {
@@ -525,6 +572,7 @@ fi
 COMPOSE_FILE="${INSTALL_DIR}/${COMPOSE_NAME}"
 ARM64_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.arm64.yml"
 USE_ARM64_OVERRIDE=0
+WAIT_TIMEOUT=180
 
 if [[ -s "${INSTALL_DIR}/nginx.conf" ]]; then
   echo "[install] Existing nginx.conf detected; it will be backed up and is no longer mounted by default."
@@ -540,6 +588,7 @@ stage_legacy_garage_config
 
 fetch_file "${COMPOSE_SOURCE}" "${COMPOSE_FILE}"
 fetch_file "docker-compose.arm64.yml" "${ARM64_COMPOSE_FILE}"
+fetch_file "docker-compose.recommender.yml" "${INSTALL_DIR}/docker-compose.recommender.yml"
 fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
 fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
 fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
@@ -565,6 +614,13 @@ if is_arm64_host; then
   COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
   echo "[install] ARM64 host detected, using Redis cache override."
 fi
+choose_recommender
+if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
+  RECOMMENDER_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.recommender.yml"
+  COMPOSE_ARGS+=(-f "${RECOMMENDER_COMPOSE_FILE}")
+  WAIT_TIMEOUT=900
+  echo "[install] Recommender (experimental) added to the stack."
+fi
 if [[ -f "${INSTALL_DIR}/docker-compose.override.yml" ]]; then
   CUSTOM_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.override.yml"
   COMPOSE_ARGS+=(-f "${CUSTOM_COMPOSE_FILE}")
@@ -581,6 +637,7 @@ ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
 ensure_service_url_env "${INSTALL_DIR}/.env"
 ensure_beta_internal_server_env "${INSTALL_DIR}/.env"
+ensure_recommender_env "${INSTALL_DIR}/.env"
 "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
 if [[ ${BETA_STACK} -eq 1 ]]; then
@@ -626,14 +683,14 @@ if [[ ${START_STACK} -eq 0 ]]; then
   echo "[install] Download-only complete."
   [[ ! -s "${INSTALL_DIR}/garage.toml" ]] || echo "[install] The existing garage.toml will be imported on the next Compose startup."
   [[ -z "${BACKUP_DIR}" ]] || echo "[install] Rollback files: ${BACKUP_DIR}"
-  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/run-stack-init.sh && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && $(init_command_hint) && $(compose_command_hint 'up -d')"
   exit 0
 fi
 
 if [[ ${AUTO_APPROVE} -eq 0 ]] && ! confirm_tty "Proceed with Docker pull + startup in ${INSTALL_DIR}?"; then
   echo "[install] Stack files are ready in ${INSTALL_DIR}."
   echo "[install] Docker startup skipped."
-  echo "[install] Next step: cd ${INSTALL_DIR} && ./scripts/run-stack-init.sh && $(compose_command_hint 'up -d')"
+  echo "[install] Next step: cd ${INSTALL_DIR} && $(init_command_hint) && $(compose_command_hint 'up -d')"
   exit 0
 fi
 
@@ -643,16 +700,18 @@ docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" pull
 echo "[install] Starting stack..."
 COMPOSE_FILE="${COMPOSE_FILE}" \
   COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+  COMPOSE_RECOMMENDER_FILE="${RECOMMENDER_COMPOSE_FILE}" \
   COMPOSE_CUSTOM_FILE="${CUSTOM_COMPOSE_FILE}" \
   "${INSTALL_DIR}/scripts/run-stack-init.sh"
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" \
-  up -d --remove-orphans --wait --wait-timeout 180
+  up -d --remove-orphans --wait --wait-timeout "${WAIT_TIMEOUT}"
 
 echo "[install] Bootstrapping Garage..."
 (
   cd "${INSTALL_DIR}"
   COMPOSE_FILE="${COMPOSE_FILE}" \
     COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
+    COMPOSE_RECOMMENDER_FILE="${RECOMMENDER_COMPOSE_FILE}" \
     COMPOSE_CUSTOM_FILE="${CUSTOM_COMPOSE_FILE}" \
     ./scripts/bootstrap-garage.sh
 )
