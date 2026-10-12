@@ -207,6 +207,19 @@ GitHub Sponsors donation that helped support TypeType.
 If you want to support TypeType financially, you can do so through
 [GitHub Sponsors](https://github.com/sponsors/Priveetee).
 
+## Star history
+
+<a href="https://star-history.dera.page/#TypeType-Video/TypeType">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=TypeType-Video/TypeType&theme=dark">
+    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=TypeType-Video/TypeType">
+    <img alt="Star history chart for TypeType" src="https://star-history.dera.page/svg?repos=TypeType-Video/TypeType">
+  </picture>
+</a>
+
+The chart is rendered by [SimRepo](https://github.com/Mubelotix/SimRepo), a
+token-free GitHub star history service.
+
 ## For developers
 
 Each component has its own repository, tests, release cycle, and license. Pull requests belong in the repository that owns the changed code. Bug reports and feature requests stay in the central issue tracker.
