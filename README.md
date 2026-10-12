@@ -189,11 +189,13 @@ Read the [localization guide](https://github.com/TypeType-Video/TypeType-Fronten
 
 <p>
   <a href="https://github.com/Toastienergy" title="@Toastienergy"><img src="https://github.com/Toastienergy.png?size=128" alt="@Toastienergy" width="64" height="64"></a>
+  <a href="https://github.com/crichemond" title="@crichemond"><img src="https://github.com/crichemond.png?size=128" alt="@crichemond" width="64" height="64"></a>
 </p>
 
-Thank you to [@Toastienergy](https://github.com/Toastienergy) for supporting
-TypeType through a recurring GitHub Sponsors contribution. It helps me cover the
-infrastructure and spend more time improving the project.
+Thank you to [@Toastienergy](https://github.com/Toastienergy) and
+[@crichemond](https://github.com/crichemond) for supporting TypeType through
+recurring GitHub Sponsors contributions. It helps me cover the infrastructure
+and spend more time improving the project.
 
 ### One-time donor
 
