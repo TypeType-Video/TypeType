@@ -22,6 +22,7 @@ done
 ./scripts/install-stack.test.sh
 ./scripts/deploy-beta.test.sh
 ./scripts/registry-sync.test.sh
+./scripts/deploy-stable.test.sh
 ./scripts/run-stack-init.test.sh
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
