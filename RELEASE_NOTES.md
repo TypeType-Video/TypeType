@@ -1,24 +1,28 @@
 # TypeType 1.10.0
 
-TypeType 1.10.0 brings recommendations you run yourself, a first version of the
-YouTube livestream chat, and a player that recovers instead of resetting. It
-also lands a large batch of community pull requests, a seasonal theme, and the
-documentation in four languages.
+TypeType 1.10.0 brings an experimental recommender you run yourself, a first
+version of the YouTube livestream chat, and a player that recovers instead of
+resetting. It also lands a large batch of community pull requests, a seasonal
+theme, and the documentation in four languages.
 
 Thx to everyone who reported, tested, translated or sent code. A big part of
 this release started with a report or a pull request from the community, and I
 really appreciate the time you put into it.
 
-## Self-Hosted Recommendations
+## Self-Hosted Recommender (experimental)
 
-- Add an optional recommendation service to the stack, off by default and
-  offered by the installer. [#306](https://github.com/TypeType-Video/TypeType/pull/306)
+- Add an experimental, optional recommendation service to the stack. It is off
+  by default, offered by the installer, and a stack without it behaves exactly
+  as before. [#306](https://github.com/TypeType-Video/TypeType/pull/306)
 - Build the home feed on the instance from its own data, with an Algorithm page
   to choose and tune how the feed is built. [Frontend #55](https://github.com/TypeType-Video/TypeType-Frontend/pull/55), [Server #95](https://github.com/TypeType-Video/TypeType-Server/pull/95)
 - Keep it opt-in per profile, store its settings, opinions and choices per
   profile, and carry them in exports and backups. A refusal stays isolated to
   the profile that made it.
 - Document the service, its install and the algorithm tuning. [Self-hosting guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/recommender), [Algorithm guide](https://typetype-video.github.io/Docs-TypeType/guide/algorithm)
+- Treat it as experimental: the algorithms, and the home feed they build, will
+  keep changing. You turn it on per profile, and you can turn it off to go back
+  to the standard home page at any time.
 
 ## Live Streams
 
