@@ -75,15 +75,15 @@ Thx to everyone who reported, tested, translated or sent code. A big part of thi
 
 ## Thx
 
-- @Aquarius-Situla for the long run of frontend work on this release: the playback fixes, the danmaku rework, the BiliBili collections, the system theme, the web fullscreen, Simplified Chinese, the cinema-mode report in [#295](https://github.com/TypeType-Video/TypeType/issues/295), and the BiliBili server and token fixes. [Frontend #36](https://github.com/TypeType-Video/TypeType-Frontend/pull/36) to [Frontend #48](https://github.com/TypeType-Video/TypeType-Frontend/pull/48), [Server #89](https://github.com/TypeType-Video/TypeType-Server/pull/89), [Server #90](https://github.com/TypeType-Video/TypeType-Server/pull/90), [Token #21](https://github.com/TypeType-Video/TypeType-Token/pull/21)
-- @Toastienergy for reviewing this release, testing the beta, the recommender setup feedback, the random-recommendations request in [#270](https://github.com/TypeType-Video/TypeType/issues/270), and the German translation.
-- @uniextra for the Takeout import report in [#276](https://github.com/TypeType-Video/TypeType/issues/276).
-- @kinouzero for the YouTube remote-login report in [#250](https://github.com/TypeType-Video/TypeType/issues/250).
-- @gohoski for the downloader report in [#304](https://github.com/TypeType-Video/TypeType/issues/304).
-- @AphoticUmbral for the shuffle request and the loading report in [#303](https://github.com/TypeType-Video/TypeType/issues/303) and [#302](https://github.com/TypeType-Video/TypeType/issues/302).
-- @ilar for the livestream chat request in [#297](https://github.com/TypeType-Video/TypeType/issues/297).
-- @drJeckyll for the autoplay discussion in [#283](https://github.com/TypeType-Video/TypeType/issues/283).
-- @arcoast for the setup feedback in [#254](https://github.com/TypeType-Video/TypeType/issues/254).
+A huge thx to @Aquarius-Situla for all the frontend work on this release, from the playback fixes and danmaku rework to BiliBili collections, the system theme, web fullscreen and Simplified Chinese. Thx as well for the BiliBili creator-search improvement in [Server #90](https://github.com/TypeType-Video/TypeType-Server/pull/90), the remote-login changes in [Server #89](https://github.com/TypeType-Video/TypeType-Server/pull/89) and [Token #21](https://github.com/TypeType-Video/TypeType-Token/pull/21), and for reporting the cinema-mode player reset in [#295](https://github.com/TypeType-Video/TypeType/issues/295). The frontend work spans [Frontend #36](https://github.com/TypeType-Video/TypeType-Frontend/pull/36) to [Frontend #48](https://github.com/TypeType-Video/TypeType-Frontend/pull/48).
+
+Thx to @Toastienergy for reviewing the release, testing the beta and sharing feedback on the recommender setup. Thx as well for suggesting random recommendations in [#270](https://github.com/TypeType-Video/TypeType/issues/270) and contributing the German translation.
+
+Thx to @uniextra for reporting the Takeout import issue in [#276](https://github.com/TypeType-Video/TypeType/issues/276), and to @kinouzero for reporting the YouTube remote-login issue in [#250](https://github.com/TypeType-Video/TypeType/issues/250).
+
+Thx to @gohoski for reporting the downloader issue in [#304](https://github.com/TypeType-Video/TypeType/issues/304), and to @AphoticUmbral for requesting playlist shuffle in [#303](https://github.com/TypeType-Video/TypeType/issues/303) and reporting the loading issue in [#302](https://github.com/TypeType-Video/TypeType/issues/302).
+
+Thx to @ilar for requesting YouTube livestream chat in [#297](https://github.com/TypeType-Video/TypeType/issues/297), and to @arcoast for sharing feedback on the initial setup in [#254](https://github.com/TypeType-Video/TypeType/issues/254).
 
 A special thx to sponsors [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond) for supporting TypeType.
 
