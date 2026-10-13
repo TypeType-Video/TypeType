@@ -1,0 +1,11 @@
+[Unit]
+Description=Check TypeType registry images every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Persistent=true
+Unit=typetype-registry-sync.service
+[Install]
+WantedBy=timers.target

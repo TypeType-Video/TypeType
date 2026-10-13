@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source_root="${1:?deployment source is required}"
+source "$source_root/scripts/deploy-beta-helpers.sh"
 component="${TYPETYPE_DEPLOY_COMPONENT:-${2:-all}}"
 image="${TYPETYPE_DEPLOY_IMAGE:-${3:-}}"
 digest="${TYPETYPE_DEPLOY_DIGEST:-${4:-}}"
@@ -22,78 +23,23 @@ root=$(docker inspect "$anchor" --format '{{index .Config.Labels "com.docker.com
 test -d "$root"
 test -f "$root/.env"
 
-target_service=
-image_variable=
-expected_image=
-case "$component" in
-  all) ;;
-  frontend)
-    target_service=typetype
-    image_variable=TYPETYPE_WEB_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-beta
-    ;;
-  server)
-    target_service=typetype-server
-    image_variable=TYPETYPE_SERVER_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-server-beta
-    ;;
-  downloader)
-    target_service=typetype-downloader
-    image_variable=TYPETYPE_DOWNLOADER_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-downloader-beta
-    ;;
-  token)
-    target_service=typetype-token
-    image_variable=TYPETYPE_TOKEN_BETA_IMAGE
-    expected_image=ghcr.io/typetype-video/typetype-token-beta
-    ;;
-  *) exit 64 ;;
-esac
-if [[ "$component" != all ]]; then
-  stage=validate-component
-  [[ "$image" == "$expected_image" ]]
-  [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-fi
+configure_beta_component
 export COMPOSE_FILE="$root/docker-compose.dev.yml"
 export COMPOSE_PROJECT_NAME="$project"
 
+compose_files=(-f "$root/docker-compose.dev.yml")
+source_compose_files=(-f "$source_root/docker-compose.dev.yml")
+site_compose="$root/docker-compose.site.yml"
+if [[ -f "$site_compose" ]]; then
+  compose_files+=(-f "$site_compose")
+  source_compose_files+=(-f "$site_compose")
+  export COMPOSE_CUSTOM_FILE="$site_compose"
+fi
+
 compose() {
-  docker compose --env-file "$root/.env" "$@"
+  docker compose --env-file "$root/.env" "${compose_files[@]}" "$@"
 }
 
-prune_unused_typetype_images() {
-  local source
-  local sources=(
-    https://github.com/TypeType-Video/TypeType-Frontend
-    https://github.com/TypeType-Video/TypeType-Server
-    https://github.com/TypeType-Video/TypeType-Downloader
-    https://github.com/TypeType-Video/TypeType-Token
-  )
-  for source in "${sources[@]}"; do
-    docker image prune --all --force \
-      --filter "label=org.opencontainers.image.source=$source"
-  done
-}
-
-set_env_value() {
-  local key="$1"
-  local value="$2"
-  local temporary
-  temporary=$(mktemp "$root/.env.XXXXXX")
-  awk -v key="$key" -v value="$value" '
-    BEGIN { found = 0 }
-    index($0, key "=") == 1 {
-      if (!found) print key "=" value
-      found = 1
-      next
-    }
-    { print }
-    END { if (!found) print key "=" value }
-  ' "$root/.env" > "$temporary"
-  chmod --reference="$root/.env" "$temporary"
-  chown --reference="$root/.env" "$temporary"
-  mv "$temporary" "$root/.env"
-}
 managed_files=(
   .env.example
   docker-compose.dev.yml
@@ -102,6 +48,7 @@ managed_files=(
   scripts/initialize-stack.sh
   scripts/run-stack-init.sh
   scripts/deploy-beta.sh
+  scripts/deploy-beta-helpers.sh
 )
 services=(
   typetype
@@ -118,7 +65,7 @@ proxy_url=$(awk -F= '$1 == "YOUTUBE_OUTBOUND_PROXY_URL" { value = substr($0, ind
 stage=validate-compose
 YOUTUBE_OUTBOUND_PROXY_URL="$proxy_url" docker compose \
   --project-directory "$root" --env-file "$root/.env" \
-  -f "$source_root/docker-compose.dev.yml" config -q
+  "${source_compose_files[@]}" config -q
 if [[ "$component" == all ]]; then
   "$source_root/scripts/check-youtube-egress.sh" "$project" "$proxy_url"
 fi
@@ -178,13 +125,11 @@ finish() {
   done
   cd "$root"
   if [[ "$component" == all ]]; then
-    docker compose --env-file .env -f docker-compose.dev.yml -f "$backup/rollback.yml" \
-      up -d --no-deps "${rollback_services[@]}"
+    compose -f "$backup/rollback.yml" up -d --no-deps "${rollback_services[@]}"
   else
-    docker compose --env-file .env -f docker-compose.dev.yml -f "$backup/rollback.yml" \
-      up -d --no-deps "$target_service"
+    compose -f "$backup/rollback.yml" up -d --no-deps "$target_service"
   fi
-  docker compose --env-file .env -f docker-compose.dev.yml -f "$backup/rollback.yml" ps
+  compose -f "$backup/rollback.yml" ps
   exit "$status"
 }
 trap finish EXIT
@@ -194,9 +139,6 @@ if [[ "$component" == token || "$component" == server || "$component" == all ]];
   set_env_value "YOUTUBE_REMOTE_LOGIN_ENABLED" "true"
 fi
 
-stage=prune-images
-prune_unused_typetype_images
-
 stage=install-stack-files
 install -m 644 "$source_root/.env.example" "$root/.env.example"
 install -m 644 "$source_root/docker-compose.dev.yml" "$root/docker-compose.dev.yml"
@@ -205,6 +147,7 @@ install -m 755 "$source_root/scripts/check-youtube-egress.sh" "$root/scripts/che
 install -m 755 "$source_root/scripts/initialize-stack.sh" "$root/scripts/initialize-stack.sh"
 install -m 755 "$source_root/scripts/run-stack-init.sh" "$root/scripts/run-stack-init.sh"
 install -m 755 "$source_root/scripts/deploy-beta.sh" "$root/scripts/deploy-beta.sh"
+install -m 644 "$source_root/scripts/deploy-beta-helpers.sh" "$root/scripts/deploy-beta-helpers.sh"
 install -d -m 700 "$root/.typetype-migration"
 if [[ -s "$root/garage.toml" ]]; then
   install -D -m 600 "$root/garage.toml" "$root/.typetype-migration/garage.toml"

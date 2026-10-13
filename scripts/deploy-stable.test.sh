@@ -9,6 +9,7 @@ source_root="$temporary/source"
 stack="$temporary/stack"
 fake_bin="$temporary/bin"
 mkdir -p "$source_root/scripts" "$stack/scripts" "$fake_bin"
+cp "$repository/docker-compose.recommender.yml" "$source_root/docker-compose.recommender.yml"
 
 for file in \
   .env.example \

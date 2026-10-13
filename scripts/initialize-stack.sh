@@ -64,3 +64,22 @@ if [ "$exists" != "1" ]; then
   psql -h "$postgres_host" -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
     -c 'CREATE DATABASE typetype_downloader'
 fi
+
+# Optional recommender: its own database (it manages its tables itself) and the secret it
+# shares with Server. Skipped entirely on a stack that does not install it.
+if [ "${RECOMMENDER_INSTALL:-false}" = "true" ]; then
+  ensure_secret \
+    /run/typetype-secrets/recommender_internal_token \
+    "${RECOMMENDER_INTERNAL_TOKEN:-}" \
+    SET_ME_RECOMMENDER_INTERNAL_TOKEN \
+    SET_ME_SHARED_SECRET
+  recommender_database="${RECOMMENDER_DATABASE:-typetype_recommender}"
+  exists="$(psql -h "$postgres_host" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
+    "SELECT 1 FROM pg_database WHERE datname='${recommender_database}'")"
+  if [ "$exists" != "1" ]; then
+    psql -h "$postgres_host" -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+      -c "CREATE DATABASE \"${recommender_database}\""
+  fi
+  psql -h "$postgres_host" -U "$POSTGRES_USER" -d "$recommender_database" \
+    -c 'CREATE EXTENSION IF NOT EXISTS vector'
+fi

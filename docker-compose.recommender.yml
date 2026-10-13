@@ -1,0 +1,62 @@
+services:
+  typetype-server:
+    environment:
+      RECOMMENDER_SERVICE_URL: ${RECOMMENDER_SERVICE_URL:-http://typetype-recommender:8190}
+      RECOMMENDER_INTERNAL_TOKEN_FILE: /run/typetype-secrets/recommender_internal_token
+      RECOMMENDER_INTERNAL_TOKEN: ""
+      RECOMMENDER_ENABLED: ${RECOMMENDER_ENABLED:-false}
+      RECOMMENDER_REQUEST_TIMEOUT_MS: ${RECOMMENDER_REQUEST_TIMEOUT_MS:-}
+      RECOMMENDER_PAGE_DEADLINE_MS: ${RECOMMENDER_PAGE_DEADLINE_MS:-}
+      RECOMMENDER_STREAM_REQUESTS_PER_MINUTE: ${RECOMMENDER_STREAM_REQUESTS_PER_MINUTE:-}
+      RECOMMENDER_RELATED_TTL_SECONDS: ${RECOMMENDER_RELATED_TTL_SECONDS:-}
+      RECOMMENDER_SEARCH_TTL_SECONDS: ${RECOMMENDER_SEARCH_TTL_SECONDS:-}
+      RECOMMENDER_CHANNEL_TTL_SECONDS: ${RECOMMENDER_CHANNEL_TTL_SECONDS:-}
+      RECOMMENDER_PAGE_TTL_SECONDS: ${RECOMMENDER_PAGE_TTL_SECONDS:-}
+      RECOMMENDER_SETTINGS_TTL_SECONDS: ${RECOMMENDER_SETTINGS_TTL_SECONDS:-}
+      RECOMMENDER_HISTORY_KEY_TTL_SECONDS: ${RECOMMENDER_HISTORY_KEY_TTL_SECONDS:-}
+      RECOMMENDER_PAGE_VARIANTS: ${RECOMMENDER_PAGE_VARIANTS:-}
+      RECOMMENDER_SOURCE_PARALLELISM: ${RECOMMENDER_SOURCE_PARALLELISM:-}
+
+  typetype-recommender:
+    image: ${TYPETYPE_RECOMMENDER_IMAGE:-ghcr.io/typetype-video/typetype-signals:latest}
+    environment:
+      RECOMMENDER_PORT: "${TYPETYPE_RECOMMENDER_PORT:-8190}"
+      RECOMMENDER_INTERNAL_TOKEN_FILE: /run/typetype-secrets/recommender_internal_token
+      RECOMMENDER_DATABASE_URL: ${RECOMMENDER_DATABASE_URL:-postgresql://${POSTGRES_USER:-typetype}:${POSTGRES_PASSWORD:-typetype}@postgres:5432/${RECOMMENDER_DATABASE:-typetype_recommender}}
+      RECOMMENDER_CACHE_URL: ${RECOMMENDER_CACHE_URL:-redis://dragonfly:6379}
+      RECOMMENDER_MODEL_CACHE: /models
+      RECOMMENDER_EMBEDDING_MODEL: ${RECOMMENDER_EMBEDDING_MODEL:-}
+      RECOMMENDER_EMBEDDING_FILE: ${RECOMMENDER_EMBEDDING_FILE:-}
+      RECOMMENDER_THREADS: ${RECOMMENDER_THREADS:-}
+      RECOMMENDER_HISTORY_TTL_SECONDS: ${RECOMMENDER_HISTORY_TTL_SECONDS:-}
+      RECOMMENDER_PLAN_TTL_SECONDS: ${RECOMMENDER_PLAN_TTL_SECONDS:-}
+      RECOMMENDER_PROFILE_TTL_SECONDS: ${RECOMMENDER_PROFILE_TTL_SECONDS:-}
+      RECOMMENDER_DEFAULT_ALGORITHM: ${RECOMMENDER_DEFAULT_ALGORITHM:-}
+    volumes:
+      - typetype_secrets:/run/typetype-secrets:ro
+      - recommender_models:/models
+    mem_limit: ${RECOMMENDER_MEMORY_LIMIT:-2g}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      dragonfly:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('RECOMMENDER_PORT','8190')+'/health',timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+    restart: unless-stopped
+
+  postgres:
+    image: ${TYPETYPE_POSTGRES_VECTOR_IMAGE:-pgvector/pgvector:pg17}
+
+  typetype-init:
+    environment:
+      RECOMMENDER_INSTALL: "true"
+      RECOMMENDER_DATABASE: ${RECOMMENDER_DATABASE:-typetype_recommender}
+      RECOMMENDER_INTERNAL_TOKEN: ${RECOMMENDER_INTERNAL_TOKEN:-}
+
+volumes:
+  recommender_models:

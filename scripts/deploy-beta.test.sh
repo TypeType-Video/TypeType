@@ -95,13 +95,13 @@ export PATH="$fake_bin:$PATH"
 digest="sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
 TYPETYPE_DEPLOY_COMPONENT=server \
-TYPETYPE_DEPLOY_IMAGE=ghcr.io/typetype-video/typetype-server-beta \
+TYPETYPE_DEPLOY_IMAGE=registery.typetype.video/typetype/server-beta \
 TYPETYPE_DEPLOY_DIGEST="$digest" \
   "$repository/scripts/deploy-beta.sh" "$repository"
 
 grep -Fq 'label=com.docker.compose.project=typetype-beta' "$FAKE_DOCKER_LOG"
 
-if ! grep -Fq "TYPETYPE_SERVER_BETA_IMAGE=ghcr.io/typetype-video/typetype-server-beta@$digest" \
+if ! grep -Fq "TYPETYPE_SERVER_BETA_IMAGE=registery.typetype.video/typetype/server-beta@$digest" \
   "$stack/.env"; then
   echo "the server image digest was not persisted" >&2
   sed -n '/^TYPETYPE_.*_IMAGE=/p' "$stack/.env" >&2
@@ -124,33 +124,19 @@ if grep -Eq 'compose .* pull $' "$FAKE_DOCKER_LOG"; then
   echo "a server rollout must not pull the full stack" >&2
   exit 1
 fi
-for source in \
-  TypeType-Frontend \
-  TypeType-Server \
-  TypeType-Downloader \
-  TypeType-Token; do
-  if ! grep -Fq \
-    "image prune --all --force --filter label=org.opencontainers.image.source=https://github.com/TypeType-Video/$source" \
-    "$FAKE_DOCKER_LOG"; then
-    echo "the beta rollout did not prune unused $source images" >&2
-    cat "$FAKE_DOCKER_LOG" >&2
-    exit 1
-  fi
-done
-prune_line=$(grep -n -m1 'image prune --all --force' "$FAKE_DOCKER_LOG" | cut -d: -f1)
-pull_line=$(grep -n -m1 'compose .* pull typetype-server' "$FAKE_DOCKER_LOG" | cut -d: -f1)
-if ((prune_line >= pull_line)); then
-  echo "unused images must be pruned before pulling a replacement" >&2
+if grep -Fq 'image prune' "$FAKE_DOCKER_LOG"; then
+  echo "a beta rollout must preserve images retained for production rollback" >&2
   cat "$FAKE_DOCKER_LOG" >&2
   exit 1
 fi
 
 previous_pin=$(grep '^TYPETYPE_SERVER_BETA_IMAGE=' "$stack/.env")
+printf 'services: {}\n' > "$stack/docker-compose.site.yml"
 : > "$FAKE_DOCKER_LOG"
 failed_digest="sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
 if FAKE_FAIL_UPDATE=1 \
   TYPETYPE_DEPLOY_COMPONENT=server \
-  TYPETYPE_DEPLOY_IMAGE=ghcr.io/typetype-video/typetype-server-beta \
+  TYPETYPE_DEPLOY_IMAGE=registery.typetype.video/typetype/server-beta \
   TYPETYPE_DEPLOY_DIGEST="$failed_digest" \
     "$repository/scripts/deploy-beta.sh" "$repository"; then
   echo "the simulated failed rollout unexpectedly succeeded" >&2
@@ -158,6 +144,9 @@ if FAKE_FAIL_UPDATE=1 \
 fi
 grep -Fxq "$previous_pin" "$stack/.env"
 grep -Fq 'up -d --no-deps typetype-server' "$FAKE_DOCKER_LOG"
+grep -Fq -- "-f $stack/docker-compose.site.yml" "$FAKE_DOCKER_LOG"
+grep -Fq -- "-f $stack/docker-compose.site.yml -f $stack/.deploy-rollbacks/" "$FAKE_DOCKER_LOG"
+grep -Fxq 'services: {}' "$stack/docker-compose.site.yml"
 if grep -Eq 'compose .* up .*typetype($| )' "$FAKE_DOCKER_LOG"; then
   echo "a server rollback must not recreate the frontend" >&2
   exit 1
