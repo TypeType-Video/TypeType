@@ -110,11 +110,8 @@ really appreciate the time you put into it.
 ## Issues Fixed in This Dev Line
 
 - [#254](https://github.com/TypeType-Video/TypeType/issues/254): Simplify the initial setup.
-- [#268](https://github.com/TypeType-Video/TypeType/issues/268): The player animation was doubled.
 - [#276](https://github.com/TypeType-Video/TypeType/issues/276): Importing a YouTube Takeout could fail.
 - [#283](https://github.com/TypeType-Video/TypeType/issues/283): Separate autoplay on open from autoplay next video.
-- [#284](https://github.com/TypeType-Video/TypeType/issues/284): Video loading took too long on the public instance.
-- [#285](https://github.com/TypeType-Video/TypeType/issues/285): Pause did not work in fullscreen on iOS web.
 - [#286](https://github.com/TypeType-Video/TypeType/issues/286): Visiting a BiliBili channel returned HTTP 422.
 - [#287](https://github.com/TypeType-Video/TypeType/issues/287): Support the BiliBili session cookie for higher quality.
 - [#288](https://github.com/TypeType-Video/TypeType/issues/288): Restore cursor visibility over a paused player.
@@ -128,18 +125,11 @@ playback fixes, the danmaku rework, the BiliBili collections, the system theme,
 the web fullscreen, Simplified Chinese, and the BiliBili server and token
 fixes. [Frontend #36](https://github.com/TypeType-Video/TypeType-Frontend/pull/36) to [Frontend #48](https://github.com/TypeType-Video/TypeType-Frontend/pull/48), [Server #89](https://github.com/TypeType-Video/TypeType-Server/pull/89), [Server #90](https://github.com/TypeType-Video/TypeType-Server/pull/90), [Token #21](https://github.com/TypeType-Video/TypeType-Token/pull/21)
 
-Thx to @Toastienergy for the German translation, the beta testing, the
-recommender setup feedback and the support.
-
-Thx to @Dorry-san for the fullscreen and slow-loading reports in
-[#284](https://github.com/TypeType-Video/TypeType/issues/284) and
-[#285](https://github.com/TypeType-Video/TypeType/issues/285).
+Thx to @Toastienergy for reviewing this release, testing the beta, the
+recommender setup feedback, and the German translation.
 
 Thx to @uniextra for the Takeout import report in
 [#276](https://github.com/TypeType-Video/TypeType/issues/276).
-
-Thx to @therealresonix for the doubled-animation report in
-[#268](https://github.com/TypeType-Video/TypeType/issues/268).
 
 Thx to @gohoski for the downloader report in
 [#304](https://github.com/TypeType-Video/TypeType/issues/304),
