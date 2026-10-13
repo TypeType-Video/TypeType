@@ -1,3 +1,164 @@
+# TypeType 1.10.0
+
+TypeType 1.10.0 brings recommendations you run yourself, a first version of the
+YouTube livestream chat, and a player that recovers instead of resetting. It
+also lands a large batch of community pull requests, a seasonal theme, and the
+documentation in four languages.
+
+Thx to everyone who reported, tested, translated or sent code. A big part of
+this release started with a report or a pull request from the community, and I
+really appreciate the time you put into it.
+
+## Self-Hosted Recommendations
+
+- Add an optional recommendation service to the stack, off by default and
+  offered by the installer. [#306](https://github.com/TypeType-Video/TypeType/pull/306)
+- Build the home feed on the instance from its own data, with an Algorithm page
+  to choose and tune how the feed is built. [Frontend #55](https://github.com/TypeType-Video/TypeType-Frontend/pull/55), [Server #95](https://github.com/TypeType-Video/TypeType-Server/pull/95)
+- Keep it opt-in per profile, store its settings, opinions and choices per
+  profile, and carry them in exports and backups. A refusal stays isolated to
+  the profile that made it.
+- Document the service, its install and the algorithm tuning. [Self-hosting guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/recommender), [Algorithm guide](https://typetype-video.github.io/Docs-TypeType/guide/algorithm)
+
+## Live Streams
+
+- Show the YouTube livestream chat beside the player, with the author name,
+  avatar and message. [#297](https://github.com/TypeType-Video/TypeType/issues/297)
+- Reconnect on its own when the chat drops, show a skeleton while it connects,
+  and batch incoming messages so the panel stays smooth.
+- Release the extractor resources after the chat ends and report the failing
+  stage when it cannot be initialized.
+
+## Playback and Providers
+
+- Keep the player mounted and the position intact when toggling cinema mode.
+  [#295](https://github.com/TypeType-Video/TypeType/issues/295)
+- Recover SABR playback instead of resetting it: keep the media mounted during a
+  recovery, wait for the network to come back, and confirm autoplay once the
+  stream resumes.
+- Keep YouTube extraction answering under load, pace the videos opened at the
+  provider, and renew the provider session after repeated refusals.
+  [Server #92](https://github.com/TypeType-Video/TypeType-Server/pull/92)
+- Support BiliBili multi-part videos and collections, with episode thumbnails
+  and section tabs in the collection panel. [#294](https://github.com/TypeType-Video/TypeType/issues/294), [Frontend #39](https://github.com/TypeType-Video/TypeType-Frontend/pull/39)
+- Support the BiliBili session cookie to unlock 1080p and 4K streams, and fix a
+  channel page returning HTTP 422. [#287](https://github.com/TypeType-Video/TypeType/issues/287), [#286](https://github.com/TypeType-Video/TypeType/issues/286)
+- Generate multi-quality DASH manifests so BiliBili plays at full resolution.
+  [Frontend #36](https://github.com/TypeType-Video/TypeType-Frontend/pull/36)
+- Normalize the BiliBili session timestamp and recommend the top matching
+  creator in search. [Frontend #46](https://github.com/TypeType-Video/TypeType-Frontend/pull/46), [Frontend #37](https://github.com/TypeType-Video/TypeType-Frontend/pull/37), [Server #90](https://github.com/TypeType-Video/TypeType-Server/pull/90)
+- Improve danmaku: synchronize playback, smooth the animation, support BiliBili
+  bullet comments, move the overlay beneath the control bar, and add a desktop
+  `D` key to toggle them. [Frontend #48](https://github.com/TypeType-Video/TypeType-Frontend/pull/48)
+
+## Watch Page and Playlists
+
+- Add persistent shuffle and a per-playlist choice to hide upcoming videos.
+  [#303](https://github.com/TypeType-Video/TypeType/issues/303)
+- Expand the watch metadata to the full width in cinema mode. [Frontend #47](https://github.com/TypeType-Video/TypeType-Frontend/pull/47)
+- Stop requesting the recommendation videos nobody is watching yet, and read the
+  notifications once a minute instead of repeatedly. [Frontend #54](https://github.com/TypeType-Video/TypeType-Frontend/pull/54)
+- Show a subscription feed being prepared instead of a misleading empty feed,
+  and prepare a card only when the pointer rests on it.
+- Prevent the recommended-videos and guest-screen flashes on the watch page, and
+  show a playlist skeleton while the page loads. [Frontend #42](https://github.com/TypeType-Video/TypeType-Frontend/pull/42), [Frontend #38](https://github.com/TypeType-Video/TypeType-Frontend/pull/38)
+
+## Interface and Languages
+
+- Add a system theme mode with a three-way toggle that follows the OS in real
+  time. [Frontend #44](https://github.com/TypeType-Video/TypeType-Frontend/pull/44)
+- Add Simplified Chinese to the web app, and the documentation in French,
+  German, Spanish and Simplified Chinese. [Frontend #45](https://github.com/TypeType-Video/TypeType-Frontend/pull/45)
+- Add web fullscreen mode with its control and hotkey, session-platform
+  navigation with anti-flicker transitions, and an instant redirect on the
+  landing page when the home is disabled. [Frontend #41](https://github.com/TypeType-Video/TypeType-Frontend/pull/41), [Frontend #43](https://github.com/TypeType-Video/TypeType-Frontend/pull/43), [Frontend #40](https://github.com/TypeType-Video/TypeType-Frontend/pull/40)
+- Normalize the channel search result layout.
+- Add a seasonal Halloween theme you can open from the navbar. It is a 3D scene,
+  so it asks for graphics acceleration and stays off on its own.
+  [Frontend #57](https://github.com/TypeType-Video/TypeType-Frontend/pull/57), [Frontend #56](https://github.com/TypeType-Video/TypeType-Frontend/pull/56)
+
+## Accounts and Imports
+
+- Allow TOTP and password 2FA fallback when the platform authenticator is not
+  supported during remote login. [Token #21](https://github.com/TypeType-Video/TypeType-Token/pull/21)
+- Import a YouTube Takeout faithfully in any language: keep the likes apart from
+  the dislikes, keep the current subscriptions with their dates, accept a handle
+  in the channel URL, and leave the ads out of the imported history.
+  [Server #93](https://github.com/TypeType-Video/TypeType-Server/pull/93)
+
+## Self-Hosting and Dependencies
+
+- Offer the optional recommender in the installer, and give the cache a memory
+  limit so it forgets its oldest entries instead of growing.
+  [#305](https://github.com/TypeType-Video/TypeType/pull/305)
+- Keep proxied thumbnails in the shared cache. [Server #94](https://github.com/TypeType-Video/TypeType-Server/pull/94)
+- Refresh the container base images, the Go and Kotlin dependencies, and the
+  Ktor and Jackson versions, and update the bundled extractor.
+- Move the build and validation pipelines to Woodpecker across the repositories.
+
+## Downloads
+
+- Fix H.264 and AV1 downloads, which failed because the requested codec profile
+  was matched case-sensitively. [#304](https://github.com/TypeType-Video/TypeType/issues/304)
+- Delete expired artifacts from Garage after their URL grace, evict expired jobs
+  from the cache, and move the downloader image to ffmpeg 9.
+
+## Issues Fixed in This Dev Line
+
+- [#254](https://github.com/TypeType-Video/TypeType/issues/254): Simplify the initial setup.
+- [#268](https://github.com/TypeType-Video/TypeType/issues/268): The player animation was doubled.
+- [#276](https://github.com/TypeType-Video/TypeType/issues/276): Importing a YouTube Takeout could fail.
+- [#283](https://github.com/TypeType-Video/TypeType/issues/283): Separate autoplay on open from autoplay next video.
+- [#284](https://github.com/TypeType-Video/TypeType/issues/284): Video loading took too long on the public instance.
+- [#285](https://github.com/TypeType-Video/TypeType/issues/285): Pause did not work in fullscreen on iOS web.
+- [#286](https://github.com/TypeType-Video/TypeType/issues/286): Visiting a BiliBili channel returned HTTP 422.
+- [#287](https://github.com/TypeType-Video/TypeType/issues/287): Support the BiliBili session cookie for higher quality.
+- [#288](https://github.com/TypeType-Video/TypeType/issues/288): Restore cursor visibility over a paused player.
+- [#289](https://github.com/TypeType-Video/TypeType/issues/289): Add configurable content density for grids and related videos.
+- [#294](https://github.com/TypeType-Video/TypeType/issues/294): Support BiliBili multi-part videos and collections.
+
+## Thx
+
+Thx to @Aquarius-Situla for the long run of frontend work on this release: the
+playback fixes, the danmaku rework, the BiliBili collections, the system theme,
+the web fullscreen, Simplified Chinese, and the BiliBili server and token
+fixes. [Frontend #36](https://github.com/TypeType-Video/TypeType-Frontend/pull/36) to [Frontend #48](https://github.com/TypeType-Video/TypeType-Frontend/pull/48), [Server #89](https://github.com/TypeType-Video/TypeType-Server/pull/89), [Server #90](https://github.com/TypeType-Video/TypeType-Server/pull/90), [Token #21](https://github.com/TypeType-Video/TypeType-Token/pull/21)
+
+Thx to @Toastienergy for the German translation, the beta testing, the
+recommender setup feedback and the support.
+
+Thx to @Dorry-san for the fullscreen and slow-loading reports in
+[#284](https://github.com/TypeType-Video/TypeType/issues/284) and
+[#285](https://github.com/TypeType-Video/TypeType/issues/285).
+
+Thx to @uniextra for the Takeout import report in
+[#276](https://github.com/TypeType-Video/TypeType/issues/276).
+
+Thx to @therealresonix for the doubled-animation report in
+[#268](https://github.com/TypeType-Video/TypeType/issues/268).
+
+Thx to @gohoski for the downloader report in
+[#304](https://github.com/TypeType-Video/TypeType/issues/304),
+@AphoticUmbral for the shuffle request and the loading report in
+[#303](https://github.com/TypeType-Video/TypeType/issues/303) and
+[#302](https://github.com/TypeType-Video/TypeType/issues/302), @ilar for the
+livestream chat request in [#297](https://github.com/TypeType-Video/TypeType/issues/297),
+@drJeckyll for the autoplay discussion in
+[#283](https://github.com/TypeType-Video/TypeType/issues/283), and @arcoast for
+the setup feedback in [#254](https://github.com/TypeType-Video/TypeType/issues/254).
+
+A special thx to sponsors [@Toastienergy](https://github.com/Toastienergy),
+[@crichemond](https://github.com/crichemond) and
+[@filippobaroni](https://github.com/filippobaroni) for supporting TypeType.
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.9.0
 
 This is a big one. More than two weeks of work went into making playback more reliable, bringing subscription groups to desktop, improving Takeout and self-hosting, and making TypeType’s approach to AI easier to find. Many of these improvements started with community reports and PRs. We’re grateful to everyone who helped make this release happen.
