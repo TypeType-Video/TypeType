@@ -151,9 +151,8 @@ livestream chat request in [#297](https://github.com/TypeType-Video/TypeType/iss
 [#283](https://github.com/TypeType-Video/TypeType/issues/283), and @arcoast for
 the setup feedback in [#254](https://github.com/TypeType-Video/TypeType/issues/254).
 
-A special thx to sponsors [@Toastienergy](https://github.com/Toastienergy),
-[@crichemond](https://github.com/crichemond) and
-[@filippobaroni](https://github.com/filippobaroni) for supporting TypeType.
+A special thx to sponsors [@Toastienergy](https://github.com/Toastienergy) and
+[@crichemond](https://github.com/crichemond) for supporting TypeType.
 
 If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
 

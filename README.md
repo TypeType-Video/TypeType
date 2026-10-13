@@ -197,15 +197,6 @@ Thank you to [@Toastienergy](https://github.com/Toastienergy) and
 recurring GitHub Sponsors contributions. It helps me cover the infrastructure
 and spend more time improving the project.
 
-### One-time donor
-
-<p>
-  <a href="https://github.com/filippobaroni" title="@filippobaroni"><img src="https://github.com/filippobaroni.png?size=128" alt="@filippobaroni" width="64" height="64"></a>
-</p>
-
-I also thank [@filippobaroni](https://github.com/filippobaroni) for the one-time
-GitHub Sponsors donation that helped support TypeType.
-
 If you want to support TypeType financially, you can do so through
 [GitHub Sponsors](https://github.com/sponsors/Priveetee).
 
