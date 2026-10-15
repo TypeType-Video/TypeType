@@ -80,7 +80,7 @@ services:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
       TYPETYPE_API_BASE: ${TYPETYPE_API_BASE:-http://typetype-beta-server:8080}
-      DB_URL: ${DB_URL:-postgres://${POSTGRES_USER:-typetype}:${POSTGRES_PASSWORD:-typetype}@postgres:5432/typetype_downloader?sslmode=disable}
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/typetype_downloader}
       DB_USER: ${DB_USER:-${POSTGRES_USER:-typetype}}
       DB_PASSWORD: ${DB_PASSWORD:-${POSTGRES_PASSWORD:-typetype}}
       REDIS_HOST: dragonfly
