@@ -1,6 +1,6 @@
-# TypeType 1.10.1
+# TypeType 1.11.0
 
-TypeType 1.10.1 adds YouTube account linking for TV-backed playback, expands BiliBili channel and playlist tools, and improves recovery after seeks. Authenticated YouTube streams now keep their real video title and channel name in the watch page and history.
+TypeType 1.11.0 adds YouTube account linking for TV-backed playback, expands BiliBili channel and playlist tools, and improves recovery after seeks. Authenticated YouTube streams now keep their real video title and channel name in the watch page and history.
 
 ## YouTube Accounts and Playback
 
