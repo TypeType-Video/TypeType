@@ -1,3 +1,51 @@
+# TypeType 1.10.1
+
+TypeType 1.10.1 adds YouTube account linking for TV-backed playback, expands BiliBili channel and playlist tools, and improves recovery after seeks. Authenticated YouTube streams now keep their real video title and channel name in the watch page and history.
+
+## YouTube Accounts and Playback
+
+- Connect YouTube with a TV device-code flow or import an existing session cookie. Sessions are encrypted at rest and refreshed automatically. [Frontend device login](https://github.com/TypeType-Video/TypeType-Frontend/commit/adce8871), [Server changes](https://github.com/TypeType-Video/TypeType-Server/compare/36e1e7d174df9161900c56e118e3543375e60c45...65c25cda709206e6ad06c639484513781c768360), [Token changes](https://github.com/TypeType-Video/TypeType-Token/compare/a5024bb55831d459b644d2733bf8b4296af1ef98...ad3064246552d8c92a7fdd036dd516cdffe90627)
+- Use the matching TV player identity and integrity token for authenticated SABR playback, including age-restricted videos.
+- Keep the YouTube title and channel name on authenticated video pages and in watch history instead of the generic provider label.
+- Recover protected SABR initialization requests and ignore stale playback-position updates after a seek.
+
+## BiliBili
+
+- Browse channel collections and series, search within a channel, and save public playlists. [Frontend #60](https://github.com/TypeType-Video/TypeType-Frontend/pull/60)
+- Refresh linked BiliBili sessions automatically, including rotated refresh credentials.
+- Preserve BiliBili API paths through the reverse proxy and keep those requests on the intended provider routes.
+
+## Watch and Discovery
+
+- Choose audio-only playback for a playlist and keep playlist controls in sync with the active mode.
+- Exclude Shorts from normal video browsing and filter search results for livestreams.
+- Render BiliBili danmaku emotes and richer comment text.
+- Give video details, related videos, and comments more room on the watch page.
+- Preserve playback progress through player reattachment and improve recovery from seek/decode failures. This addresses the black-screen pause reported in [#323](https://github.com/TypeType-Video/TypeType/issues/323).
+
+## Interface and Reliability
+
+- Respect iOS safe areas when TypeType is installed as a web app. [Frontend #64](https://github.com/TypeType-Video/TypeType-Frontend/pull/64)
+- Keep the login redirect clear when guest mode is disabled, and hide registration when it is unavailable. [Frontend #61](https://github.com/TypeType-Video/TypeType-Frontend/pull/61)
+- Refine Simplified Chinese wording. [Frontend #59](https://github.com/TypeType-Video/TypeType-Frontend/pull/59)
+- Retry push deliveries until the client acknowledges them, and invalidate unread-count caches when notification preferences change.
+- Parse Unicode whitespace in YouTube Takeout dates.
+
+## Thx
+
+- @Aquarius-Situla for the BiliBili channel tools, account flow, iOS safe-area work, and Simplified Chinese updates. [Frontend #59](https://github.com/TypeType-Video/TypeType-Frontend/pull/59), [#60](https://github.com/TypeType-Video/TypeType-Frontend/pull/60), [#61](https://github.com/TypeType-Video/TypeType-Frontend/pull/61), [#64](https://github.com/TypeType-Video/TypeType-Frontend/pull/64)
+- @AphoticUmbral for reporting the seek recovery issue in [#323](https://github.com/TypeType-Video/TypeType/issues/323).
+
+Thx u guys, [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond), for supporting TypeType!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.10.0
 
 TypeType 1.10.0 brings an experimental recommender you run yourself, a first version of the YouTube livestream chat, and a player that recovers instead of resetting. It also lands a large batch of community pull requests, a seasonal theme, and the documentation in four languages.
