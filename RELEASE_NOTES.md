@@ -1,3 +1,57 @@
+# TypeType 1.11.1
+
+TypeType 1.11.1 is a reliability and performance release. NicoNico playback works again, videos start much faster, and the server now handles YouTube bot checks without breaking playback or getting the instance flagged in the first place.
+
+## Playback
+
+- Fix NicoNico playback after NicoNico changed its watch data format. [Extractor changes](https://github.com/TypeType-Video/PipePipeExtractor/compare/705e2649f96e69d7525dac4fa625c60498639f81...631988d64ba4ebddab8a182d2a58cbe1ace7efea)
+- Start YouTube videos faster: a warm start now reaches the first frame in about 0.2 s instead of 0.9 s, and a cold start in about 2 s instead of 3.4 s. [Server changes](https://github.com/TypeType-Video/TypeType-Server/compare/e36c464255994c8adcf0ed9d950e533266923c4e...10d72e779ad7b276fc185bb17a1b9316557547ed)
+- Prefer warm BiliBili mirror CDNs, which cuts the slowest cold starts from about 9 s to under 4 s.
+- Retry a failed media request without clearing the buffer or restarting the video from the beginning. This addresses [#347](https://github.com/TypeType-Video/TypeType/issues/347). [Player changes](https://github.com/TypeType-Video/TypeType-Player/compare/f03a8bcc5fdb040a82e1b50e319d95e628b17f4c...2381ffe51041ec8d4fc7d5ec0f00f6d95f3c874e)
+- Keep the requested position when seeking while a video is still loading. This addresses [#321](https://github.com/TypeType-Video/TypeType/issues/321).
+- Keep SABR sessions alive when a single segment cannot be fetched, and recover segments that YouTube did not return. This covers [#339](https://github.com/TypeType-Video/TypeType/issues/339) and [#340](https://github.com/TypeType-Video/TypeType/issues/340).
+- Cache finished live streams briefly, so replays of past streams no longer run a full extraction on every play.
+
+## YouTube Bot Checks
+
+- Refresh subscription feeds on a timer instead of on every read. TypeType now sends about 12 times fewer requests to YouTube, which was the main reason instances got bot-checked.
+- Answer a bot check, a rate limit or an upstream timeout with a clear status (503, 429 or 504) and a `Retry-After` delay instead of a generic 502.
+- Pause YouTube requests while the instance is blocked, renew the session once, and resume automatically when the block lifts.
+- Rebuild playback sessions after a PO token refresh, so playback recovers instead of failing with 403. [Token changes](https://github.com/TypeType-Video/TypeType-Token/compare/bfcf9b0b909b2fdf72e54e7a4dcbb89e1ea2b2ac...705af3cff7930309cfd323ff78d63703fcbee7c8)
+- Warm PO tokens at startup, bound every token request with a timeout, recover from a browser crash, and report token readiness on `/ready`.
+- Respect `Retry-After` in the web player, so clients no longer flood a busy server, and tell viewers when a stream is being retried.
+
+## Data and Caching
+
+- Never cache empty or failed channel pages, searches, comments, related videos or Shorts feeds. Keep the last good result when a provider fails. This fixes [#346](https://github.com/TypeType-Video/TypeType/issues/346) for every service.
+- Keep a channel's videos in the subscription feed when that channel fails to load.
+- Return `200` with an explicit favorite status instead of a `404` for videos that are not favorited. This addresses [#333](https://github.com/TypeType-Video/TypeType/issues/333).
+- Turn notifications on or off for every channel in one request, and include the video thumbnail in push notifications.
+
+## Interface and Performance
+
+- Load about 28% less JavaScript on the first page. [Frontend changes](https://github.com/TypeType-Video/TypeType-Frontend/compare/ec6a88af10402a558ddbd861133886696f4ca1af...c7aa23941a1db00800b90e703dfa8b297a4f2255)
+- Remove the remote browser YouTube login, which no longer worked, and keep the TV device-code login. This addresses [#250](https://github.com/TypeType-Video/TypeType/issues/250).
+- Match the startup loader and page spinner to the light theme. This addresses [#345](https://github.com/TypeType-Video/TypeType/issues/345).
+- Stop answering 500 when a client closes a connection early, and stop saving unchanged caption styles.
+
+## Thx
+
+- @Aquarius-Situla for the detailed reports on the proxy, the BiliBili channel cache and the favorite status. [#347](https://github.com/TypeType-Video/TypeType/issues/347), [#346](https://github.com/TypeType-Video/TypeType/issues/346), [#345](https://github.com/TypeType-Video/TypeType/issues/345), [#333](https://github.com/TypeType-Video/TypeType/issues/333)
+- @MatthiasGrandl for tracing the SABR recovery bugs. [#339](https://github.com/TypeType-Video/TypeType/issues/339), [#340](https://github.com/TypeType-Video/TypeType/issues/340)
+- @AphoticUmbral for reporting the seek issue in [#321](https://github.com/TypeType-Video/TypeType/issues/321).
+- @kinouzero for the YouTube login report in [#250](https://github.com/TypeType-Video/TypeType/issues/250).
+
+Thx u guys, [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond), for supporting TypeType!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.11.0
 
 TypeType 1.11.0 adds YouTube account linking for TV-backed playback, expands BiliBili channel and playlist tools, and improves recovery after seeks. Authenticated YouTube streams now keep their real video title and channel name in the watch page and history.
