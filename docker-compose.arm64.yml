@@ -1,4 +1,4 @@
 services:
   dragonfly:
-    image: redis:7-alpine
+    image: redis:7.4.11-alpine3.21
     command: ["redis-server", "--save", "", "--appendonly", "no"]
