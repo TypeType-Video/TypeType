@@ -1,3 +1,42 @@
+# TypeType 1.12.0
+
+TypeType 1.12.0 brings BiliBili verified badges, a player color setting and subtitles in audio-only mode, and fixes a batch of BiliBili and YouTube playback bugs.
+
+## New
+
+- Show BiliBili verified badges: a yellow lightning for verified people and a blue one for organizations, in search and on channel pages. Verified channels now come first in BiliBili channel search. This addresses [#354](https://github.com/TypeType-Video/TypeType/issues/354). [Extractor changes](https://github.com/TypeType-Video/PipePipeExtractor/compare/631988d64ba4ebddab8a182d2a58cbe1ace7efea...b49ced6760c37d6c68a85fed4173268212c599cf)
+- Pick the player color in Settings > Interface: default, white, red, pink, purple, blue, green or orange. It colors the progress bar and the controls, for video and audio-only playback. [Frontend changes](https://github.com/TypeType-Video/TypeType-Frontend/compare/2d8f45e8b4c555c97e59196930db6631a67f156e...80a5e93a182f893bf7b34d505093a76351e48f2c)
+- Show subtitles in audio-only mode. This addresses [#342](https://github.com/TypeType-Video/TypeType/issues/342).
+
+## Playback
+
+- Resume a BiliBili media segment from the missing bytes when the CDN cuts it mid-transfer, and switch to another official BiliBili mirror when a range fails or is too slow, instead of answering 500. This addresses [#347](https://github.com/TypeType-Video/TypeType/issues/347). [Server changes](https://github.com/TypeType-Video/TypeType-Server/compare/326e05f956d857839fc87a310ce3ba913d28a779...b75c7cc573f9e756a0a160404860be82818c6943)
+- Reload an expired BiliBili stream instead of freezing when seeking or rewinding after a long watch, and use smaller seek buffers. This fixes [#358](https://github.com/TypeType-Video/TypeType/issues/358).
+- Keep the BiliBili player when returning from the mini-player instead of reloading it. This fixes [#350](https://github.com/TypeType-Video/TypeType/issues/350).
+- Replay a YouTube video from the start after it ends instead of getting stuck. This fixes [#357](https://github.com/TypeType-Video/TypeType/issues/357). [Player changes](https://github.com/TypeType-Video/TypeType-Player/compare/2381ffe51041ec8d4fc7d5ec0f00f6d95f3c874e...9888aad46e336b0130f7caf28ef588a44aeb3dab)
+- Land YouTube seeks on the target instead of overshooting and jumping back. This addresses [#351](https://github.com/TypeType-Video/TypeType/issues/351).
+- Fit vertical videos in the mini-player instead of showing a large black box. This fixes [#334](https://github.com/TypeType-Video/TypeType/issues/334).
+
+## Server
+
+- Fix a server freeze under load: waiting for an extraction slot no longer blocks the threads that serve requests.
+- Load later pages of BiliBili collections instead of failing with 422, and name their uploader. This fixes [#356](https://github.com/TypeType-Video/TypeType/issues/356).
+
+## Thx
+
+- @Aquarius-Situla for the many detailed BiliBili and YouTube player reports. [#358](https://github.com/TypeType-Video/TypeType/issues/358), [#357](https://github.com/TypeType-Video/TypeType/issues/357), [#356](https://github.com/TypeType-Video/TypeType/issues/356), [#354](https://github.com/TypeType-Video/TypeType/issues/354), [#351](https://github.com/TypeType-Video/TypeType/issues/351), [#350](https://github.com/TypeType-Video/TypeType/issues/350), [#347](https://github.com/TypeType-Video/TypeType/issues/347), [#334](https://github.com/TypeType-Video/TypeType/issues/334)
+- @AphoticUmbral for asking for subtitles in audio-only mode in [#342](https://github.com/TypeType-Video/TypeType/issues/342).
+
+Thx u guys, [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond), for supporting TypeType!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.11.1
 
 TypeType 1.11.1 is a reliability and performance release. NicoNico playback works again, videos start much faster, and the server now handles YouTube bot checks without breaking playback or getting the instance flagged in the first place.
