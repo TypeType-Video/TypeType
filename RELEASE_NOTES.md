@@ -1,3 +1,39 @@
+# TypeType 1.13.0
+
+TypeType 1.13.0 brings QR code sign-in for TypeType TV, a BiliBili buffer setting and NicoNico ID search, and fixes NicoNico playback, YouTube seeks, BiliBili stalls and videos failing to load after a night away.
+
+## New
+
+- Sign in to TypeType TV by scanning a QR code and confirming on a signed-in phone, with [TypeType TV 0.3.0](https://github.com/TypeType-Video/TypeType-TV/releases/tag/v0.3.0) or later. Admins can turn it off in the admin settings. [Server changes](https://github.com/TypeType-Video/TypeType-Server/compare/d265ca0aa5113ea722e48333d955ba7d2574964b...f3eaacb0566165b395256dbb4bed158a86aaab8f) [Frontend changes](https://github.com/TypeType-Video/TypeType-Frontend/compare/31440fde04fc81aeabe3249ec8e085bfb0df59a9...c516e1618671065790d5187451185a71d66302d9)
+- Choose how far ahead BiliBili videos load in Settings > Playback: Saver (8 s), Normal (15 s, the default) or Large (30 s). The buffer grows with the playback speed, up to 120 s. This addresses [#347](https://github.com/TypeType-Video/TypeType/issues/347).
+- Open a NicoNico video by typing its ID, like `sm22314266`, in search.
+
+## Playback
+
+- Play NicoNico videos again: whole HLS segments are loaded so the encrypted audio and video decrypt. This fixes [#360](https://github.com/TypeType-Video/TypeType/issues/360). [Player changes](https://github.com/TypeType-Video/TypeType-Player/compare/9888aad46e336b0130f7caf28ef588a44aeb3dab...eb12cdef121be85175a1e32c779dfa6df2391a05)
+- Keep YouTube seeks hidden until playback resumes at the target, instead of playing the part before it and then jumping back. This fixes [#351](https://github.com/TypeType-Video/TypeType/issues/351).
+- Move the progress bar and the time to a YouTube seek or replay target right away, while the video loads. This follows up on [#357](https://github.com/TypeType-Video/TypeType/issues/357).
+- Keep BiliBili gap jumping on after a manual quality change, so a small hole in the buffer no longer freezes playback for good. This addresses [#361](https://github.com/TypeType-Video/TypeType/issues/361).
+- Fit vertical videos inside the mini-player on iOS Safari. This addresses [#334](https://github.com/TypeType-Video/TypeType/issues/334).
+
+## Sign-in
+
+- Refresh an expired session before loading a video, comments, search, recommendations or playlists, instead of failing with 401 until the page is reloaded after a night or a sleeping device. This fixes [#362](https://github.com/TypeType-Video/TypeType/issues/362).
+
+## Thx
+
+- @Aquarius-Situla for the detailed NicoNico, BiliBili, YouTube and sign-in reports, and the mini-player fix idea. [#362](https://github.com/TypeType-Video/TypeType/issues/362), [#361](https://github.com/TypeType-Video/TypeType/issues/361), [#360](https://github.com/TypeType-Video/TypeType/issues/360), [#351](https://github.com/TypeType-Video/TypeType/issues/351), [#347](https://github.com/TypeType-Video/TypeType/issues/347), [#334](https://github.com/TypeType-Video/TypeType/issues/334)
+
+Thx u guys, [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond), for supporting TypeType!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.12.0
 
 TypeType 1.12.0 brings BiliBili verified badges, a player color setting and subtitles in audio-only mode, and fixes a batch of BiliBili and YouTube playback bugs.
