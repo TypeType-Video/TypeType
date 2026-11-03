@@ -37,6 +37,23 @@ fi
 YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \
   docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 
+for compose_file in docker-compose.yml docker-compose.dev.yml; do
+  db_config="$(
+    env -u DB_URL -u DB_USER -u DB_PASSWORD \
+      POSTGRES_USER='d@n.de' POSTGRES_PASSWORD='p@ss' \
+      docker compose --env-file .env.example -f "$compose_file" config
+  )"
+  for expected in \
+    'DB_URL: jdbc:postgresql://postgres:5432/typetype_downloader' \
+    'DB_USER: d@n.de' \
+    'DB_PASSWORD: p@ss'; do
+    if ! grep -Fq "$expected" <<<"$db_config"; then
+      echo "downloader database config did not preserve separate credentials: $expected" >&2
+      exit 1
+    fi
+  done
+done
+
 custom_config="$(TYPETYPE_SERVER_HOST=custom-server \
   TYPETYPE_TOKEN_HOST=custom-token \
   TYPETYPE_DOWNLOADER_HOST=custom-downloader \
