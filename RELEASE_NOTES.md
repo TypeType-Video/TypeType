@@ -31,7 +31,7 @@ TypeType 1.15.0 brings a playback queue on the web, a hold-to-fast-forward speed
 ## Thx
 
 - @Aquarius-Situla for the reports [#365](https://github.com/TypeType-Video/TypeType/issues/365), [#368](https://github.com/TypeType-Video/TypeType/issues/368) to [#375](https://github.com/TypeType-Video/TypeType/issues/375), the BiliBili CDN routing and prefetch work and the Simplified Chinese translations.
-- @gohoski for [#367](https://github.com/TypeType-Video/TypeType/issues/367), @303inmyheart for [#377](https://github.com/TypeType-Video/TypeType/issues/377), @JamesMowery for [#378](https://github.com/TypeType-Video/TypeType/issues/378), and @Lucyfire for [#376](https://github.com/TypeType-Video/TypeType/issues/376) and for tracking down the Docker network issue in [#312](https://github.com/TypeType-Video/TypeType/discussions/312).
+- @gohoski for [#367](https://github.com/TypeType-Video/TypeType/issues/367), @303inmyheart for [#377](https://github.com/TypeType-Video/TypeType/issues/377), @JamesMowery for [#378](https://github.com/TypeType-Video/TypeType/issues/378), and @Lucyfire for [#376](https://github.com/TypeType-Video/TypeType/issues/376).
 
 Thx u guys, [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond), for supporting TypeType!
 
