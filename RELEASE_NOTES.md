@@ -1,3 +1,59 @@
+# TypeType 1.15.0
+
+TypeType 1.15.0 brings a playback queue on the web, a hold-to-fast-forward speed setting and YouTube subtitles through the server, and fixes progress lost when a BiliBili stream renews, endless loading after a night away and the missing loop toggle. From this release on, every component uses the TypeType version: web, server, token and downloader are all 1.15.0.
+
+## New
+
+- Play next and Add to queue in the menu of every video. The queue shows on the watch page, plays in order and stays after a reload of the tab. This addresses [#377](https://github.com/TypeType-Video/TypeType/issues/377).
+- Choose the hold-to-fast-forward speed in Settings > Playback, from 1.5× to 4×, and see it while holding. This addresses [#373](https://github.com/TypeType-Video/TypeType/issues/373).
+- Keep the speed u picked for the next videos. This addresses [#369](https://github.com/TypeType-Video/TypeType/issues/369).
+- Load YouTube subtitles through the server, with a fallback to the stream track when the fresh one fails. This addresses [#367](https://github.com/TypeType-Video/TypeType/issues/367).
+- Open legacy BiliBili AV links and numbers under their BV ID. This addresses [#365](https://github.com/TypeType-Video/TypeType/issues/365).
+
+## Playback
+
+- Switching to audio only and back keeps playing while the new stream gets ready, so the cut is much shorter and the position no longer jumps back or shows 0:00.
+- Resume from the current position when a BiliBili stream expires and renews, instead of going back to 0:00 and overwriting the saved progress. This fixes [#374](https://github.com/TypeType-Video/TypeType/issues/374).
+- Bring back the loop toggle and hide the duplicate quality menu that came with Vidstack 1.15. This fixes [#370](https://github.com/TypeType-Video/TypeType/issues/370).
+- Keep the docked player size while it scrolls out in cinema mode. This fixes [#372](https://github.com/TypeType-Video/TypeType/issues/372).
+- Recover YouTube playback when the attestation stays pending, instead of stopping.
+- Contain portrait videos in the docked player on WebKit ([#334](https://github.com/TypeType-Video/TypeType/issues/334)), and on the watch page hide and pause the floating player instead of closing it ([#364](https://github.com/TypeType-Video/TypeType/issues/364)).
+- Admins of instances outside mainland China can now set a BiliBili CDN region, split large ranges and prefetch them, and skip Akamai mirrors. Everything stays off unless u set it.
+
+## Fixes
+
+- Give up a session refresh that never answers, so the watch page no longer loads forever after a night away. This fixes [#368](https://github.com/TypeType-Video/TypeType/issues/368).
+- Search suggestions work on instances with guest access turned off. This fixes [#371](https://github.com/TypeType-Video/TypeType/issues/371).
+- Show the like count of a comment when it has no text, like 0 likes. This fixes [#375](https://github.com/TypeType-Video/TypeType/issues/375).
+- Blocked videos, channels and keywords no longer show in the subscription feed and the subscription Shorts.
+- The menu of a video card always sits at the right edge of the card, even when the title is short. This addresses [#378](https://github.com/TypeType-Video/TypeType/issues/378).
+
+## Thx
+
+- @Aquarius-Situla for the reports [#365](https://github.com/TypeType-Video/TypeType/issues/365), [#368](https://github.com/TypeType-Video/TypeType/issues/368) to [#375](https://github.com/TypeType-Video/TypeType/issues/375), the BiliBili CDN routing and prefetch work and the Simplified Chinese translations.
+- @gohoski for [#367](https://github.com/TypeType-Video/TypeType/issues/367), @303inmyheart for [#377](https://github.com/TypeType-Video/TypeType/issues/377), @JamesMowery for [#378](https://github.com/TypeType-Video/TypeType/issues/378), and @Lucyfire for [#376](https://github.com/TypeType-Video/TypeType/issues/376) and for tracking down the Docker network issue in [#312](https://github.com/TypeType-Video/TypeType/discussions/312).
+
+Thx u guys, [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond), for supporting TypeType!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Versions
+
+There is no TypeType 1.14. Until now each component had its own number, and the server already shipped 1.14.0 and 1.14.1, so 1.15.0 is the first number all components could share.
+
+From now on every component ships with the TypeType version. TypeType 1.15.0 is web 1.15.0, server 1.15.0, token 1.15.0 and downloader 1.15.0, even when a component did not change, so u only need one number. Here is how it works:
+
+- `dev` is where we work. Every push builds the beta images, so beta changes all the time and can break.
+- Each component gets a `staging` branch for pre-releases of the next version, like `1.16.0-rc.1`. That's where things get checked before a release.
+- When everything is stable together, every component is merged into `main` and tagged with the same version at the same time.
+- `latest` only moves on release day, so a pull always gives u a set that was released together. To roll back, set the previous version for every image.
+
+## Updating
+
+Every image of this release is 1.15.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.13.0
 
 TypeType 1.13.0 brings QR code sign-in for TypeType TV, a BiliBili buffer setting and NicoNico ID search, and fixes NicoNico playback, YouTube seeks, BiliBili stalls and videos failing to load after a night away.
