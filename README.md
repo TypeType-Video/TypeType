@@ -33,26 +33,38 @@ multi-service discovery, personal libraries, downloads, administration, and
 SABR playback without installing a client.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/TypeType-Video/TypeType/7f46bbb/assets/screenshots/01-hero-watch-desktop.png" alt="TypeType playing a YouTube video" width="100%">
+  <img src="assets/screenshots/home.png" alt="The TypeType home page with continue watching and recommendations" width="100%">
 </p>
 
 ### Search across three services
 
 <p align="center">
-  <img src="assets/gifs/01-multi-service-search-fluid.gif" alt="Browsing search results from YouTube, NicoNico, and BiliBili" width="960">
+  <img src="assets/gifs/search.gif" alt="Searching from the search bar, then opening the Live streams tab" width="960">
 </p>
 
-### Personal library
-
 <p align="center">
-  <img src="assets/gifs/02-library-flow-fluid.gif" alt="Browsing playlists and personal video libraries in TypeType" width="960">
+  <img src="assets/gifs/bilibili-channel.gif" alt="A BiliBili channel: opening Collections & Series, then searching the channel" width="960">
 </p>
 
 ### Web playback
 
 <p align="center">
-  <img src="assets/gifs/03-watch-flow-fluid.gif" alt="Browsing a video page and its player in TypeType" width="960">
+  <img src="assets/gifs/watch.gif" alt="A video playing on a self-hosted instance" width="960">
 </p>
+
+<p align="center">
+  <img src="assets/gifs/cinema.gif" alt="Cinema mode, the player widened with the page dimmed" width="960">
+</p>
+
+| Audio only with subtitles | Player color |
+| --- | --- |
+| ![Audio-only playback with English subtitles under the title](assets/screenshots/audio-only-subtitles.png) | ![The player with a purple progress bar](assets/screenshots/player-color.png) |
+
+### Personal library
+
+| Subscriptions | Playlists | History |
+| --- | --- | --- |
+| ![Your subscriptions feed](assets/screenshots/subscriptions.png) | ![Your playlists](assets/screenshots/playlists.png) | ![Your watch history](assets/screenshots/history.png) |
 
 ### Mobile web
 
