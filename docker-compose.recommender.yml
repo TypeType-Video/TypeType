@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: ${TYPETYPE_POSTGRES_VECTOR_IMAGE:-pgvector/pgvector:pg17}
+    image: ${TYPETYPE_POSTGRES_VECTOR_IMAGE:-pgvector/pgvector:0.8.7-pg17}
 
   typetype-init:
     environment:
