@@ -11,6 +11,7 @@ AUTO_APPROVE=0
 RECOMMENDER_STACK=0
 REF_SET=0
 TYPETYPE_VERSION=""
+IMAGE_CHANNEL=""
 INSTALL_DIR_SET=0
 ENV_FILE_CREATED=0
 BACKUP_DIR=""
@@ -29,6 +30,14 @@ DEFAULT_BETA_SERVER_HOST="typetype-beta-server"
 DEFAULT_BETA_SERVER_URL="http://typetype-beta-server:8080"
 PLACEHOLDER_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN="SET_ME_SHARED_SECRET"
 
+choose_image_channel() {
+  if [[ -n "${IMAGE_CHANNEL}" && "${IMAGE_CHANNEL}" != "$1" ]]; then
+    echo "[install] Use only one of --version, --rc and --latest" >&2
+    exit 1
+  fi
+  IMAGE_CHANNEL="$1"
+}
+
 usage() {
   cat <<'EOF'
 TypeType one-line installer (end-user friendly)
@@ -39,6 +48,8 @@ Usage:
 Options:
   --ref <git-ref>       Git ref to download (default: main)
   --version <x.y.z>     Pin every TypeType image to this release (default: latest)
+  --rc                  Follow the release candidate images (default ref: staging)
+  --latest              Follow the latest release again after --version or --rc
   --dir <path>          Install directory (default: ~/typetype-stack)
   --beta                Install the beta Compose stack only (default ref: dev)
   --yes                 Start Docker automatically without prompts
@@ -60,8 +71,18 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --version)
+      choose_image_channel version
       TYPETYPE_VERSION="$2"
       shift 2
+      ;;
+    --rc)
+      choose_image_channel rc
+      TYPETYPE_VERSION="rc"
+      shift
+      ;;
+    --latest)
+      choose_image_channel latest
+      shift
       ;;
     --dir)
       INSTALL_DIR="$2"
@@ -104,19 +125,27 @@ if [[ ${BETA_STACK} -eq 1 && ${REF_SET} -eq 0 ]]; then
   REF="dev"
 fi
 
-if [[ -n "${TYPETYPE_VERSION}" ]]; then
-  if [[ ${BETA_STACK} -eq 1 ]]; then
-    echo "[install] --version pins release images, it cannot be used with --beta" >&2
-    exit 1
-  fi
-  if [[ ! "${TYPETYPE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
-    echo "[install] --version looks like 1.15.0 or 1.16.0-rc.1, got ${TYPETYPE_VERSION}" >&2
-    exit 1
-  fi
+if [[ -n "${IMAGE_CHANNEL}" && ${BETA_STACK} -eq 1 ]]; then
+  echo "[install] --version, --rc and --latest choose release images, they cannot be used with --beta" >&2
+  exit 1
+fi
+if [[ "${IMAGE_CHANNEL}" == version \
+  && ! "${TYPETYPE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+  echo "[install] --version looks like 1.15.0 or 1.16.0-rc.1, got ${TYPETYPE_VERSION}" >&2
+  exit 1
+fi
+if [[ "${IMAGE_CHANNEL}" == rc && ${REF_SET} -eq 0 ]]; then
+  REF="staging"
 fi
 
 if [[ ${BETA_STACK} -eq 1 && ${INSTALL_DIR_SET} -eq 0 ]]; then
   INSTALL_DIR="${HOME}/typetype-beta-stack"
+fi
+
+if [[ -z "${IMAGE_CHANNEL}" && ${REF_SET} -eq 0 && ${BETA_STACK} -eq 0 ]] \
+  && grep -qx 'TYPETYPE_VERSION=rc' "${INSTALL_DIR}/.env" 2>/dev/null; then
+  REF="staging"
+  echo "[install] This stack follows the release candidates, using the stack files from staging"
 fi
 
 need_cmd() {
@@ -660,10 +689,20 @@ if [[ ! -f "${INSTALL_DIR}/.env" ]]; then
   echo "[install] Created ${INSTALL_DIR}/.env from .env.example"
 fi
 
-if [[ -n "${TYPETYPE_VERSION}" ]]; then
-  set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" "${TYPETYPE_VERSION}"
-  echo "[install] Pinned the TypeType images to ${TYPETYPE_VERSION}"
-fi
+case "${IMAGE_CHANNEL}" in
+  version)
+    set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" "${TYPETYPE_VERSION}"
+    echo "[install] Pinned the TypeType images to ${TYPETYPE_VERSION}"
+    ;;
+  rc)
+    set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" "rc"
+    echo "[install] The TypeType images now follow the release candidates"
+    ;;
+  latest)
+    set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" ""
+    echo "[install] The TypeType images now follow the latest release"
+    ;;
+esac
 ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
 ensure_service_url_env "${INSTALL_DIR}/.env"
