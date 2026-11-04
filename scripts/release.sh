@@ -20,7 +20,8 @@ Components: web, server, token, downloader, or all.
 
   status  Show dev, staging and main of every component, and the tags of <version>.
   rc      Move staging to dev and tag the next v<version>-rc.N. The CI publishes
-          the <version>-rc.N image and moves the rc tag.
+          the <version>-rc.N image and moves the rc tag. The staging branch of this
+          repository also moves to dev, so the installer's --rc gets matching stack files.
   final   Move main to staging and tag v<version> in every component, even the
           ones that did not change. The CI publishes <version> and moves latest.
           A component whose staging differs from main needs an rc on its staging,
@@ -34,6 +35,7 @@ repository_of() {
     server) echo TypeType-Server ;;
     token) echo TypeType-Token ;;
     downloader) echo TypeType-Downloader ;;
+    stack) echo TypeType ;;
     *) echo "Unknown component: $1" >&2; return 1 ;;
   esac
 }
@@ -144,6 +146,12 @@ release_candidate() {
     plan+=("${component}:${tag}")
     log "${component}: staging -> dev $(git -C "${directory}" rev-parse --short origin/dev), tag ${tag}"
   done
+  directory="$(checkout stack)"
+  if has_branch "${directory}" staging \
+    && ! git -C "${directory}" merge-base --is-ancestor origin/staging origin/dev; then
+    fail "stack staging has commits that are not on dev"
+  fi
+  log "stack: staging -> dev $(git -C "${directory}" rev-parse --short origin/dev)"
   confirm "Push these release candidates?" || fail "Stopped, nothing was pushed"
   local entry
   for entry in "${plan[@]}"; do
@@ -155,6 +163,8 @@ release_candidate() {
     git -C "${directory}" push --quiet origin "refs/tags/${tag}"
     log "${component}: pushed ${tag}"
   done
+  git -C "${WORK_DIR}/TypeType" push --quiet origin "refs/remotes/origin/dev:refs/heads/staging"
+  log "stack: staging moved to dev"
 }
 
 final_release() {

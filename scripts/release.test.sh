@@ -10,7 +10,7 @@ export TYPETYPE_RELEASE_REMOTE_BASE="$temporary/remotes"
 export TYPETYPE_RELEASE_DIR="$temporary/work"
 release="$repository/scripts/release.sh"
 
-for name in TypeType-Frontend TypeType-Server TypeType-Token TypeType-Downloader; do
+for name in TypeType-Frontend TypeType-Server TypeType-Token TypeType-Downloader TypeType; do
   git init --quiet --bare -b main "$temporary/remotes/$name.git"
   seed="$temporary/seed/$name"
   git init --quiet -b main "$seed"
@@ -50,11 +50,15 @@ commit_on_dev TypeType-Frontend "web change"
 "$release" rc 1.16.0 web --yes >/dev/null
 [[ "$(remote_tags TypeType-Frontend)" == "v1.16.0-rc.1 " ]]
 [[ "$(remote_ref TypeType-Frontend staging)" == "$(remote_ref TypeType-Frontend dev)" ]]
+[[ "$(remote_ref TypeType staging)" == "$(remote_ref TypeType dev)" ]]
+[[ -z "$(remote_tags TypeType)" ]]
 fails "$release" rc 1.16.0 web --yes
 
+commit_on_dev TypeType "stack change"
 commit_on_dev TypeType-Frontend "web fix"
 "$release" rc 1.16.0 web --yes >/dev/null
 [[ "$(remote_tags TypeType-Frontend)" == "v1.16.0-rc.1 v1.16.0-rc.2 " ]]
+[[ "$(remote_ref TypeType staging)" == "$(remote_ref TypeType dev)" ]]
 
 fails "$release" final 1.16.0 --yes
 "$release" rc 1.16.0 server token downloader --yes >/dev/null
