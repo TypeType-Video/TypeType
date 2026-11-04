@@ -101,6 +101,27 @@ FAKE_PYTHON_LOG="$python_log" \
 
 grep -q 'compose .*docker-compose.recommender.yml .*config -q ' "$docker_log"
 
+pinned_install_dir="${temporary}/pinned-stack"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$pinned_install_dir" \
+    --version 1.15.0 \
+    --download-only \
+    --yes > "${temporary}/pinned-install.log"
+grep -Fxq 'TYPETYPE_VERSION=1.15.0' "${pinned_install_dir}/.env"
+[[ "$(grep -c '^TYPETYPE_VERSION=' "${pinned_install_dir}/.env")" -eq 1 ]]
+
+if PATH="${fake_bin}:${PATH}" FAKE_DOCKER_LOG="$docker_log" FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" --source-dir "$repository" \
+    --dir "${temporary}/pinned-beta" --beta --version 1.15.0 --download-only --yes \
+    > "${temporary}/pinned-beta.log" 2>&1; then
+  echo "--version must be refused for the beta stack" >&2
+  exit 1
+fi
+
 beta_install_dir="${temporary}/beta-stack"
 sed -i 's/^RECOMMENDER_ENABLED=true$/RECOMMENDER_ENABLED=false/' "${recommender_install_dir}/.env"
 : > "$docker_log"

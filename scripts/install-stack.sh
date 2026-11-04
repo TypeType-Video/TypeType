@@ -10,6 +10,7 @@ BETA_STACK=0
 AUTO_APPROVE=0
 RECOMMENDER_STACK=0
 REF_SET=0
+TYPETYPE_VERSION=""
 INSTALL_DIR_SET=0
 ENV_FILE_CREATED=0
 BACKUP_DIR=""
@@ -37,6 +38,7 @@ Usage:
 
 Options:
   --ref <git-ref>       Git ref to download (default: main)
+  --version <x.y.z>     Pin every TypeType image to this release (default: latest)
   --dir <path>          Install directory (default: ~/typetype-stack)
   --beta                Install the beta Compose stack only (default ref: dev)
   --yes                 Start Docker automatically without prompts
@@ -55,6 +57,10 @@ while [[ $# -gt 0 ]]; do
     --ref)
       REF="$2"
       REF_SET=1
+      shift 2
+      ;;
+    --version)
+      TYPETYPE_VERSION="$2"
       shift 2
       ;;
     --dir)
@@ -96,6 +102,17 @@ done
 
 if [[ ${BETA_STACK} -eq 1 && ${REF_SET} -eq 0 ]]; then
   REF="dev"
+fi
+
+if [[ -n "${TYPETYPE_VERSION}" ]]; then
+  if [[ ${BETA_STACK} -eq 1 ]]; then
+    echo "[install] --version pins release images, it cannot be used with --beta" >&2
+    exit 1
+  fi
+  if [[ ! "${TYPETYPE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+    echo "[install] --version looks like 1.15.0 or 1.16.0-rc.1, got ${TYPETYPE_VERSION}" >&2
+    exit 1
+  fi
 fi
 
 if [[ ${BETA_STACK} -eq 1 && ${INSTALL_DIR_SET} -eq 0 ]]; then
@@ -643,6 +660,10 @@ if [[ ! -f "${INSTALL_DIR}/.env" ]]; then
   echo "[install] Created ${INSTALL_DIR}/.env from .env.example"
 fi
 
+if [[ -n "${TYPETYPE_VERSION}" ]]; then
+  set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" "${TYPETYPE_VERSION}"
+  echo "[install] Pinned the TypeType images to ${TYPETYPE_VERSION}"
+fi
 ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
 ensure_service_url_env "${INSTALL_DIR}/.env"
