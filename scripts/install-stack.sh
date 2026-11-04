@@ -10,6 +10,8 @@ BETA_STACK=0
 AUTO_APPROVE=0
 RECOMMENDER_STACK=0
 REF_SET=0
+TYPETYPE_VERSION=""
+IMAGE_CHANNEL=""
 INSTALL_DIR_SET=0
 ENV_FILE_CREATED=0
 BACKUP_DIR=""
@@ -28,6 +30,18 @@ DEFAULT_BETA_SERVER_HOST="typetype-beta-server"
 DEFAULT_BETA_SERVER_URL="http://typetype-beta-server:8080"
 PLACEHOLDER_YOUTUBE_REMOTE_LOGIN_INTERNAL_TOKEN="SET_ME_SHARED_SECRET"
 
+is_release_version() {
+  [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+}
+
+choose_image_channel() {
+  if [[ -n "${IMAGE_CHANNEL}" && "${IMAGE_CHANNEL}" != "$1" ]]; then
+    echo "[install] Use only one of --version, --rc and --latest" >&2
+    exit 1
+  fi
+  IMAGE_CHANNEL="$1"
+}
+
 usage() {
   cat <<'EOF'
 TypeType one-line installer (end-user friendly)
@@ -37,6 +51,9 @@ Usage:
 
 Options:
   --ref <git-ref>       Git ref to download (default: main)
+  --version <x.y.z>     Pin every TypeType image to this release (default: latest)
+  --rc                  Follow the release candidate images (default ref: staging)
+  --latest              Follow the latest release again after --version or --rc
   --dir <path>          Install directory (default: ~/typetype-stack)
   --beta                Install the beta Compose stack only (default ref: dev)
   --yes                 Start Docker automatically without prompts
@@ -56,6 +73,20 @@ while [[ $# -gt 0 ]]; do
       REF="$2"
       REF_SET=1
       shift 2
+      ;;
+    --version)
+      choose_image_channel version
+      TYPETYPE_VERSION="$2"
+      shift 2
+      ;;
+    --rc)
+      choose_image_channel rc
+      TYPETYPE_VERSION="rc"
+      shift
+      ;;
+    --latest)
+      choose_image_channel latest
+      shift
       ;;
     --dir)
       INSTALL_DIR="$2"
@@ -96,6 +127,15 @@ done
 
 if [[ ${BETA_STACK} -eq 1 && ${REF_SET} -eq 0 ]]; then
   REF="dev"
+fi
+
+if [[ -n "${IMAGE_CHANNEL}" && ${BETA_STACK} -eq 1 ]]; then
+  echo "[install] --version, --rc and --latest choose release images, they cannot be used with --beta" >&2
+  exit 1
+fi
+if [[ "${IMAGE_CHANNEL}" == version ]] && ! is_release_version "${TYPETYPE_VERSION}"; then
+  echo "[install] --version looks like 1.15.0 or 1.16.0-rc.1, got ${TYPETYPE_VERSION}" >&2
+  exit 1
 fi
 
 if [[ ${BETA_STACK} -eq 1 && ${INSTALL_DIR_SET} -eq 0 ]]; then
@@ -391,6 +431,46 @@ compose_command_hint() {
   printf 'docker compose %s --env-file .env %s' "${args}" "${command}"
 }
 
+choose_release_channel() {
+  if [[ ${BETA_STACK} -eq 1 ]]; then
+    return 0
+  fi
+  local current="" choice="" default_choice=1 version=""
+  if [[ -f "${INSTALL_DIR}/.env" ]]; then
+    current="$(get_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION")"
+  fi
+  if [[ -z "${IMAGE_CHANNEL}" && ${AUTO_APPROVE} -eq 0 ]]; then
+    if [[ "${current}" == rc ]]; then
+      default_choice=2
+    elif is_release_version "${current}"; then
+      default_choice=3
+    fi
+    echo "[install] Which TypeType version do you want?"
+    echo "[install]   1) The latest release, recommended for everyday use"
+    echo "[install]   2) The release candidates, the next version before its release"
+    echo "[install]   3) One version that never changes until you pick another one"
+    prompt_tty choice "Choose 1, 2 or 3" "${default_choice}"
+    case "${choice}" in
+      1) IMAGE_CHANNEL=latest ;;
+      2) IMAGE_CHANNEL=rc; TYPETYPE_VERSION=rc ;;
+      3)
+        prompt_tty version "Version, for example 1.15.0" "$(is_release_version "${current}" && echo "${current}")"
+        if ! is_release_version "${version}"; then
+          echo "[install] The version looks like 1.15.0 or 1.16.0-rc.1, got ${version}" >&2
+          exit 1
+        fi
+        IMAGE_CHANNEL=version
+        TYPETYPE_VERSION="${version}"
+        ;;
+      *) echo "[install] Choose 1, 2 or 3, got ${choice}" >&2; exit 1 ;;
+    esac
+  fi
+  if [[ ${REF_SET} -eq 0 ]] && { [[ "${IMAGE_CHANNEL}" == rc ]] || [[ -z "${IMAGE_CHANNEL}" && "${current}" == rc ]]; }; then
+    REF="staging"
+    echo "[install] Using the stack files of the release candidates (staging)"
+  fi
+}
+
 choose_recommender() {
   if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
     return 0
@@ -569,6 +649,7 @@ fi
 
 INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
 mkdir -p "${INSTALL_DIR}"
+choose_release_channel
 
 echo "[install] Installing TypeType stack files into: ${INSTALL_DIR}"
 
@@ -643,6 +724,20 @@ if [[ ! -f "${INSTALL_DIR}/.env" ]]; then
   echo "[install] Created ${INSTALL_DIR}/.env from .env.example"
 fi
 
+case "${IMAGE_CHANNEL}" in
+  version)
+    set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" "${TYPETYPE_VERSION}"
+    echo "[install] Pinned the TypeType images to ${TYPETYPE_VERSION}"
+    ;;
+  rc)
+    set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" "rc"
+    echo "[install] The TypeType images now follow the release candidates"
+    ;;
+  latest)
+    set_env_var "${INSTALL_DIR}/.env" "TYPETYPE_VERSION" ""
+    echo "[install] The TypeType images now follow the latest release"
+    ;;
+esac
 ensure_random_downloader_keys "${INSTALL_DIR}/.env"
 ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
 ensure_service_url_env "${INSTALL_DIR}/.env"

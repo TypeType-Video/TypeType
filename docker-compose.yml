@@ -1,6 +1,6 @@
 services:
   typetype:
-    image: ${TYPETYPE_WEB_IMAGE:-ghcr.io/typetype-video/typetype:latest}
+    image: ${TYPETYPE_WEB_IMAGE:-ghcr.io/typetype-video/typetype:${TYPETYPE_VERSION:-latest}}
     environment:
       TYPETYPE_SERVER_HOST: ${TYPETYPE_SERVER_HOST:-typetype-server}
       TYPETYPE_SERVER_PORT: "${TYPETYPE_SERVER_PORT:-8080}"
@@ -20,7 +20,7 @@ services:
       retries: 12
     restart: unless-stopped
   typetype-server:
-    image: ${TYPETYPE_SERVER_IMAGE:-ghcr.io/typetype-video/typetype-server:latest}
+    image: ${TYPETYPE_SERVER_IMAGE:-ghcr.io/typetype-video/typetype-server:${TYPETYPE_VERSION:-latest}}
     ports:
       - "${HOST_BIND_SERVER:-127.0.0.1}:${HOST_PORT_SERVER:-8080}:8080"
     environment:
@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 
   typetype-downloader:
-    image: ${TYPETYPE_DOWNLOADER_IMAGE:-ghcr.io/typetype-video/typetype-downloader:latest}
+    image: ${TYPETYPE_DOWNLOADER_IMAGE:-ghcr.io/typetype-video/typetype-downloader:${TYPETYPE_VERSION:-latest}}
     environment:
       HTTP_PORT: "18093"
       PUBLIC_BASE_URL: /api/downloader
@@ -95,7 +95,7 @@ services:
     restart: unless-stopped
 
   typetype-token:
-    image: ${TYPETYPE_TOKEN_IMAGE:-ghcr.io/typetype-video/typetype-token:latest}
+    image: ${TYPETYPE_TOKEN_IMAGE:-ghcr.io/typetype-video/typetype-token:${TYPETYPE_VERSION:-latest}}
     ports:
       - "${HOST_BIND_TOKEN:-127.0.0.1}:${HOST_PORT_TOKEN:-8081}:8081"
     init: true

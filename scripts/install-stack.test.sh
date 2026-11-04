@@ -101,6 +101,47 @@ FAKE_PYTHON_LOG="$python_log" \
 
 grep -q 'compose .*docker-compose.recommender.yml .*config -q ' "$docker_log"
 
+pinned_install_dir="${temporary}/pinned-stack"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$pinned_install_dir" \
+    --version 1.15.0 \
+    --download-only \
+    --yes > "${temporary}/pinned-install.log"
+grep -Fxq 'TYPETYPE_VERSION=1.15.0' "${pinned_install_dir}/.env"
+[[ "$(grep -c '^TYPETYPE_VERSION=' "${pinned_install_dir}/.env")" -eq 1 ]]
+
+if PATH="${fake_bin}:${PATH}" FAKE_DOCKER_LOG="$docker_log" FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" --source-dir "$repository" \
+    --dir "${temporary}/pinned-beta" --beta --version 1.15.0 --download-only --yes \
+    > "${temporary}/pinned-beta.log" 2>&1; then
+  echo "--version must be refused for the beta stack" >&2
+  exit 1
+fi
+
+install_quietly() {
+  PATH="${fake_bin}:${PATH}" FAKE_DOCKER_LOG="$docker_log" FAKE_PYTHON_LOG="$python_log" \
+    bash "${repository}/scripts/install-stack.sh" --source-dir "$repository" --download-only --yes "$@"
+}
+
+rc_install_dir="${temporary}/rc-stack"
+install_quietly --dir "$rc_install_dir" --rc > "${temporary}/rc-install.log"
+grep -Fxq 'TYPETYPE_VERSION=rc' "${rc_install_dir}/.env"
+install_quietly --dir "$rc_install_dir" > "${temporary}/rc-update.log"
+grep -Fq 'Using the stack files of the release candidates (staging)' "${temporary}/rc-update.log"
+grep -Fxq 'TYPETYPE_VERSION=rc' "${rc_install_dir}/.env"
+install_quietly --dir "$rc_install_dir" --latest > "${temporary}/rc-latest.log"
+grep -Fxq 'TYPETYPE_VERSION=' "${rc_install_dir}/.env"
+for options in "--rc --version 1.15.0" "--rc --beta" "--latest --rc"; do
+  if install_quietly --dir "${temporary}/rc-conflict" $options > "${temporary}/rc-conflict.log" 2>&1; then
+    echo "the installer accepted ${options}" >&2
+    exit 1
+  fi
+done
+
 beta_install_dir="${temporary}/beta-stack"
 sed -i 's/^RECOMMENDER_ENABLED=true$/RECOMMENDER_ENABLED=false/' "${recommender_install_dir}/.env"
 : > "$docker_log"

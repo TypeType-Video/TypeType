@@ -24,6 +24,7 @@ done
 ./scripts/registry-sync.test.sh
 ./scripts/deploy-stable.test.sh
 ./scripts/run-stack-init.test.sh
+./scripts/release.test.sh
 
 docker compose --env-file .env.example -f docker-compose.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.arm64.yml config -q

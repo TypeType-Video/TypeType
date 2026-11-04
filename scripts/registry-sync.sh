@@ -4,6 +4,7 @@ set -euo pipefail
 registry=registery.typetype.video
 manifest_accept='application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json'
 retry_cooldown_seconds=600
+stable_tag=${TYPETYPE_STABLE_TAG:-latest}
 state_root=/var/lib/typetype-registry-sync
 dry_run=false
 stable_env_backup=
@@ -123,7 +124,7 @@ sync_stable() {
   local -a changed_variables=() changed_images=() desired_images=()
   for component in frontend server downloader token; do
     key=${component_key[$component]}; variable="TYPETYPE_${key}_IMAGE"; image_path="typetype/${key,,}"
-    if ! digest=$(manifest_digest "$image_path" latest); then return 1; fi
+    if ! digest=$(manifest_digest "$image_path" "$stable_tag"); then return 1; fi
     image="$registry/$image_path@$digest"; desired_images+=("$image")
     current=$(read_env_value "$root/.env" "$variable" 2>/dev/null || true)
     if [[ "$current" != *"@$digest" ]]; then changed_variables+=("$variable"); changed_images+=("$image"); fi
@@ -159,6 +160,10 @@ main() {
     --dry-run) dry_run=true ;;
     *) printf 'usage: %s [--dry-run]\n' "$0" >&2; return 64 ;;
   esac
+  if [[ "$stable_tag" != latest && "$stable_tag" != rc ]]; then
+    printf 'TYPETYPE_STABLE_TAG must be latest or rc, got %s\n' "$stable_tag" >&2
+    return 64
+  fi
   exec 9>/run/typetype-registry-sync.lock
   if ! flock -n 9; then
     printf '%s\n' 'registry sync already running; skipping'
