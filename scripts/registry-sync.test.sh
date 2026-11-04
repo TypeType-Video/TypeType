@@ -41,4 +41,28 @@ if retry_allowed "$marker" "$signature"; then
   exit 1
 fi
 retry_allowed "$marker" different-image
+
+cat > "$temporary/bin/curl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "${@: -1}" >> "$FAKE_CURL_LOG"
+printf '%s\n' 'HTTP/2 200' 'docker-content-digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+EOF
+chmod +x "$temporary/bin/curl"
+export FAKE_CURL_LOG="$temporary/curl.log"
+stack_root="$temporary/stack"
+mkdir -p "$stack_root"
+printf 'TYPETYPE_SERVER_IMAGE=old\n' > "$stack_root/.env"
+dry_run=true
+stable_tag=rc
+sync_stable "$stack_root" > "$temporary/stable-dry-run.log"
+[[ "$(grep -c '/manifests/rc$' "$FAKE_CURL_LOG")" -eq 4 ]]
+if grep -q '/manifests/latest$' "$FAKE_CURL_LOG"; then
+  printf '%s\n' 'the stable sync ignored TYPETYPE_STABLE_TAG' >&2
+  exit 1
+fi
+stable_tag=beta
+if main --dry-run 2>/dev/null; then
+  printf '%s\n' 'an unknown TYPETYPE_STABLE_TAG was accepted' >&2
+  exit 1
+fi
 printf '%s\n' 'registry sync helpers passed'
