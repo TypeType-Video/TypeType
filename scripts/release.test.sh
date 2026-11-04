@@ -67,11 +67,20 @@ grep -q '^web .*rc: v1.16.0-rc.1 v1.16.0-rc.2  release: none$' <<< "$status_outp
 for name in TypeType-Frontend TypeType-Server TypeType-Token TypeType-Downloader; do
   [[ " $(remote_tags "$name")" == *" v1.16.0 "* ]]
   [[ "$(remote_ref "$name" 'v1.16.0^{commit}')" == "$(remote_ref "$name" main)" ]]
-  git --git-dir "$temporary/remotes/$name.git" merge-base --is-ancestor staging main
+  [[ "$(remote_ref "$name" main)" == "$(remote_ref "$name" staging)" ]]
+  git --git-dir "$temporary/remotes/$name.git" merge-base --is-ancestor main dev
 done
 fails git --git-dir "$temporary/remotes/TypeType-Server.git" merge-base --is-ancestor dev main
-[[ "$(git --git-dir "$temporary/remotes/TypeType-Frontend.git" log -1 --format=%s main)" == "chore: release 1.16.0" ]]
 fails "$release" final 1.16.0 --yes
+
+seed="$temporary/seed/TypeType-Downloader"
+git -C "$seed" fetch --quiet "$temporary/remotes/TypeType-Downloader.git" main
+git -C "$seed" checkout --quiet -B main FETCH_HEAD
+git -C "$seed" commit --quiet --allow-empty -m "fix pushed straight to main"
+git -C "$seed" push --quiet "$temporary/remotes/TypeType-Downloader.git" main
+"$release" rc 1.17.0 all --yes >/dev/null
+fails "$release" final 1.17.0 --yes
+[[ " $(remote_tags TypeType-Frontend)" != *" v1.17.0 "* ]]
 
 commit_on_dev TypeType-Token "token change"
 seed="$temporary/seed/TypeType-Token"

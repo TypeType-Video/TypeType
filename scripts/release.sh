@@ -21,9 +21,10 @@ Components: web, server, token, downloader, or all.
   status  Show dev, staging and main of every component, and the tags of <version>.
   rc      Move staging to dev and tag the next v<version>-rc.N. The CI publishes
           the <version>-rc.N image and moves the rc tag.
-  final   Merge staging into main and tag v<version> in every component, even the
+  final   Move main to staging and tag v<version> in every component, even the
           ones that did not change. The CI publishes <version> and moves latest.
-          A component whose staging differs from main needs an rc on its staging.
+          A component whose staging differs from main needs an rc on its staging,
+          and main must not have commits that staging lacks.
 EOF
 }
 
@@ -162,6 +163,8 @@ final_release() {
     directory="$(checkout "${component}")"
     has_tag "${directory}" "v${version}" && fail "${component} already has v${version}"
     has_branch "${directory}" staging || fail "${component} has no staging branch, run rc first"
+    git -C "${directory}" merge-base --is-ancestor origin/main origin/staging \
+      || fail "${component} main has commits that are not on staging, merge main into dev first"
     if ! git -C "${directory}" diff --quiet origin/main origin/staging \
       && [[ -z "$(staging_rc "${directory}" "${version}")" ]]; then
       fail "${component} staging differs from main and has no v${version}-rc tag"
@@ -171,12 +174,9 @@ final_release() {
   confirm "Release TypeType ${version} in every component?" || fail "Stopped, nothing was pushed"
   for component in "${COMPONENTS[@]}"; do
     directory="${WORK_DIR}/$(repository_of "${component}")"
-    git -C "${directory}" checkout --quiet --detach origin/main
-    if ! git -C "${directory}" merge-base --is-ancestor origin/staging HEAD; then
-      git -C "${directory}" merge --quiet --no-ff origin/staging -m "chore: release ${version}"
-    fi
-    git -C "${directory}" tag -a "v${version}" -m "TypeType ${version}" HEAD
-    git -C "${directory}" push --quiet origin HEAD:refs/heads/main "refs/tags/v${version}"
+    git -C "${directory}" tag -a "v${version}" -m "TypeType ${version}" origin/staging
+    git -C "${directory}" push --quiet origin "refs/remotes/origin/staging:refs/heads/main"
+    git -C "${directory}" push --quiet origin "refs/tags/v${version}"
     log "${component}: released v${version}"
   done
   log "Now publish the TypeType ${version} release notes and tag v${version} in the TypeType repository"
