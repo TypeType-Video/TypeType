@@ -1,3 +1,48 @@
+# TypeType 1.16.0
+
+TypeType 1.16.0 makes BiliBili and NicoNico start faster and recover by themselves, adds YouTube channel posts and rich comments with images, GIFs and voice replies, and fixes the mini player and phone fullscreen. Web, server, token and downloader are all 1.16.0.
+
+## New
+
+- A Posts tab on YouTube channels, shown as a centered feed.
+- Comments show images, GIFs and voice replies, and voice replies play right in the comment.
+- Admins can turn on background BiliBili mirror checks, so playback starts on the mirror measured fastest. It stays off unless u turn it on.
+
+## Faster BiliBili and NicoNico
+
+- The watch page asks for the video as soon as the page opens and loads the player at the same time, instead of waiting for the app to start.
+- The server prepares the first seconds of the video right after it reads the page, picks the fastest mirror, and fetches the next NicoNico parts while u watch.
+- In tests from Europe, NicoNico starts in 3.3 s instead of 3.9 s and seeks in 0.9 s instead of 2.6 s, and the slowest BiliBili starts dropped from 6.5 s to 4.8 s. Far from the instance it's even clearer: with the latency of Hong Kong, BiliBili starts in about 6 s instead of 17 s.
+- BiliBili playback comes back by itself after a network cut instead of staying stuck, and no longer freezes forever at the start when the first part arrives very fast.
+- NicoNico links that expire during a pause refresh at the same position.
+- Covers and avatars from BiliBili load at the size they are shown.
+
+## Fixes
+
+- On phones, the player offers web fullscreen instead of cinema mode. This fixes [#389](https://github.com/TypeType-Video/TypeType/issues/389).
+- Coming back from the mini player keeps the position and no longer stutters. This fixes [#381](https://github.com/TypeType-Video/TypeType/issues/381).
+- A mini player u moved stays where u put it after fullscreen and window resizes. This fixes [#387](https://github.com/TypeType-Video/TypeType/issues/387).
+- YouTube downloads no longer fail halfway with "unexpected EOF": a failed part is retried alone, then the download falls back to one stream. This fixes [#388](https://github.com/TypeType-Video/TypeType/issues/388).
+- Signed-in users no longer get a crash ("Maximum update depth exceeded") on the watch page while playing a YouTube playlist.
+- NicoNico channel and official video links open again.
+- BiliBili blocking the instance is now reported as such, instead of as paid content, and the instance waits before asking BiliBili and NicoNico again.
+- Only YouTube, BiliBili and NicoNico are listed as supported services.
+
+## Thx
+
+- @Aquarius-Situla for the reports [#381](https://github.com/TypeType-Video/TypeType/issues/381), [#388](https://github.com/TypeType-Video/TypeType/issues/388) and [#389](https://github.com/TypeType-Video/TypeType/issues/389), and the Simplified Chinese translations.
+- @Lucyfire for [#387](https://github.com/TypeType-Video/TypeType/issues/387).
+
+Thx u guys, [@Toastienergy](https://github.com/Toastienergy) and [@crichemond](https://github.com/crichemond), for supporting TypeType!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Every image of this release is 1.16.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.15.0
 
 TypeType 1.15.0 brings a playback queue on the web, a hold-to-fast-forward speed setting and YouTube subtitles through the server, and fixes progress lost when a BiliBili stream renews, endless loading after a night away and the missing loop toggle. From this release on, every component uses the TypeType version: web, server, token and downloader are all 1.15.0.
