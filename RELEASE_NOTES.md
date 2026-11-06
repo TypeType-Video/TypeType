@@ -1,3 +1,23 @@
+# TypeType 1.16.1
+
+TypeType 1.16.1 stops the volume from jumping to 100% when u get signed out during a video. Web, server, token and downloader are all 1.16.1.
+
+## Fixes
+
+- When the session ends during a video, the volume stays where it was instead of jumping to 100%, and the next videos keep it too. This fixes [#392](https://github.com/TypeType-Video/TypeType/issues/392).
+
+If ur instance runs over plain HTTP and signs u out after an hour, see [Unexpected sign-outs](https://typetype-video.github.io/Docs-TypeType/self-hosting/troubleshooting#unexpected-sign-outs).
+
+## Thx
+
+- @De-Noir for [#392](https://github.com/TypeType-Video/TypeType/issues/392).
+
+## Updating
+
+Every image of this release is 1.16.1, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.16.0
 
 TypeType 1.16.0 makes BiliBili and NicoNico start faster and recover by themselves, adds YouTube channel posts and rich comments with images, GIFs and voice replies, and fixes the mini player and phone fullscreen. Web, server, token and downloader are all 1.16.0.
