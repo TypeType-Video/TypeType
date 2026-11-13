@@ -1,3 +1,20 @@
+# TypeType 1.17.1
+
+TypeType 1.17.1 makes YouTube lives start again, tells u when a video is no longer available and skips it in a playlist. Web, server, token and downloader are all 1.17.1.
+
+## Fixes
+
+- YouTube lives play again when YouTube refuses the live client: the server falls back to the session manifest, and its segments are no longer refused.
+- A video YouTube no longer serves is shown as unavailable instead of a generic playback error.
+- In a playlist, an unavailable video is skipped after a few seconds instead of stopping the playlist.
+- Apps can tell the server they left a video, so it frees the playback session right away instead of after about 4 minutes. The Android app does it from 1.13.0-beta.4.
+
+## Updating
+
+Every image of this release is 1.17.1, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.17.0
 
 TypeType 1.17.0 brings creator end screens, an ambient light around the player and a Courses tab on channels, and makes YouTube playback recover by itself when YouTube puts the instance on hold. Web, server, token and downloader are all 1.17.0.
