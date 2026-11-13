@@ -1,3 +1,51 @@
+# TypeType 1.17.0
+
+TypeType 1.17.0 brings creator end screens, an ambient light around the player and a Courses tab on channels, and makes YouTube playback recover by itself when YouTube puts the instance on hold. Web, server, token and downloader are all 1.17.0.
+
+## New
+
+- Creator end screens show over the last seconds of a YouTube video: tap a card to open the video, playlist or channel. U can hide them in Settings > Content.
+- Ambient light: the watch page takes the colors of the video, in cinema mode too, with spread, blur and intensity sliders. It's experimental and off by default, and it's adapted from [Ambient light for YouTube](https://github.com/WesselKroos/youtube-ambilight) by Wessel Kroos.
+- Channels that have courses get a Courses tab.
+- Search the comments of a video from the watch page.
+- Sort the subscription feed from the oldest video, select several videos to mark them watched, and mark a video watched from its card menu.
+- Choose or upload ur own seekbar icon. It follows ur account on the web, Android and TV.
+- Loading and error screens show a small set of animated reactions instead of a single picture.
+
+## Player
+
+- One time slider for every player layout: the position only changes when u release it, with the same loading spinner everywhere.
+- A video opened at a given time loads straight from there instead of starting at 0 and seeking.
+- Playback recovers better from stalls on slow networks, and seeking no longer sends the player into a recovery loop or back in time.
+- Seeking on BiliBili no longer forces 1080p and empties the buffer.
+
+## YouTube playback
+
+- A video no longer fails when u resume or seek while YouTube keeps the instance session on hold. The server notices on the first answer, replaces the session and checks the new one, also before anyone runs into it.
+- Instances behind a gluetun VPN can let the server move to another exit: it only keeps an exit YouTube accepts and goes back to the last good one otherwise. Set `YOUTUBE_EGRESS_GLUETUN_URL`, `YOUTUBE_EGRESS_GLUETUN_API_KEY` and, to pick the exits, `YOUTUBE_EGRESS_GLUETUN_SERVERS`.
+- End screens are still read when playback falls back to the token session.
+
+## Fixes
+
+- YouTube playlists are linked by their list id instead of a full address in the link.
+- Channel and live chat avatars, playlist covers, NicoNico images and danmaku emotes load through the instance proxy.
+- The watch page no longer re-renders forever during a playlist countdown.
+- NicoNico comments are read in their current format.
+
+## Thx
+
+- @Aquarius-Situla for the player work: the unified time slider, loading from the start position, stall recovery and the BiliBili seek fix ([#83](https://github.com/TypeType-Video/TypeType-Frontend/pull/83), [#84](https://github.com/TypeType-Video/TypeType-Frontend/pull/84), [#85](https://github.com/TypeType-Video/TypeType-Frontend/pull/85), [#86](https://github.com/TypeType-Video/TypeType-Frontend/pull/86), [#87](https://github.com/TypeType-Video/TypeType-Frontend/pull/87)).
+
+Thx [@Toastienergy](https://github.com/Toastienergy) for being a real support for TypeType and for testing it so much!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Every image of this release is 1.17.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.16.1
 
 TypeType 1.16.1 stops the volume from jumping to 100% when u get signed out during a video. Web, server, token and downloader are all 1.16.1.
