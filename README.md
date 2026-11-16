@@ -6,7 +6,7 @@ You want to know the current position of TypeType about AI ? Go check [this](htt
 
 [Git mirror](https://git.typetype.video/TypeType-Video)
 
-[Discord](https://discord.gg/SqgqYRFJvW) · [Lemmy](https://blorp.lemmy.zip/home/c/TypeType@lemmy.zip)
+Want to chat with us? Go to [Discord](https://discord.gg/SqgqYRFJvW) or [Lemmy](https://blorp.lemmy.zip/home/c/TypeType@lemmy.zip), you're welcome there :)
 
 # TypeType
 
