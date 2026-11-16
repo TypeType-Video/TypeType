@@ -10,7 +10,7 @@ export TYPETYPE_RELEASE_REMOTE_BASE="$temporary/remotes"
 export TYPETYPE_RELEASE_DIR="$temporary/work"
 release="$repository/scripts/release.sh"
 
-for name in TypeType-Frontend TypeType-Server TypeType-Token TypeType-Downloader TypeType; do
+for name in TypeType-Frontend TypeType-Server TypeType-Token TypeType-Downloader TypeType-Live TypeType; do
   git init --quiet --bare -b main "$temporary/remotes/$name.git"
   seed="$temporary/seed/$name"
   git init --quiet -b main "$seed"
@@ -61,14 +61,14 @@ commit_on_dev TypeType-Frontend "web fix"
 [[ "$(remote_ref TypeType staging)" == "$(remote_ref TypeType dev)" ]]
 
 fails "$release" final 1.16.0 --yes
-"$release" rc 1.16.0 server token downloader --yes >/dev/null
+"$release" rc 1.16.0 server token downloader live --yes >/dev/null
 
 commit_on_dev TypeType-Server "server change after rc"
 status_output="$("$release" status 1.16.0)"
 grep -q '^web .*rc: v1.16.0-rc.1 v1.16.0-rc.2  release: none$' <<< "$status_output"
 "$release" final 1.16.0 --yes >/dev/null
 
-for name in TypeType-Frontend TypeType-Server TypeType-Token TypeType-Downloader; do
+for name in TypeType-Frontend TypeType-Server TypeType-Token TypeType-Downloader TypeType-Live; do
   [[ " $(remote_tags "$name")" == *" v1.16.0 "* ]]
   [[ "$(remote_ref "$name" 'v1.16.0^{commit}')" == "$(remote_ref "$name" main)" ]]
   [[ "$(remote_ref "$name" main)" == "$(remote_ref "$name" staging)" ]]
