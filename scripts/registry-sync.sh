@@ -10,7 +10,7 @@ dry_run=false
 stable_env_backup=
 stable_env_target=
 stable_update_complete=false
-declare -A component_key=([frontend]=WEB [server]=SERVER [downloader]=DOWNLOADER [token]=TOKEN)
+declare -A component_key=([frontend]=WEB [server]=SERVER [downloader]=DOWNLOADER [token]=TOKEN [live]=LIVE)
 
 read_env_value() {
   awk -v key="$2" 'index($0, key "=") == 1 { print substr($0, length(key) + 2); found=1; exit } END { if (!found) exit 1 }' "$1"
@@ -121,8 +121,10 @@ sync_beta() {
 
 sync_stable() {
   local root="$1" component key variable image_path digest image current signature revision i
-  local -a changed_variables=() changed_images=() desired_images=()
-  for component in frontend server downloader token; do
+  local -a changed_variables=() changed_images=() desired_images=() components=(frontend server downloader token)
+  # Only a stack that runs Twitch names its Live image; the others never pull it.
+  if [[ -n "$(read_env_value "$root/.env" TYPETYPE_LIVE_IMAGE 2>/dev/null || true)" ]]; then components+=(live); fi
+  for component in "${components[@]}"; do
     key=${component_key[$component]}; variable="TYPETYPE_${key}_IMAGE"; image_path="typetype/${key,,}"
     if ! digest=$(manifest_digest "$image_path" "$stable_tag"); then return 1; fi
     image="$registry/$image_path@$digest"; desired_images+=("$image")

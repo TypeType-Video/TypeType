@@ -1,0 +1,31 @@
+services:
+  typetype-server:
+    environment:
+      TWITCH_SERVICE_URL: ${TWITCH_SERVICE_URL:-http://typetype-live:8080}
+      TWITCH_SERVICE_SECRET_FILE: /run/typetype-secrets/twitch_service_secret
+      TWITCH_TOKEN_ENCRYPTION_KEY_FILE: /run/typetype-secrets/twitch_token_encryption_key
+      TWITCH_SERVICE_TIMEOUT_MS: ${TWITCH_SERVICE_TIMEOUT_MS:-}
+    depends_on:
+      typetype-live:
+        condition: service_healthy
+
+  typetype-live:
+    image: ${TYPETYPE_LIVE_IMAGE:-ghcr.io/typetype-video/typetype-live:${TYPETYPE_VERSION:-latest}}
+    environment:
+      LIVE_SECRET_FILE: /run/typetype-secrets/twitch_service_secret
+      LIVE_SIGNING_KEY_FILE: /run/typetype-secrets/twitch_signing_key
+      LIVE_PUBLIC_BASE: /live
+      LIVE_SEGMENT_CACHE: ${LIVE_SEGMENT_CACHE:-48MiB}
+      LIVE_LOG_LEVEL: ${LIVE_LOG_LEVEL:-info}
+      GOMEMLIMIT: ${LIVE_GO_MEMORY_LIMIT:-100MiB}
+    volumes:
+      - typetype_secrets:/run/typetype-secrets:ro
+    mem_limit: ${LIVE_MEMORY_LIMIT:-128m}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  typetype-init:
+    environment:
+      TWITCH_INSTALL: "true"

@@ -30,6 +30,12 @@ if [[ -f "$site_compose" ]]; then
   export COMPOSE_CUSTOM_FILE="$site_compose"
 fi
 
+if grep -qx 'TWITCH_ENABLED=true' "$root/.env"; then
+  compose_files+=(-f "$root/docker-compose.twitch.yml")
+  source_compose_files+=(-f "$source_root/docker-compose.twitch.yml")
+  export COMPOSE_TWITCH_FILE="$root/docker-compose.twitch.yml"
+fi
+
 compose() {
   docker compose --project-directory "$root" --env-file "$root/.env" "${compose_files[@]}" "$@"
 }
@@ -39,6 +45,7 @@ managed_files=(
   docker-compose.yml
   docker-compose.arm64.yml
   docker-compose.recommender.yml
+  docker-compose.twitch.yml
   scripts/bootstrap-env.sh
   scripts/bootstrap-garage.sh
   scripts/initialize-stack.sh
@@ -52,6 +59,7 @@ services=(
   typetype-secrets
   typetype-downloader
   typetype-token
+  typetype-live
   postgres
   postgres-init
   dragonfly

@@ -1,3 +1,40 @@
+# TypeType 1.18.0
+
+TypeType 1.18.0 brings Twitch, a new Video.js player for every platform and a lot of work on staying up through server restarts. Web, server, token, downloader and Live are all 1.18.0.
+
+## New
+
+- Twitch: browse lives, categories and tags, watch lives, past broadcasts and clips, read and send in the chat with emotes, follow channels and link ur Twitch account. Past broadcasts replay their chat and show their game chapters, and ur position is saved like any other video. It's an optional service, see "Optional: Twitch" in the README.
+- A new player built on Video.js, with a skin for YouTube, BiliBili and NicoNico and a flat one for Twitch. It has everything the classic player has: settings with submenus, every caption style, chapters, SponsorBlock, end screens, audio boost, speed keys, casting and AirPlay, the mini player and ur player colour and seekbar icon. The classic player stays the default; switch with the Video.js toggle at the top or in Settings.
+- NicoNico and Bilibili lives open on the watch page, and say so when they have not started yet.
+- b23.tv links, NicoNico mylists and series, searches, tags and embeds open inside TypeType.
+- Links to the official Discord next to Lemmy.
+
+## Staying up
+
+- The server announces restarts and updates. Pages, players and the Twitch chat wait for it and resume by themselves, YouTube playback included.
+- HLS and DASH playback survive a short server outage.
+- Playback starts with sound when the browser allows it, and on the first click when it does not.
+
+## Fixes
+
+- NicoNico channel pages list their videos again, and NicoNico lives no longer stop after a few seconds.
+- A Bilibili live could stay frozen on the classic player.
+- An offline Bilibili room no longer fails with a date error.
+- A guest changing one setting no longer resets the others.
+
+## Thx
+
+Thx [@Toastienergy](https://github.com/Toastienergy) for testing TypeType so much!
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Every image of this release is 1.18.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.17.0
 
 TypeType 1.17.0 brings creator end screens, an ambient light around the player and a Courses tab on channels, and makes YouTube playback recover by itself when YouTube puts the instance on hold. Web, server, token and downloader are all 1.17.0.

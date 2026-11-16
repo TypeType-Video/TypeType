@@ -10,6 +10,7 @@ stack="$temporary/stack"
 fake_bin="$temporary/bin"
 mkdir -p "$source_root/scripts" "$stack/scripts" "$fake_bin"
 cp "$repository/docker-compose.recommender.yml" "$source_root/docker-compose.recommender.yml"
+cp "$repository/docker-compose.twitch.yml" "$source_root/docker-compose.twitch.yml"
 
 for file in \
   .env.example \
@@ -39,6 +40,7 @@ done
 cat > "$fake_bin/docker" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+printf '%s\n' "$*" >> "$FAKE_DOCKER_LOG"
 case "$1" in
   ps)
     if [[ " $* " == *" -q "* ]]; then
@@ -76,7 +78,12 @@ chmod +x "$fake_bin/docker"
 
 PATH="$fake_bin:$PATH" \
 FAKE_STACK_ROOT="$stack" \
+FAKE_DOCKER_LOG="$temporary/docker.log" \
   "$repository/scripts/deploy-stable.sh" "$source_root"
+if grep -q 'docker-compose.twitch.yml' "$temporary/docker.log"; then
+  echo "a stack without Twitch deployed the Twitch overlay" >&2
+  exit 1
+fi
 
 for index in {1..6}; do
   if [[ ! -d "$rollback_root/old-$index" ]]; then
@@ -89,3 +96,11 @@ if [[ "$snapshot_count" -ne 7 ]]; then
   echo "expected six existing snapshots and one new snapshot, got $snapshot_count" >&2
   exit 1
 fi
+
+printf 'TWITCH_ENABLED=true\n' >> "$stack/.env"
+: > "$temporary/docker.log"
+PATH="$fake_bin:$PATH" \
+FAKE_STACK_ROOT="$stack" \
+FAKE_DOCKER_LOG="$temporary/docker.log" \
+  "$repository/scripts/deploy-stable.sh" "$source_root"
+grep -q "compose .*-f $stack/docker-compose.twitch.yml .*up -d" "$temporary/docker.log"

@@ -2,7 +2,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 
-COMPONENTS=(web server token downloader)
+COMPONENTS=(web server token downloader live)
 REMOTE_BASE="${TYPETYPE_RELEASE_REMOTE_BASE:-https://github.com/TypeType-Video}"
 WORK_DIR="${TYPETYPE_RELEASE_DIR:-${XDG_CACHE_HOME:-${HOME}/.cache}/typetype-release}"
 ASSUME_YES=0
@@ -16,7 +16,7 @@ Usage:
   scripts/release.sh rc <version> <component>... [--yes]
   scripts/release.sh final <version> [--yes]
 
-Components: web, server, token, downloader, or all.
+Components: web, server, token, downloader, live, or all.
 
   status  Show dev, staging and main of every component, and the tags of <version>.
   rc      Move staging to dev and tag the next v<version>-rc.N. The CI publishes
@@ -35,6 +35,7 @@ repository_of() {
     server) echo TypeType-Server ;;
     token) echo TypeType-Token ;;
     downloader) echo TypeType-Downloader ;;
+    live) echo TypeType-Live ;;
     stack) echo TypeType ;;
     *) echo "Unknown component: $1" >&2; return 1 ;;
   esac

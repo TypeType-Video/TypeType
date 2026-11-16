@@ -65,6 +65,14 @@ if [ "$exists" != "1" ]; then
     -c 'CREATE DATABASE typetype_downloader'
 fi
 
+# Optional Twitch support: the secret Server shares with TypeType-Live, the key that encrypts linked Twitch
+# accounts, and the key that keeps Live's signed links valid across restarts.
+if [ "${TWITCH_INSTALL:-false}" = "true" ]; then
+  for secret in twitch_service_secret twitch_token_encryption_key twitch_signing_key; do
+    ensure_secret "/run/typetype-secrets/${secret}" "" "" ""
+  done
+fi
+
 # Optional recommender: its own database (it manages its tables itself) and the secret it
 # shares with Server. Skipped entirely on a stack that does not install it.
 if [ "${RECOMMENDER_INSTALL:-false}" = "true" ]; then
