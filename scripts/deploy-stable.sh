@@ -30,6 +30,12 @@ if [[ -f "$site_compose" ]]; then
   export COMPOSE_CUSTOM_FILE="$site_compose"
 fi
 
+if grep -qx 'TWITCH_ENABLED=true' "$root/.env"; then
+  compose_files+=(-f "$root/docker-compose.twitch.yml")
+  source_compose_files+=(-f "$source_root/docker-compose.twitch.yml")
+  export COMPOSE_TWITCH_FILE="$root/docker-compose.twitch.yml"
+fi
+
 compose() {
   docker compose --project-directory "$root" --env-file "$root/.env" "${compose_files[@]}" "$@"
 }
