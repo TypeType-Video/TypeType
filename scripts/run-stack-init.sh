@@ -5,6 +5,7 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 compose_file="${COMPOSE_FILE:-${root}/docker-compose.yml}"
 compose_override_file="${COMPOSE_OVERRIDE_FILE:-}"
 compose_recommender_file="${COMPOSE_RECOMMENDER_FILE:-}"
+compose_twitch_file="${COMPOSE_TWITCH_FILE:-}"
 compose_custom_file="${COMPOSE_CUSTOM_FILE:-}"
 
 compose_args=(--project-directory "$root" --env-file "$root/.env" -f "$compose_file")
@@ -13,6 +14,9 @@ if [[ -n "$compose_override_file" ]]; then
 fi
 if [[ -n "$compose_recommender_file" ]]; then
   compose_args+=(-f "$compose_recommender_file")
+fi
+if [[ -n "$compose_twitch_file" ]]; then
+  compose_args+=(-f "$compose_twitch_file")
 fi
 if [[ -n "$compose_custom_file" ]]; then
   compose_args+=(-f "$compose_custom_file")

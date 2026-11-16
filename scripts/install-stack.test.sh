@@ -39,6 +39,7 @@ for file in \
   docker-compose.yml \
   docker-compose.arm64.yml \
   docker-compose.recommender.yml \
+  docker-compose.twitch.yml \
   .env.example \
   .env \
   scripts/install-stack.sh \
@@ -70,6 +71,41 @@ if grep -q 'docker-compose.recommender.yml' "$docker_log"; then
   exit 1
 fi
 grep -Fxq 'RECOMMENDER_ENABLED=false' "${install_dir}/.env"
+if grep -q 'docker-compose.twitch.yml' "$docker_log"; then
+  echo "Twitch must not be added unless asked" >&2
+  exit 1
+fi
+grep -Fxq 'TWITCH_ENABLED=false' "${install_dir}/.env"
+
+twitch_install_dir="${temporary}/twitch-stack"
+: > "$docker_log"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$twitch_install_dir" \
+    --twitch \
+    --download-only \
+    --yes > "${temporary}/twitch-install.log"
+
+grep -q 'compose .*docker-compose.twitch.yml .*config -q ' "$docker_log"
+grep -Fxq 'TWITCH_ENABLED=true' "${twitch_install_dir}/.env"
+grep -Fq 'COMPOSE_TWITCH_FILE=docker-compose.twitch.yml ./scripts/run-stack-init.sh' \
+  "${temporary}/twitch-install.log"
+
+: > "$docker_log"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$twitch_install_dir" \
+    --download-only \
+    --yes > "${temporary}/twitch-update.log"
+
+grep -q 'compose .*docker-compose.twitch.yml .*config -q ' "$docker_log"
+
 
 recommender_install_dir="${temporary}/recommender-stack"
 : > "$docker_log"

@@ -39,6 +39,7 @@ managed_files=(
   docker-compose.yml
   docker-compose.arm64.yml
   docker-compose.recommender.yml
+  docker-compose.twitch.yml
   scripts/bootstrap-env.sh
   scripts/bootstrap-garage.sh
   scripts/initialize-stack.sh
@@ -52,6 +53,7 @@ services=(
   typetype-secrets
   typetype-downloader
   typetype-token
+  typetype-live
   postgres
   postgres-init
   dragonfly

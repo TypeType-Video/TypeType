@@ -10,6 +10,7 @@ stack="$temporary/stack"
 fake_bin="$temporary/bin"
 mkdir -p "$source_root/scripts" "$stack/scripts" "$fake_bin"
 cp "$repository/docker-compose.recommender.yml" "$source_root/docker-compose.recommender.yml"
+cp "$repository/docker-compose.twitch.yml" "$source_root/docker-compose.twitch.yml"
 
 for file in \
   .env.example \
