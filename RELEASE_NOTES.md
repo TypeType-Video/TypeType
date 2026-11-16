@@ -1,17 +1,20 @@
 # TypeType 1.18.0
 
-TypeType 1.18.0 brings Twitch, a new Video.js player for every platform and a lot of work on staying up through server restarts. Web, server, token, downloader and Live are all 1.18.0.
+TypeType 1.18.0 opens an official Discord, brings Twitch and a new Video.js player for every platform, and keeps everything up through server restarts. Web, server, token, downloader and Live are all 1.18.0.
+
+## Discord
+
+TypeType has an official Discord now! Come chat, ask for help and report bugs on [discord.gg/SqgqYRFJvW](https://discord.gg/SqgqYRFJvW). U'll find it next to Lemmy in the app, on typetype.video and in the README, and a small popup shows it once after the update.
 
 ## New
 
 - Twitch: browse lives, categories and tags, watch lives, past broadcasts and clips, read and send in the chat with emotes, follow channels and link ur Twitch account. Past broadcasts replay their chat and show their game chapters, and ur position is saved like any other video. It's an optional service, see "Optional: Twitch" in the README.
-- A new player built on Video.js, with a skin for YouTube, BiliBili and NicoNico and a flat one for Twitch. It has everything the classic player has: settings with submenus, every caption style, chapters, SponsorBlock, end screens, audio boost, speed keys, casting and AirPlay, the mini player and ur player colour and seekbar icon. The classic player stays the default; switch with the Video.js toggle at the top or in Settings.
+- A new player built on Video.js, with a skin for YouTube, BiliBili and NicoNico and a flat one for Twitch. It has everything the classic player has: settings with submenus, every caption style, chapters, SponsorBlock, end screens, audio boost, speed keys, casting and AirPlay, the mini player and ur player colour and seekbar icon. The classic player stays the default; try Video.js from the popup, the toggle at the top or Settings.
 - NicoNico and Bilibili lives open on the watch page, and say so when they have not started yet.
 - b23.tv links, NicoNico mylists and series, searches, tags and embeds open inside TypeType.
 - Focus mode: pick a study group and weekdays, and TypeType fades the rest from the home, the feed and channel pages, per profile.
 - Jump to a timecode sent in the danmaku, and undo the jump.
 - Bilibili collections and series open as playlists, with their sections and episode counts.
-- Links to the official Discord next to Lemmy.
 
 ## Staying up
 
