@@ -8,6 +8,9 @@ TypeType 1.18.0 brings Twitch, a new Video.js player for every platform and a lo
 - A new player built on Video.js, with a skin for YouTube, BiliBili and NicoNico and a flat one for Twitch. It has everything the classic player has: settings with submenus, every caption style, chapters, SponsorBlock, end screens, audio boost, speed keys, casting and AirPlay, the mini player and ur player colour and seekbar icon. The classic player stays the default; switch with the Video.js toggle at the top or in Settings.
 - NicoNico and Bilibili lives open on the watch page, and say so when they have not started yet.
 - b23.tv links, NicoNico mylists and series, searches, tags and embeds open inside TypeType.
+- Focus mode: pick a study group and weekdays, and TypeType fades the rest from the home, the feed and channel pages, per profile.
+- Jump to a timecode sent in the danmaku, and undo the jump.
+- Bilibili collections and series open as playlists, with their sections and episode counts.
 - Links to the official Discord next to Lemmy.
 
 ## Staying up
@@ -18,12 +21,17 @@ TypeType 1.18.0 brings Twitch, a new Video.js player for every platform and a lo
 
 ## Fixes
 
+- A finished video replays from the start instead of its last checkpoint.
+- YouTube playback refreshes an expired session by itself, no longer bounces back at startup, and keeps the seek target after an error.
+- SponsorBlock no longer delays playback, and the player says when it did not answer.
 - NicoNico channel pages list their videos again, and NicoNico lives no longer stop after a few seconds.
 - A Bilibili live could stay frozen on the classic player.
 - An offline Bilibili room no longer fails with a date error.
 - A guest changing one setting no longer resets the others.
 
 ## Thx
+
+- @Aquarius-Situla for the playback and Bilibili playlist fixes ([#94](https://github.com/TypeType-Video/TypeType-Frontend/pull/94), [#95](https://github.com/TypeType-Video/TypeType-Frontend/pull/95), [#96](https://github.com/TypeType-Video/TypeType-Frontend/pull/96), [#97](https://github.com/TypeType-Video/TypeType-Frontend/pull/97), [#99](https://github.com/TypeType-Video/TypeType-Frontend/pull/99), [#110](https://github.com/TypeType-Video/TypeType-Server/pull/110)).
 
 Thx [@Toastienergy](https://github.com/Toastienergy) for testing TypeType so much!
 
