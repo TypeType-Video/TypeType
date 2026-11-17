@@ -9,6 +9,7 @@ SOURCE_DIR=""
 BETA_STACK=0
 AUTO_APPROVE=0
 RECOMMENDER_STACK=0
+TWITCH_STACK=0
 REF_SET=0
 TYPETYPE_VERSION=""
 IMAGE_CHANNEL=""
@@ -17,6 +18,7 @@ ENV_FILE_CREATED=0
 BACKUP_DIR=""
 CUSTOM_COMPOSE_FILE=""
 RECOMMENDER_COMPOSE_FILE=""
+TWITCH_COMPOSE_FILE=""
 
 DEFAULT_DOWNLOADER_S3_ACCESS_KEY="SET_ME_ACCESS_KEY"
 DEFAULT_DOWNLOADER_S3_SECRET_KEY="SET_ME_SECRET_KEY"
@@ -58,6 +60,7 @@ Options:
   --beta                Install the beta Compose stack only (default ref: dev)
   --yes                 Start Docker automatically without prompts
   --recommender         Add the optional recommender (experimental)
+  --twitch              Add the optional Twitch support (TypeType-Live)
   --download-only       Download/update files only, do not start Docker
   --source-dir <path>   Copy files from a local repo path (advanced)
   -h, --help            Show this help
@@ -103,6 +106,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --recommender)
       RECOMMENDER_STACK=1
+      shift
+      ;;
+    --twitch)
+      TWITCH_STACK=1
       shift
       ;;
     --download-only)
@@ -425,6 +432,9 @@ compose_command_hint() {
   if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
     args="${args} -f docker-compose.recommender.yml"
   fi
+  if [[ ${TWITCH_STACK} -eq 1 ]]; then
+    args="${args} -f docker-compose.twitch.yml"
+  fi
   if [[ -n "${CUSTOM_COMPOSE_FILE}" ]]; then
     args="${args} -f docker-compose.override.yml"
   fi
@@ -511,10 +521,42 @@ ensure_recommender_env() {
 }
 
 init_command_hint() {
+  local files=""
   if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
-    printf 'COMPOSE_RECOMMENDER_FILE=docker-compose.recommender.yml ./scripts/run-stack-init.sh'
-  else
-    printf './scripts/run-stack-init.sh'
+    files="COMPOSE_RECOMMENDER_FILE=docker-compose.recommender.yml "
+  fi
+  if [[ ${TWITCH_STACK} -eq 1 ]]; then
+    files="${files}COMPOSE_TWITCH_FILE=docker-compose.twitch.yml "
+  fi
+  printf '%s./scripts/run-stack-init.sh' "${files}"
+}
+
+choose_twitch() {
+  if [[ ${TWITCH_STACK} -eq 1 ]]; then
+    return 0
+  fi
+  if [[ -f "${INSTALL_DIR}/.env" && "$(get_env_var "${INSTALL_DIR}/.env" "TWITCH_ENABLED")" == "true" ]]; then
+    TWITCH_STACK=1
+    return 0
+  fi
+  if [[ ${AUTO_APPROVE} -eq 1 ]]; then
+    return 0
+  fi
+  echo "[install] Optional: Twitch support lets users browse Twitch, watch lives, past broadcasts and clips, and use the chat."
+  echo "[install] It adds the TypeType-Live service, which needs about 128 MB of memory."
+  if confirm_tty "Add Twitch support?"; then
+    TWITCH_STACK=1
+  fi
+}
+
+ensure_twitch_env() {
+  local env_file="$1"
+  if [[ ${TWITCH_STACK} -eq 0 ]]; then
+    return 0
+  fi
+  set_env_var "${env_file}" "TWITCH_ENABLED" "true"
+  if [[ ${BETA_STACK} -eq 1 && -z "$(get_env_var "${env_file}" "TYPETYPE_LIVE_IMAGE")" ]]; then
+    set_env_var "${env_file}" "TYPETYPE_LIVE_IMAGE" "ghcr.io/typetype-video/typetype-live-beta:beta"
   fi
 }
 
@@ -680,6 +722,7 @@ stage_legacy_garage_config
 fetch_file "${COMPOSE_SOURCE}" "${COMPOSE_FILE}"
 fetch_file "docker-compose.arm64.yml" "${ARM64_COMPOSE_FILE}"
 fetch_file "docker-compose.recommender.yml" "${INSTALL_DIR}/docker-compose.recommender.yml"
+fetch_file "docker-compose.twitch.yml" "${INSTALL_DIR}/docker-compose.twitch.yml"
 fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
 fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
 fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
@@ -712,6 +755,12 @@ if [[ ${RECOMMENDER_STACK} -eq 1 ]]; then
   WAIT_TIMEOUT=900
   echo "[install] Recommender (experimental) added to the stack."
 fi
+choose_twitch
+if [[ ${TWITCH_STACK} -eq 1 ]]; then
+  TWITCH_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.twitch.yml"
+  COMPOSE_ARGS+=(-f "${TWITCH_COMPOSE_FILE}")
+  echo "[install] Twitch support added to the stack."
+fi
 if [[ -f "${INSTALL_DIR}/docker-compose.override.yml" ]]; then
   CUSTOM_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.override.yml"
   COMPOSE_ARGS+=(-f "${CUSTOM_COMPOSE_FILE}")
@@ -743,6 +792,7 @@ ensure_youtube_remote_login_env "${INSTALL_DIR}/.env"
 ensure_service_url_env "${INSTALL_DIR}/.env"
 ensure_beta_internal_server_env "${INSTALL_DIR}/.env"
 ensure_recommender_env "${INSTALL_DIR}/.env"
+ensure_twitch_env "${INSTALL_DIR}/.env"
 "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
 if [[ ${BETA_STACK} -eq 1 ]]; then
@@ -806,6 +856,7 @@ echo "[install] Starting stack..."
 COMPOSE_FILE="${COMPOSE_FILE}" \
   COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
   COMPOSE_RECOMMENDER_FILE="${RECOMMENDER_COMPOSE_FILE}" \
+  COMPOSE_TWITCH_FILE="${TWITCH_COMPOSE_FILE}" \
   COMPOSE_CUSTOM_FILE="${CUSTOM_COMPOSE_FILE}" \
   "${INSTALL_DIR}/scripts/run-stack-init.sh"
 docker compose "${COMPOSE_ARGS[@]}" --env-file "${INSTALL_DIR}/.env" \
@@ -817,6 +868,7 @@ echo "[install] Bootstrapping Garage..."
   COMPOSE_FILE="${COMPOSE_FILE}" \
     COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE}" \
     COMPOSE_RECOMMENDER_FILE="${RECOMMENDER_COMPOSE_FILE}" \
+    COMPOSE_TWITCH_FILE="${TWITCH_COMPOSE_FILE}" \
     COMPOSE_CUSTOM_FILE="${CUSTOM_COMPOSE_FILE}" \
     ./scripts/bootstrap-garage.sh
 )

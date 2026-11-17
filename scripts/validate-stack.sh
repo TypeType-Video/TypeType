@@ -31,8 +31,14 @@ docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.a
 docker compose --env-file .env.example -f docker-compose.dev.yml config -q
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.recommender.yml config -q
 docker compose --env-file .env.example -f docker-compose.dev.yml -f docker-compose.recommender.yml config -q
+docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.twitch.yml config -q
+docker compose --env-file .env.example -f docker-compose.dev.yml -f docker-compose.twitch.yml config -q
 if docker compose --env-file .env.example -f docker-compose.yml config | grep -qi recommender; then
   echo "the base stack must not mention the optional recommender" >&2
+  exit 1
+fi
+if docker compose --env-file .env.example -f docker-compose.yml config | grep -qi typetype-live; then
+  echo "the base stack must not mention the optional Twitch service" >&2
   exit 1
 fi
 YOUTUBE_OUTBOUND_PROXY_URL=http://127.0.0.1:29083 \

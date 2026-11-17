@@ -170,6 +170,31 @@ and the `typetype_recommender` database can be deleted by hand.
 All its settings (`RECOMMENDER_*`, `TYPETYPE_RECOMMENDER_IMAGE`,
 `TYPETYPE_POSTGRES_VECTOR_IMAGE`) are listed in `.env.example`.
 
+### Optional: Twitch
+
+Twitch support is a separate service, [TypeType-Live](https://github.com/TypeType-Video/TypeType-Live): users
+browse Twitch, watch lives, past broadcasts and clips, use the chat and can link their Twitch account. It is
+optional: a stack without it behaves exactly as before and shows no Twitch section.
+
+What it needs: about 128 MB of memory (`LIVE_MEMORY_LIMIT`), and three secrets created by `typetype-init`.
+
+Add it with the installer, which asks, or takes `--twitch`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/TypeType-Video/TypeType/main/scripts/install-stack.sh | bash -s -- --twitch
+```
+
+Or by hand on an existing stack:
+
+```sh
+COMPOSE_TWITCH_FILE=docker-compose.twitch.yml ./scripts/run-stack-init.sh
+docker compose -f docker-compose.yml -f docker-compose.twitch.yml up -d --wait
+```
+
+Remove it: set `TWITCH_ENABLED=false` in `.env`, so a future update does not add it again, then start the stack
+without the overlay (`docker compose -f docker-compose.yml up -d --remove-orphans --wait`). Linked Twitch
+accounts stay encrypted in the database.
+
 ### Maintain your instance
 
 - [User guide](https://typetype-video.github.io/Docs-TypeType/guide/)

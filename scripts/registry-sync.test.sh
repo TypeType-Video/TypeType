@@ -56,6 +56,16 @@ dry_run=true
 stable_tag=rc
 sync_stable "$stack_root" > "$temporary/stable-dry-run.log"
 [[ "$(grep -c '/manifests/rc$' "$FAKE_CURL_LOG")" -eq 4 ]]
+if grep -q '/typetype/live/' "$FAKE_CURL_LOG"; then
+  printf '%s\n' 'a stack without Twitch pulled the Live image' >&2
+  exit 1
+fi
+printf 'TYPETYPE_LIVE_IMAGE=old\n' >> "$stack_root/.env"
+: > "$FAKE_CURL_LOG"
+sync_stable "$stack_root" > "$temporary/stable-live-dry-run.log"
+[[ "$(grep -c '/manifests/rc$' "$FAKE_CURL_LOG")" -eq 5 ]]
+grep -q '/typetype/live/manifests/rc$' "$FAKE_CURL_LOG"
+grep -q '^watch TYPETYPE_LIVE_IMAGE: old -> ' "$temporary/stable-live-dry-run.log"
 if grep -q '/manifests/latest$' "$FAKE_CURL_LOG"; then
   printf '%s\n' 'the stable sync ignored TYPETYPE_STABLE_TAG' >&2
   exit 1
