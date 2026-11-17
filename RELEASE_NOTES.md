@@ -6,10 +6,21 @@ TypeType 1.18.0 opens an official Discord, brings Twitch and a new Video.js play
 
 TypeType has an official Discord now! Come chat, ask for help and report bugs on [discord.gg/SqgqYRFJvW](https://discord.gg/SqgqYRFJvW). U'll find it next to Lemmy in the app, on typetype.video and in the README, and a small popup shows it once after the update.
 
+## Twitch
+
+- Browse lives, categories and tags, watch lives, past broadcasts and clips, read and send in the chat with emotes, follow channels and link ur Twitch account. It's an optional service, see "Optional: Twitch" in the README.
+- Past broadcasts replay their chat and show their game chapters, and ur position is saved like any other video.
+- The chat shows the running poll and the pinned message, and with a linked account u can vote right from TypeType.
+- A low latency switch in the player settings, like on Twitch: on by default for a delay of a few seconds, off for a steadier stream a bit further behind.
+- With a linked account, the Twitch page lists the past broadcasts of the channels u follow and all ur followed channels, live or not, so their replays are one click away.
+- The about page shows the Live version next to the other services.
+
+## Video.js
+
+A new player built on Video.js, with a skin for YouTube, BiliBili and NicoNico and a flat one for Twitch. It has everything the classic player has: settings with submenus, every caption style, chapters, SponsorBlock, end screens, audio boost, speed keys, casting and AirPlay, the mini player and ur player colour and seekbar icon. The classic player stays the default; try Video.js from the popup, the toggle at the top or Settings.
+
 ## New
 
-- Twitch: browse lives, categories and tags, watch lives, past broadcasts and clips, read and send in the chat with emotes, follow channels and link ur Twitch account. Past broadcasts replay their chat and show their game chapters, and ur position is saved like any other video. It's an optional service, see "Optional: Twitch" in the README.
-- A new player built on Video.js, with a skin for YouTube, BiliBili and NicoNico and a flat one for Twitch. It has everything the classic player has: settings with submenus, every caption style, chapters, SponsorBlock, end screens, audio boost, speed keys, casting and AirPlay, the mini player and ur player colour and seekbar icon. The classic player stays the default; try Video.js from the popup, the toggle at the top or Settings.
 - NicoNico and Bilibili lives open on the watch page, and say so when they have not started yet.
 - b23.tv links, NicoNico mylists and series, searches, tags and embeds open inside TypeType.
 - Focus mode: pick a study group and weekdays, and TypeType fades the rest from the home, the feed and channel pages, per profile.
@@ -31,18 +42,23 @@ TypeType has an official Discord now! Come chat, ask for help and report bugs on
 - A Bilibili live could stay frozen on the classic player.
 - An offline Bilibili room no longer fails with a date error.
 - A guest changing one setting no longer resets the others.
+- The Twitch player no longer restarts when u come back to the tab.
+- A video part that arrives damaged no longer freezes the player under an error message: it loads again and playback goes on.
+- The chat replay of a past broadcast no longer retries forever, and says when it's not available.
+- "Connection to the server lost" and "Reconnecting to the chat" go away as soon as the connection is back, also behind a proxy that buffers the event stream.
+- The up next screen stays above the Video.js controls.
 
 ## Thx
 
 - @Aquarius-Situla for the playback and Bilibili playlist fixes ([#94](https://github.com/TypeType-Video/TypeType-Frontend/pull/94), [#95](https://github.com/TypeType-Video/TypeType-Frontend/pull/95), [#96](https://github.com/TypeType-Video/TypeType-Frontend/pull/96), [#97](https://github.com/TypeType-Video/TypeType-Frontend/pull/97), [#99](https://github.com/TypeType-Video/TypeType-Frontend/pull/99), [#110](https://github.com/TypeType-Video/TypeType-Server/pull/110)).
 
-Thx [@Toastienergy](https://github.com/Toastienergy) for testing TypeType so much!
+Thx [@Toastienergy](https://github.com/Toastienergy) for testing TypeType so much, and for all the Twitch feedback: polls, low latency, replays and most fixes of this release come from it!
 
 If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
 
 ## Updating
 
-Every image of this release is 1.18.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+Every image of this release is 1.18.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance). If u followed the release candidate with `TYPETYPE_VERSION=rc`, u can go back to `latest`.
 
 If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
 
