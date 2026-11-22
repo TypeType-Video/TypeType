@@ -1,3 +1,18 @@
+# TypeType 1.19.1
+
+TypeType 1.19.1 fixes seeking with Video.js and the watch page in the light theme. Web, server, token, downloader and live are all 1.19.1.
+
+## Fixes
+
+- Seeking in a YouTube video with Video.js keeps the time and the progress bar on the target while the new part loads, instead of going back to 0:00. Several seeks in a row no longer end at the start.
+- With ambient light on, the watch page stays dark in the light theme instead of turning white around the video.
+
+## Updating
+
+Every image of this release is 1.19.1, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.19.0
 
 TypeType 1.19.0 makes Video.js the default player, lets u rewind Twitch lives, adds a strict study mode to Focus and a search in the settings. Web, server, token, downloader and Live are all 1.19.0.
