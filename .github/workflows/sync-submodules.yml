@@ -1,0 +1,86 @@
+name: Sync submodules
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: sync-submodules
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: dev
+
+      - name: Update submodule pointers
+        id: sync
+        run: |
+          set -euo pipefail
+
+          changes=()
+          while IFS=' ' read -r key path; do
+            name="${key#submodule.}"
+            name="${name%.path}"
+            url="$(git config -f .gitmodules --get "submodule.${name}.url")"
+            branch="$(git config -f .gitmodules --get "submodule.${name}.branch" || true)"
+
+            if [[ -n "$branch" ]]; then
+              ref="refs/heads/${branch}"
+            else
+              ref="HEAD"
+            fi
+
+            latest_sha="$(git ls-remote "$url" "$ref" | awk 'NR == 1 { print $1 }')"
+            if [[ ! "$latest_sha" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "Failed to resolve ${url} (${ref})" >&2
+              exit 1
+            fi
+
+            current_sha="$(git ls-files -s -- "$path" | awk '{ print $2 }')"
+            if [[ "$latest_sha" != "$current_sha" ]]; then
+              git update-index --add --cacheinfo "160000,${latest_sha},${path}"
+              changes+=("${path}: ${current_sha:0:7} -> ${latest_sha:0:7}")
+            fi
+          done < <(git config -f .gitmodules --get-regexp '^submodule\..*\.path$')
+
+          if [[ ${#changes[@]} -eq 0 ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "All submodules are already up to date."
+            exit 0
+          fi
+
+          {
+            echo "changed=true"
+            echo "summary<<EOF"
+            printf '%s\n' "${changes[@]}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Updated submodules"
+            echo
+            printf -- '- `%s`\n' "${changes[@]}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit and push
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          SUMMARY: ${{ steps.sync.outputs.summary }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync submodule pointers to latest dev [skip ci]" -m "$SUMMARY"
+          git pull --rebase origin dev
+          git push origin HEAD:dev
