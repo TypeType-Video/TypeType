@@ -5,7 +5,7 @@ TypeType 1.19.1 fixes seeking with Video.js and the watch page in the light them
 ## Fixes
 
 - Seeking in a YouTube video with Video.js keeps the time and the progress bar on the target while the new part loads, instead of going back to 0:00. Several seeks in a row no longer end at the start.
-- With ambient light on, the watch page stays dark in the light theme instead of turning white around the video.
+- The watch page follows the light theme again: only the player stays dark, also with ambient light on.
 
 ## Updating
 
