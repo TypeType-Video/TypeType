@@ -1,3 +1,71 @@
+# TypeType 1.19.0
+
+TypeType 1.19.0 makes Video.js the default player, lets u rewind Twitch lives, adds a strict study mode to Focus and a search in the settings. Web, server, token, downloader and Live are all 1.19.0.
+
+## Video.js by default
+
+The Video.js player is now the default for everyone who never picked one. If u chose the classic player, TypeType keeps it; switch any time from the toggle at the top or Settings.
+
+## Twitch
+
+- Rewind a live without leaving the live page, through the past broadcast it records, and come back to the live edge in one click.
+- A past broadcast that is still recording says so, and opens where u left its live.
+- Audio only for lives and past broadcasts.
+- Ad breaks that TypeType strips from the stream are announced, and a small game (snake or memory pairs) keeps u busy while the live comes back.
+
+## Focus
+
+- Strict blocking, off by default: while Focus runs, playback, feeds and channel pages outside ur study group are paused, with a card that says why.
+- Add a channel to ur study group right from that card. It unlocks after a 24 hour cooling-off period, and u can cancel before.
+- Optional monochrome thumbnails for everything outside ur study group, now also in history and playlists.
+
+Thx @Aquarius-Situla, who built all of it.
+
+## New
+
+- Search the settings from the settings page.
+- The recommender can use an OpenAI-compatible `/v1/embeddings` endpoint (llama.cpp, LocalAI, vLLM, OpenAI...) instead of its built-in model, so u can reuse the models u already serve. See [Embeddings from an OpenAI-compatible server](https://typetype-video.github.io/Docs-TypeType/self-hosting/recommender#openai-embeddings).
+- Bilibili BV/av and NicoNico sm/so/nm ids in comments, descriptions and danmaku show as "▶ title", and open the video inside TypeType.
+- Channel aliases (youtube.com/c/..., /user/...) and YouTube redirect links open inside TypeType.
+- Shorts are hidden from YouTube search results by default; turn them back on in Settings.
+- Choose when a video counts as watched, hide watched videos from ur subscriptions, and turn off the mini player.
+- Auto quality, picked from ur screen.
+- The watch page uses the whole screen from 720p to 4K: a bigger player, and recommended videos with readable titles.
+- Lemmy, Discord and Support now show in their own colours.
+
+## Fixes
+
+- The light theme is readable on video pages: the player, embeds and Shorts stay dark, the rest follows the theme.
+- A server that cannot get YouTube tokens now says why, and names the blocked host in the token logs.
+- A YouTube session that YouTube refuses after asking for a reload ends with a clear error, and the player starts a new one by itself.
+- With gluetun rotation set up, search, trending, channels and playlists recover after the exit changes, and the request that hit the block is sent again.
+- SponsorBlock works on signed-in YouTube playback too.
+- Saved videos refresh their title and thumbnail once a day, and playlists repair their missing avatars and thumbnails on their own.
+- Bilibili danmaku load faster and no longer slow down the video page.
+- Video.js: the controls fit narrow players, long clicks work, and a normal click no longer fast-forwards.
+- "The video service is busy" shows only when the server is really busy.
+- Downloads say why they failed.
+- Marking many videos watched takes one request.
+
+## For admins
+
+- A new internal endpoint resets YouTube's caches and connections after u change the outbound IP yourself. Thx @Aquarius-Situla.
+- Provider blocks and 429 refusals are logged in a structured way. Thx @Aquarius-Situla.
+- [Token cannot reach YouTube](https://typetype-video.github.io/Docs-TypeType/self-hosting/troubleshooting#token-egress) explains what to check when videos stay on "busy".
+
+## Thx
+
+- @Aquarius-Situla for Focus strict study, the egress reset, the danmaku caching and the provider logs ([Frontend #137](https://github.com/TypeType-Video/TypeType-Frontend/pull/137), [Server #124](https://github.com/TypeType-Video/TypeType-Server/pull/124), [#125](https://github.com/TypeType-Video/TypeType-Server/pull/125), [#126](https://github.com/TypeType-Video/TypeType-Server/pull/126), [#127](https://github.com/TypeType-Video/TypeType-Server/pull/127), [#128](https://github.com/TypeType-Video/TypeType-Server/pull/128), [#129](https://github.com/TypeType-Video/TypeType-Server/pull/129)).
+- @Toastienergy for the Twitch rewind idea.
+
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
+## Updating
+
+Every image of this release is 1.19.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance). If u followed the release candidate with `TYPETYPE_VERSION=rc`, u can go back to `latest`.
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.18.0
 
 TypeType 1.18.0 opens an official Discord, brings Twitch and a new Video.js player for every platform, and keeps everything up through server restarts. Web, server, token, downloader and Live are all 1.18.0.
