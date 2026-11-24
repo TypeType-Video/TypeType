@@ -22,3 +22,11 @@
 	path = Docs-TypeType
 	url = https://github.com/TypeType-Video/Docs-TypeType.git
 	branch = dev
+[submodule "TypeType-Live"]
+	path = TypeType-Live
+	url = https://github.com/TypeType-Video/TypeType-Live.git
+	branch = dev
+[submodule "TypeType-Signals"]
+	path = TypeType-Signals
+	url = https://github.com/TypeType-Video/TypeType-Signals.git
+	branch = dev
