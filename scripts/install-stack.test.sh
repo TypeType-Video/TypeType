@@ -40,6 +40,7 @@ for file in \
   docker-compose.arm64.yml \
   docker-compose.recommender.yml \
   docker-compose.twitch.yml \
+  docker-compose.go.yml \
   .env.example \
   .env \
   scripts/install-stack.sh \
@@ -76,6 +77,56 @@ if grep -q 'docker-compose.twitch.yml' "$docker_log"; then
   exit 1
 fi
 grep -Fxq 'TWITCH_ENABLED=false' "${install_dir}/.env"
+if grep -q 'docker-compose.go.yml' "$docker_log"; then
+  echo "the Go server must not replace the Kotlin one unless asked" >&2
+  exit 1
+fi
+grep -Fxq 'TYPETYPE_SERVER=kotlin' "${install_dir}/.env"
+
+go_install_dir="${temporary}/go-stack"
+: > "$docker_log"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$go_install_dir" \
+    --server go \
+    --download-only \
+    --yes > "${temporary}/go-install.log"
+
+grep -q 'compose .*docker-compose.go.yml .*config -q ' "$docker_log"
+grep -Fxq 'TYPETYPE_SERVER=go' "${go_install_dir}/.env"
+grep -Fq -- '-f docker-compose.go.yml' "${temporary}/go-install.log"
+
+: > "$docker_log"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$go_install_dir" \
+    --download-only \
+    --yes > "${temporary}/go-update.log"
+
+grep -q 'compose .*docker-compose.go.yml .*config -q ' "$docker_log"
+
+: > "$docker_log"
+PATH="${fake_bin}:${PATH}" \
+FAKE_DOCKER_LOG="$docker_log" \
+FAKE_PYTHON_LOG="$python_log" \
+  bash "${repository}/scripts/install-stack.sh" \
+    --source-dir "$repository" \
+    --dir "$go_install_dir" \
+    --server kotlin \
+    --download-only \
+    --yes > "${temporary}/go-back.log"
+
+if grep -q 'docker-compose.go.yml' "$docker_log"; then
+  echo "--server kotlin must take the Go server out" >&2
+  exit 1
+fi
+grep -Fxq 'TYPETYPE_SERVER=kotlin' "${go_install_dir}/.env"
 
 twitch_install_dir="${temporary}/twitch-stack"
 : > "$docker_log"
