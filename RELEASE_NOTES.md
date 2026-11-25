@@ -1,3 +1,64 @@
+# TypeType 1.20.0
+
+TypeType 1.20.0 brings a server rewritten in Go, experimental for now and the future of TypeType, starts videos faster, lets u hide watched videos right from ur subscriptions, filters Twitch lives by language, and fixes a long list of things u reported. Web, server, token, downloader and Live are all 1.20.0.
+
+## A new server, in Go (experimental)
+
+TypeType Server now also exists in Go: [TypeType-Server-Go](https://github.com/TypeType-Video/TypeType-Server-Go). It answers the same API with the same database, settings and secrets, so the web, Android and TV apps work with it unchanged.
+
+- Videos start in about 0.6 to 0.9 s, and a seek far ahead plays again in about a second.
+- One hour of 1080p playback used 0.55 % of one core and about 245 MB of memory.
+- One small static binary, about 30 MB of image.
+
+In the end, TypeType will move to the Go server: once it matches the Kotlin server everywhere, it becomes the default and the Kotlin server is retired. For now it is experimental: the Kotlin server stays the default, and u can switch back any time, since everything the Go server writes stays readable by the Kotlin one. To try it:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/TypeType-Video/TypeType/main/scripts/install-stack.sh | bash -s -- --server go
+```
+
+Read [The Go server](https://typetype-video.github.io/Docs-TypeType/self-hosting/go-server) first: requirements, backup, switching back and the manual setup.
+
+## Faster starts
+
+- Hovering a video card already opens its playback session, so the video is ready by the time u click.
+- The player asks for the first part of a video as soon as the session is ready, and plays each part while its bytes are still arriving (with the Go server).
+- The watch page shows the video first and loads comments, related videos and the rest right after the first frame.
+- Videos start in ur chosen quality right away.
+
+## New
+
+- Hide or show watched videos from a button on the Subscriptions page (#442). It uses the same setting as Settings, so it follows ur account on every device.
+- Filter Twitch lives by language on the Live page, the categories and the tags, like on twitch.tv. Pick one language or several, and "All languages" brings everything back (#444).
+
+## Fixes
+
+- With watched videos hidden, the Subscriptions page no longer reloads page after page until it shows an error. It now asks only for the progress of new videos, and stops loading by itself when nothing new shows up, with a "Load more" button to keep going (#443).
+- With strict Focus, a recent video of an entertainment channel now plays when its channel page lists it. Videos older than ur archive window stay blocked, and the message now says exactly that (#431).
+- Twitch past broadcasts resume where u left them, on any device, and an older position from another device no longer overwrites the newer one. A past broadcast u finished starts over again (#447).
+- The "connection lost" notice goes away once the server is back, also behind a reverse proxy that answers 404 while the server restarts, and after a laptop or phone wakes up (#449).
+- No more white frame around the video in fullscreen after seeking with the keyboard (#448).
+- The error and Focus screens of a video follow the light theme instead of staying dark between a light top bar and bottom bar (#445).
+- The language flags keep their colours with dark mode extensions such as Noir (#437).
+
+## Documentation and self-hosting
+
+- New page: [The Go server](https://typetype-video.github.io/Docs-TypeType/self-hosting/go-server), in English, French, German, Spanish and Chinese.
+- The installer takes `--server go` or `--server kotlin`, and keeps ur choice on updates.
+- The TypeType repository now carries TypeType-Live and TypeType-Signals as submodules, and every submodule points at its release, so `git clone --recurse-submodules` gets the whole stack.
+
+## Thanks
+
+- @Toastienergy built the Twitch language filter, and found and explained the VOD progress, reconnect and fullscreen bugs down to the exact lines.
+- @jayscovill reported the Subscriptions loop and asked for the watched videos button.
+- @Aquarius-Situla fixed the language flags, and reported the light theme screens and the strict Focus case.
+- @303inmyheart asked for the Twitch language filter.
+
+## Updating
+
+Every image of this release is 1.20.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
+
+If necessary, follow the [rollback guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/rollback).
+
 # TypeType 1.19.1
 
 TypeType 1.19.1 fixes seeking with Video.js and the watch page in the light theme. Web, server, token, downloader and live are all 1.19.1.
