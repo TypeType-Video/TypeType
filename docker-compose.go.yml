@@ -1,0 +1,8 @@
+# The Go server (experimental) in place of the Kotlin one: same API, database, secrets and settings.
+# install-stack.sh adds this file with --server go and keeps it on updates; --server kotlin takes it out again.
+services:
+  typetype-server:
+    image: ${TYPETYPE_GO_SERVER_IMAGE:-ghcr.io/typetype-video/typetype-server-go:latest}
+    user: "100:101"
+    healthcheck:
+      test: ["CMD", "/ko-app/typetype-server", "health"]

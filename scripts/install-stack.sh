@@ -10,6 +10,7 @@ BETA_STACK=0
 AUTO_APPROVE=0
 RECOMMENDER_STACK=0
 TWITCH_STACK=0
+SERVER_FLAVOR=""
 REF_SET=0
 TYPETYPE_VERSION=""
 IMAGE_CHANNEL=""
@@ -19,6 +20,7 @@ BACKUP_DIR=""
 CUSTOM_COMPOSE_FILE=""
 RECOMMENDER_COMPOSE_FILE=""
 TWITCH_COMPOSE_FILE=""
+GO_SERVER_COMPOSE_FILE=""
 
 DEFAULT_DOWNLOADER_S3_ACCESS_KEY="SET_ME_ACCESS_KEY"
 DEFAULT_DOWNLOADER_S3_SECRET_KEY="SET_ME_SECRET_KEY"
@@ -61,6 +63,7 @@ Options:
   --yes                 Start Docker automatically without prompts
   --recommender         Add the optional recommender (experimental)
   --twitch              Add the optional Twitch support (TypeType-Live)
+  --server <go|kotlin>  Server to run: kotlin (default) or the experimental Go server; kept on updates
   --download-only       Download/update files only, do not start Docker
   --source-dir <path>   Copy files from a local repo path (advanced)
   -h, --help            Show this help
@@ -111,6 +114,16 @@ while [[ $# -gt 0 ]]; do
     --twitch)
       TWITCH_STACK=1
       shift
+      ;;
+    --server)
+      case "${2:-}" in
+        go|kotlin) SERVER_FLAVOR="$2" ;;
+        *)
+          echo "[install] --server takes go or kotlin" >&2
+          exit 1
+          ;;
+      esac
+      shift 2
       ;;
     --download-only)
       START_STACK=0
@@ -435,6 +448,9 @@ compose_command_hint() {
   if [[ ${TWITCH_STACK} -eq 1 ]]; then
     args="${args} -f docker-compose.twitch.yml"
   fi
+  if [[ "${SERVER_FLAVOR}" == "go" ]]; then
+    args="${args} -f docker-compose.go.yml"
+  fi
   if [[ -n "${CUSTOM_COMPOSE_FILE}" ]]; then
     args="${args} -f docker-compose.override.yml"
   fi
@@ -546,6 +562,37 @@ choose_twitch() {
   echo "[install] It adds the TypeType-Live service, which needs about 128 MB of memory."
   if confirm_tty "Add Twitch support?"; then
     TWITCH_STACK=1
+  fi
+}
+
+# The server is kept from one run to the next in TYPETYPE_SERVER; without --server and without that setting it is
+# the Kotlin server.
+choose_server() {
+  if [[ -n "${SERVER_FLAVOR}" ]]; then
+    return 0
+  fi
+  if [[ -f "${INSTALL_DIR}/.env" && "$(get_env_var "${INSTALL_DIR}/.env" "TYPETYPE_SERVER")" == "go" ]]; then
+    SERVER_FLAVOR="go"
+  else
+    SERVER_FLAVOR="kotlin"
+  fi
+}
+
+ensure_server_env() {
+  local env_file="$1"
+  set_env_var "${env_file}" "TYPETYPE_SERVER" "${SERVER_FLAVOR}"
+  if [[ "${SERVER_FLAVOR}" != "go" ]]; then
+    return 0
+  fi
+  local image
+  image="$(get_env_var "${env_file}" "TYPETYPE_GO_SERVER_IMAGE")"
+  if [[ ${BETA_STACK} -eq 1 && ( -z "${image}" || "${image}" == "ghcr.io/typetype-video/typetype-server-go:latest" ) ]]; then
+    set_env_var "${env_file}" "TYPETYPE_GO_SERVER_IMAGE" "ghcr.io/typetype-video/typetype-server-go-beta:beta"
+  elif [[ ${BETA_STACK} -eq 0 && "${image}" == "ghcr.io/typetype-video/typetype-server-go-beta:beta" ]]; then
+    set_env_var "${env_file}" "TYPETYPE_GO_SERVER_IMAGE" "ghcr.io/typetype-video/typetype-server-go:latest"
+  fi
+  if [[ -n "${TYPETYPE_VERSION}" ]]; then
+    echo "[install] The Go server has its own versions: it follows its latest release, not --version or --rc."
   fi
 }
 
@@ -723,6 +770,7 @@ fetch_file "${COMPOSE_SOURCE}" "${COMPOSE_FILE}"
 fetch_file "docker-compose.arm64.yml" "${ARM64_COMPOSE_FILE}"
 fetch_file "docker-compose.recommender.yml" "${INSTALL_DIR}/docker-compose.recommender.yml"
 fetch_file "docker-compose.twitch.yml" "${INSTALL_DIR}/docker-compose.twitch.yml"
+fetch_file "docker-compose.go.yml" "${INSTALL_DIR}/docker-compose.go.yml"
 fetch_file ".env.example" "${INSTALL_DIR}/.env.example"
 fetch_file "scripts/install-stack.sh" "${INSTALL_DIR}/scripts/install-stack.sh"
 fetch_file "scripts/bootstrap-env.sh" "${INSTALL_DIR}/scripts/bootstrap-env.sh"
@@ -761,6 +809,12 @@ if [[ ${TWITCH_STACK} -eq 1 ]]; then
   COMPOSE_ARGS+=(-f "${TWITCH_COMPOSE_FILE}")
   echo "[install] Twitch support added to the stack."
 fi
+choose_server
+if [[ "${SERVER_FLAVOR}" == "go" ]]; then
+  GO_SERVER_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.go.yml"
+  COMPOSE_ARGS+=(-f "${GO_SERVER_COMPOSE_FILE}")
+  echo "[install] Go server (experimental) in place of the Kotlin server."
+fi
 if [[ -f "${INSTALL_DIR}/docker-compose.override.yml" ]]; then
   CUSTOM_COMPOSE_FILE="${INSTALL_DIR}/docker-compose.override.yml"
   COMPOSE_ARGS+=(-f "${CUSTOM_COMPOSE_FILE}")
@@ -793,6 +847,7 @@ ensure_service_url_env "${INSTALL_DIR}/.env"
 ensure_beta_internal_server_env "${INSTALL_DIR}/.env"
 ensure_recommender_env "${INSTALL_DIR}/.env"
 ensure_twitch_env "${INSTALL_DIR}/.env"
+ensure_server_env "${INSTALL_DIR}/.env"
 "${INSTALL_DIR}/scripts/bootstrap-env.sh"
 
 if [[ ${BETA_STACK} -eq 1 ]]; then
