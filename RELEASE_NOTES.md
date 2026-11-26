@@ -53,6 +53,8 @@ Read [The Go server](https://typetype-video.github.io/Docs-TypeType/self-hosting
 - @Aquarius-Situla fixed the language flags, and reported the light theme screens and the strict Focus case.
 - @303inmyheart asked for the Twitch language filter.
 
+If u want to support TypeType, please share it with others! If u want to support it financially, u can do so through [GitHub Sponsors](https://github.com/sponsors/Priveetee)!
+
 ## Updating
 
 Every image of this release is 1.20.0, so update them all together. Follow the [update guide](https://typetype-video.github.io/Docs-TypeType/self-hosting/maintenance).
