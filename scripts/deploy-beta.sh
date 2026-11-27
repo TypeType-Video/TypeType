@@ -157,7 +157,7 @@ cd "$root"
 probe() {
   local url="$1"
   for attempt in $(seq 1 30); do
-    if compose exec -T typetype-server wget -q -T 20 -t 1 -O /dev/null "$url"; then
+    if compose exec -T typetype wget -q -T 20 -t 1 -O /dev/null "$url"; then
       return 0
     fi
     sleep 1
@@ -171,7 +171,7 @@ if [[ "$component" == all ]]; then
   COMPOSE_FILE="$root/docker-compose.dev.yml" ./scripts/run-stack-init.sh
   compose up -d --remove-orphans --wait --wait-timeout 180
   ./scripts/bootstrap-garage.sh
-  probe http://127.0.0.1:8080/health
+  probe http://typetype-server:8080/health
   probe http://typetype-token:8081/health
   probe 'http://typetype-token:8081/potoken?videoId=dQw4w9WgXcQ'
   probe http://typetype-downloader:18093/health/deep
@@ -187,7 +187,7 @@ else
         http://127.0.0.1/api/health
       ;;
     server)
-      probe http://127.0.0.1:8080/health
+      probe http://typetype-server:8080/health
       ;;
     token)
       compose exec -T typetype-token curl --fail --silent \
